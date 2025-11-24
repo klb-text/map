@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import os
@@ -5,25 +6,14 @@ import os
 # -------------------------------
 # Config
 # -------------------------------
-PASSWORD = os.getenv("APP_PASSWORD", "changeme")  # Set in Streamlit Cloud secrets
+PASSWORD = os.getenv("APP_PASSWORD", "changeme")
+API_TOKEN = os.getenv("API_TOKEN", "secret")
 CADS_FILE = "CADS.csv"
 MAP_FILE = "Mappings.csv"
 ADJ_FILE = "Adjustments.csv"
 
 # -------------------------------
-# Authentication
-# -------------------------------
-st.set_page_config(page_title="Private CADS Mapper", layout="wide")
-st.title("🔒 Private CADS Mapper")
-
-pw = st.text_input("Enter password", type="password")
-if pw != PASSWORD:
-    st.stop()
-
-st.success("Authenticated ✅")
-
-# -------------------------------
-# Helpers
+# Load Data
 # -------------------------------
 def load_csv(path, required=None):
     if not os.path.exists(path):
@@ -51,12 +41,9 @@ def apply_adjustments(cads_df, adj_df):
     merged["ad_mfgcode"] = merged["model_code"].fillna(merged["ad_mfgcode"])
     return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
 
-# -------------------------------
-# Load Data
-# -------------------------------
 cads_df = load_csv(CADS_FILE, required={"ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"})
 if cads_df is None:
-    st.error("Upload CADS.csv to the app folder and refresh.")
+    st.error("Upload CADS.csv to the repo and refresh.")
     st.stop()
 
 adj_df = load_csv(ADJ_FILE)
@@ -66,11 +53,45 @@ maps_df = load_csv(MAP_FILE)
 if maps_df is None:
     maps_df = pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
 
-st.success(f"CADS loaded. Rows: {len(cads_df)}")
+# -------------------------------
+# API Mode for Mozenda
+# -------------------------------
+params = st.experimental_get_query_params()
+if params.get("api_token", [""])[0] == API_TOKEN:
+    # API endpoint logic
+    if "options" in params:
+        years = sorted(cads_df["ad_year"].unique().tolist())
+        makes = sorted(cads_df["ad_make"].unique().tolist())
+        models = sorted(cads_df["ad_model"].unique().tolist())
+        trims = sorted(cads_df["ad_trim"].unique().tolist())
+        st.json({"years": years, "makes": makes, "models": models, "trims": trims})
+        st.stop()
+    elif "mapping" in params:
+        year = params.get("year", [""])[0]
+        make = params.get("make", [""])[0]
+        model = params.get("model", [""])[0]
+        trim = params.get("trim", [""])[0]
+        match = cads_df[
+            (cads_df["ad_year"] == year) &
+            (cads_df["ad_make"] == make) &
+            (cads_df["ad_model"] == model) &
+            (cads_df["ad_trim"] == trim)
+        ]
+        st.json(match.to_dict(orient="records"))
+        st.stop()
 
 # -------------------------------
-# Dropdowns
+# UI Mode
 # -------------------------------
+st.set_page_config(page_title="Private CADS Mapper", layout="wide")
+st.title("🔒 Private CADS Mapper")
+
+pw = st.text_input("Enter password", type="password")
+if pw != PASSWORD:
+    st.stop()
+
+st.success("Authenticated ✅")
+
 st.subheader("Select Vehicle")
 years = sorted(cads_df["ad_year"].unique().tolist())
 col1, col2, col3, col4 = st.columns(4)
@@ -120,3 +141,4 @@ if st.button("💾 Save Mapping"):
         maps_df.to_csv(MAP_FILE, index=False)
         st.success("Mapping saved to Mappings.csv.")
         st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
+
