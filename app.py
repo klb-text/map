@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import os
+from rapidfuzz import fuzz, process
 
 # -------------------------------
 # Config
@@ -41,6 +42,26 @@ def apply_adjustments(cads_df, adj_df):
     merged["ad_mfgcode"] = merged["model_code"].fillna(merged["ad_mfgcode"])
     return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
 
+def fuzzy_filter(df, year, make, model, trim, threshold=80):
+    """Return rows that match fuzzily on make/model/trim if exact match fails."""
+    filtered = df.copy()
+    if year:
+        filtered = filtered[filtered["ad_year"] == year]
+    candidates = []
+    for idx, row in filtered.iterrows():
+        score = 0
+        if make:
+            score += fuzz.partial_ratio(make.lower(), row["ad_make"].lower())
+        if model:
+            score += fuzz.partial_ratio(model.lower(), row["ad_model"].lower())
+        if trim:
+            score += fuzz.partial_ratio(trim.lower(), row["ad_trim"].lower())
+        avg_score = score / (sum(bool(x) for x in [make, model, trim]) or 1)
+        if avg_score >= threshold:
+            candidates.append((idx, avg_score))
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    return filtered.loc[[c[0] for c in candidates]]
+
 # -------------------------------
 # Load Data
 # -------------------------------
@@ -73,12 +94,7 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         make = params.get("make", [""])[0]
         model = params.get("model", [""])[0]
         trim = params.get("trim", [""])[0]
-        match = cads_df[
-            (cads_df["ad_year"] == year) &
-            (cads_df["ad_make"].str.lower() == make.lower()) &
-            (cads_df["ad_model"].str.lower() == model.lower()) &
-            (cads_df["ad_trim"].str.lower() == trim.lower())
-        ]
+        match = fuzzy_filter(cads_df, year, make, model, trim)
         st.json(match.to_dict(orient="records"))
         st.stop()
 
@@ -108,10 +124,7 @@ if vehicle_input.strip():
     if len(parts) > 2: parsed_model = parts[2]
     if len(parts) > 3: parsed_trim = parts[3]
 
-# -------------------------------
-# Dropdowns for fallback
-# -------------------------------
-years = sorted(cads_df["ad_year"].unique().tolist())
+# Manual text fields
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     sel_year = st.text_input("Year", parsed_year)
@@ -126,6 +139,7 @@ with col4:
 # Search Logic
 # -------------------------------
 if st.button("Search"):
+    # Exact match first
     filtered = cads_df.copy()
     if sel_year: filtered = filtered[filtered["ad_year"] == sel_year]
     if sel_make: filtered = filtered[filtered["ad_make"].str.lower() == sel_make.lower()]
@@ -133,7 +147,11 @@ if st.button("Search"):
     if sel_trim: filtered = filtered[filtered["ad_trim"].str.lower() == sel_trim.lower()]
 
     if filtered.empty:
-        st.warning("No matches found.")
+        st.warning("No exact matches found. Trying fuzzy match...")
+        filtered = fuzzy_filter(cads_df, sel_year, sel_make, sel_model, sel_trim)
+
+    if filtered.empty:
+        st.error("No matches found even with fuzzy matching.")
     else:
         st.write(f"Found {len(filtered)} match(es):")
         st.dataframe(filtered[["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]])
