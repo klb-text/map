@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz
 
 # -------------------------------
 # Config
@@ -43,7 +43,6 @@ def apply_adjustments(cads_df, adj_df):
     return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
 
 def fuzzy_filter(df, year, make, model, trim, threshold=80):
-    """Return rows that match fuzzily on make/model/trim if exact match fails."""
     filtered = df.copy()
     if year:
         filtered = filtered[filtered["ad_year"] == year]
@@ -139,7 +138,6 @@ with col4:
 # Search Logic
 # -------------------------------
 if st.button("Search"):
-    # Exact match first
     filtered = cads_df.copy()
     if sel_year: filtered = filtered[filtered["ad_year"] == sel_year]
     if sel_make: filtered = filtered[filtered["ad_make"].str.lower() == sel_make.lower()]
@@ -156,7 +154,6 @@ if st.button("Search"):
         st.write(f"Found {len(filtered)} match(es):")
         st.dataframe(filtered[["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]])
 
-        # Allow mapping update if single match
         if len(filtered) == 1:
             existing_code = filtered.iloc[0]["ad_mfgcode"]
             new_code = st.text_input("Model Code", value=existing_code)
@@ -170,4 +167,3 @@ if st.button("Search"):
                 maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
                 maps_df.to_csv(MAP_FILE, index=False)
                 st.success("Mapping saved to Mappings.csv.")
-                st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
