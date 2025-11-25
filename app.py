@@ -13,7 +13,7 @@ MAP_FILE = "Mappings.csv"
 ADJ_FILE = "Adjustments.csv"
 
 # -------------------------------
-# Load Data
+# Helpers
 # -------------------------------
 def load_csv(path, required=None):
     if not os.path.exists(path):
@@ -41,6 +41,9 @@ def apply_adjustments(cads_df, adj_df):
     merged["ad_mfgcode"] = merged["model_code"].fillna(merged["ad_mfgcode"])
     return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
 
+# -------------------------------
+# Load Data
+# -------------------------------
 cads_df = load_csv(CADS_FILE, required={"ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"})
 if cads_df is None:
     st.error("Upload CADS.csv to the repo and refresh.")
@@ -58,7 +61,6 @@ if maps_df is None:
 # -------------------------------
 params = st.experimental_get_query_params()
 if params.get("api_token", [""])[0] == API_TOKEN:
-    # API endpoint logic
     if "options" in params:
         years = sorted(cads_df["ad_year"].unique().tolist())
         makes = sorted(cads_df["ad_make"].unique().tolist())
@@ -91,6 +93,36 @@ if pw != PASSWORD:
     st.stop()
 
 st.success("Authenticated ✅")
+
+# Offer file upload for unmatched logic
+offer_file = st.file_uploader("Upload Offer File (CSV)", type=["csv"])
+if offer_file:
+    offer_df = pd.read_csv(offer_file, dtype=str, keep_default_na=False)
+    offer_df.columns = [c.strip().lower() for c in offer_df.columns]
+
+    # Compare Offer vs CADS
+    unmatched = []
+    for _, row in offer_df.iterrows():
+        year = row.get("year","")
+        make = row.get("make","")
+        model = row.get("model","")
+        trim = row.get("trim","")
+        match = cads_df[
+            (cads_df["ad_year"] == year) &
+            (cads_df["ad_make"] == make) &
+            (cads_df["ad_model"] == model) &
+            (cads_df["ad_trim"] == trim)
+        ]
+        if match.empty:
+            unmatched.append(row.to_dict())
+
+    st.subheader("Unmatched Rows")
+    if unmatched:
+        unmatched_df = pd.DataFrame(unmatched)
+        st.dataframe(unmatched_df)
+        st.download_button("Download Unmatched CSV", unmatched_df.to_csv(index=False), "unmatched.csv", "text/csv")
+    else:
+        st.success("All rows matched!")
 
 st.subheader("Select Vehicle")
 years = sorted(cads_df["ad_year"].unique().tolist())
@@ -141,4 +173,3 @@ if st.button("💾 Save Mapping"):
         maps_df.to_csv(MAP_FILE, index=False)
         st.success("Mapping saved to Mappings.csv.")
         st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
-
