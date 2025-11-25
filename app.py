@@ -152,19 +152,27 @@ if st.button("Search"):
         st.error("No matches found even with fuzzy matching.")
     else:
         st.write(f"Found {len(filtered)} match(es):")
-        st.dataframe(filtered[["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]])
+        editable_df = filtered[["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]].copy()
+        editable_df.rename(columns={"ad_mfgcode": "model_code"}, inplace=True)
+        edited = st.data_editor(editable_df, num_rows="dynamic", use_container_width=True)
 
-        if len(filtered) == 1:
-            existing_code = filtered.iloc[0]["ad_mfgcode"]
-            new_code = st.text_input("Model Code", value=existing_code)
-            if st.button("💾 Save Mapping"):
+        if st.button("💾 Save All Changes"):
+            for _, row in edited.iterrows():
                 maps_df = maps_df[
-                    ~((maps_df["year"] == sel_year) & (maps_df["make"].str.lower() == sel_make.lower()) &
-                      (maps_df["model"].str.lower() == sel_model.lower()) & (maps_df["trim"].str.lower() == sel_trim.lower()))
+                    ~((maps_df["year"] == row["ad_year"]) &
+                      (maps_df["make"].str.lower() == row["ad_make"].lower()) &
+                      (maps_df["model"].str.lower() == row["ad_model"].lower()) &
+                      (maps_df["trim"].str.lower() == row["ad_trim"].lower()))
                 ]
-                new_row = {"year": sel_year, "make": sel_make, "model": sel_model,
-                           "trim": sel_trim, "model_code": new_code.strip(), "source": "user"}
+                new_row = {
+                    "year": row["ad_year"],
+                    "make": row["ad_make"],
+                    "model": row["ad_model"],
+                    "trim": row["ad_trim"],
+                    "model_code": row["model_code"],
+                    "source": "user"
+                }
                 maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
-                maps_df.to_csv(MAP_FILE, index=False)
-                st.success("Mapping saved to Mappings.csv.")
-                st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
+            maps_df.to_csv(MAP_FILE, index=False)
+            st.success("All changes saved to Mappings.csv.")
+            st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
