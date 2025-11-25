@@ -110,6 +110,32 @@ if pw != PASSWORD:
 st.success("Authenticated ✅")
 
 # -------------------------------
+# Offer File Upload for Unmatched
+# -------------------------------
+offer_file = st.file_uploader("Upload Offer File (CSV)", type=["csv"])
+if offer_file:
+    offer_df = pd.read_csv(offer_file, dtype=str, keep_default_na=False)
+    offer_df.columns = [c.strip().lower() for c in offer_df.columns]
+
+    unmatched = []
+    for _, row in offer_df.iterrows():
+        year = row.get("year","")
+        make = row.get("make","")
+        model = row.get("model","")
+        trim = row.get("trim","")
+        match = fuzzy_filter(cads_df, year, make, model, trim)
+        if match.empty:
+            unmatched.append(row.to_dict())
+
+    st.subheader("Unmatched Rows")
+    if unmatched:
+        unmatched_df = pd.DataFrame(unmatched)
+        st.dataframe(unmatched_df)
+        st.download_button("Download Unmatched CSV", unmatched_df.to_csv(index=False), "unmatched.csv", "text/csv")
+    else:
+        st.success("All rows matched!")
+
+# -------------------------------
 # Vehicle Text Input
 # -------------------------------
 st.subheader("Search by Vehicle String or Y/M/M/T")
@@ -173,6 +199,7 @@ if st.button("Search"):
                     "source": "user"
                 }
                 maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
+            # Save locally (temporary in Streamlit Cloud)
             maps_df.to_csv(MAP_FILE, index=False)
             st.success("All changes saved to Mappings.csv.")
             st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
