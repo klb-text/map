@@ -167,3 +167,4 @@ if st.button("Search"):
                 maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
                 maps_df.to_csv(MAP_FILE, index=False)
                 st.success("Mapping saved to Mappings.csv.")
+                st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
