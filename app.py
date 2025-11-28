@@ -1,4 +1,3 @@
-
 import os
 import io
 import json
@@ -51,17 +50,19 @@ def apply_adjustments(cads_df, adj_df):
     return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
 
 def apply_mappings_to_cads(cads_df, maps_df):
+    """Overlay saved mappings using normalized keys."""
     if maps_df is None or maps_df.empty:
         return cads_df
-    for _, row in maps_df.iterrows():
-        mask = (
-            (cads_df["ad_year"] == row.get("year", "")) &
-            (cads_df["ad_make"].str.lower()  == row.get("make", "").lower()) &
-            (cads_df["ad_model"].str.lower() == row.get("model", "").lower()) &
-            (cads_df["ad_trim"].str.lower()  == row.get("trim", "").lower())
-        )
-        cads_df.loc[mask, "ad_mfgcode"] = row.get("model_code", "")
-    return cads_df
+    c = cads_df.copy()
+    c["key"] = c.apply(lambda r: normalize_key(r.get("ad_year"), r.get("ad_make"), r.get("ad_model"), r.get("ad_trim")), axis=1)
+    m = maps_df.copy()
+    for col in ["year","make","model","trim","model_code"]:
+        if col not in m.columns:
+            m[col] = ""
+    m["key"] = m.apply(lambda r: normalize_key(r.get("year"), r.get("make"), r.get("model"), r.get("trim")), axis=1)
+    c = c.merge(m[["key","model_code"]], on="key", how="left")
+    c["ad_mfgcode"] = c["model_code"].fillna(c["ad_mfgcode"])
+    return c.drop(columns=["key","model_code"], errors="ignore")
 
 def fuzzy_filter(df, year, make, model, trim, threshold=80):
     filtered = df.copy()
@@ -144,43 +145,6 @@ if maps_df is None:
 cads_df = apply_mappings_to_cads(cads_df, maps_df)
 
 # -------------------------------
-# API Mode for Mozenda
-# -------------------------------
-params = st.experimental_get_query_params()
-if params.get("api_token", [""])[0] == API_TOKEN:
-    if "get_model_code" in params:
-        year = params.get("year", [""])[0]
-        make = params.get("make", [""])[0]
-        model = params.get("model", [""])[0]
-        trim = params.get("trim", [""])[0]
-        match = fuzzy_filter(cads_df, year, make, model, trim)
-        if not match.empty:
-            st.json({"model_code": match.iloc[0]["ad_mfgcode"]})
-        else:
-            st.json({"model_code": ""})
-        st.stop()
-
-    if "save_mapping" in params:
-        year = params.get("year", [""])[0]
-        make = params.get("make", [""])[0]
-        model = params.get("model", [""])[0]
-        trim = params.get("trim", [""])[0]
-        code = params.get("code", [""])[0]
-        if not all([year, make, model, trim, code]):
-            st.json({"ok": False, "error": "missing params"}); st.stop()
-        maps_df = maps_df[
-            ~((maps_df["year"] == year) &
-              (maps_df["make"].str.lower() == make.lower()) &
-              (maps_df["model"].str.lower() == model.lower()) &
-              (maps_df["trim"].str.lower() == trim.lower()))
-        ]
-        maps_df = pd.concat([maps_df, pd.DataFrame([{
-            "year": year, "make": make, "model": model, "trim": trim, "model_code": code, "source": "api"
-        }])], ignore_index=True)
-        ok, msg = github_put_file(MAP_FILE, maps_df.to_csv(index=False).encode("utf-8"), f"API save mapping")
-        st.json({"ok": ok, "message": msg}); st.stop()
-
-# -------------------------------
 # UI Mode
 # -------------------------------
 st.set_page_config(page_title="CADS Mapper", layout="wide")
@@ -212,11 +176,12 @@ with c4: sel_trim = st.text_input("Trim", trm)
 threshold = st.slider("Fuzzy threshold", 60, 95, 80)
 
 if st.button("Search"):
+    norm = lambda s: str(s or "").strip().lower()
     exact = cads_df.copy()
     if sel_year: exact = exact[exact["ad_year"] == sel_year]
-    if sel_make: exact = exact[exact["ad_make"].str.lower() == sel_make.lower()]
-    if sel_model: exact = exact[exact["ad_model"].str.lower() == sel_model.lower()]
-    if sel_trim: exact = exact[exact["ad_trim"].str.lower() == sel_trim.lower()]
+    if sel_make: exact = exact[exact["ad_make"].apply(norm) == norm(sel_make)]
+    if sel_model: exact = exact[exact["ad_model"].apply(norm) == norm(sel_model)]
+    if sel_trim: exact = exact[exact["ad_trim"].apply(norm) == norm(sel_trim)]
     results = exact if not exact.empty else fuzzy_filter(cads_df, sel_year, sel_make, sel_model, sel_trim, threshold)
 
     if results.empty:
@@ -240,11 +205,12 @@ if st.button("Search"):
                     "year": y, "make": m, "model": mo, "trim": t, "model_code": code, "source": "ui"
                 }])], ignore_index=True)
             ok, msg = github_put_file(MAP_FILE, maps_df.to_csv(index=False).encode("utf-8"), f"UI save mappings")
+            st.write("🔍 GitHub API response:", msg)
             if ok:
                 st.success("Mappings committed to GitHub. They will be remembered.")
                 cads_df[:] = apply_mappings_to_cads(cads_df, maps_df)
             else:
-                st.error(f"Failed to persist mappings: {msg}")
+                st.error("Failed to persist mappings.")
 
 st.divider()
 st.subheader("Current mappings (loaded)")
