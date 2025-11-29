@@ -1,32 +1,22 @@
 import os
-import io
-import json
-import base64
-import requests
 import streamlit as st
 import pandas as pd
 from rapidfuzz import fuzz
 
 # -------------------------------
-# Config from Streamlit Secrets
+# POC config (no secrets needed)
 # -------------------------------
-APP_PASSWORD  = os.getenv("APP_PASSWORD", "changeme")
-API_TOKEN     = os.getenv("API_TOKEN", "secret")
-CADS_FILE     = "CADS.csv"
-MAP_FILE      = "Mappings.csv"
-ADJ_FILE      = "Adjustments.csv"
-
-GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "")
-GITHUB_REPO   = os.getenv("GITHUB_REPO", "")
-GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main")
+APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")
+CADS_FILE    = "CADS.csv"
+SRC_MAP_FILE = "SourceMappings.csv"  # external->CADS crosswalk
 
 # -------------------------------
-# Utilities
+# Helpers
 # -------------------------------
-def load_csv_local(path, required=None):
+def load_csv(path, required=None, usecols=None):
     if not os.path.exists(path):
         return None
-    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+    df = pd.read_csv(path, dtype=str, keep_default_na=False, usecols=usecols)
     df.columns = [c.strip().lower() for c in df.columns]
     if required:
         missing = set(required) - set(df.columns)
@@ -34,184 +24,273 @@ def load_csv_local(path, required=None):
             raise ValueError(f"{path} missing columns: {sorted(missing)}")
     return df
 
+def norm(s: str) -> str:
+    s = str(s or "").lower().strip()
+    return " ".join(s.split())
+
 def normalize_key(year, make, model, trim):
-    return "|".join([str(x or "").strip().lower() for x in [year, make, model, trim]])
+    return "|".join([norm(year), norm(make), norm(model), norm(trim)])
 
-def apply_adjustments(cads_df, adj_df):
-    if adj_df is None or adj_df.empty:
-        return cads_df
-    adj_df["key"]  = adj_df.apply(lambda r: normalize_key(r.get("year"), r.get("make"), r.get("model"), r.get("trim")), axis=1)
-    cads_df["key"] = cads_df.apply(lambda r: normalize_key(r.get("ad_year"), r.get("ad_make"), r.get("ad_model"), r.get("ad_trim")), axis=1)
-    merged = cads_df.merge(adj_df[["key","new_trim","new_model","new_make","model_code"]], on="key", how="left")
-    merged["ad_trim"]    = merged["new_trim"].fillna(merged["ad_trim"])
-    merged["ad_model"]   = merged["new_model"].fillna(merged["ad_model"])
-    merged["ad_make"]    = merged["new_make"].fillna(merged["ad_make"])
-    merged["ad_mfgcode"] = merged["model_code"].fillna(merged["ad_mfgcode"])
-    return merged.drop(columns=["key","new_trim","new_model","new_make","model_code"], errors="ignore")
-
-def apply_mappings_to_cads(cads_df, maps_df):
-    """Overlay saved mappings using normalized keys."""
-    if maps_df is None or maps_df.empty:
-        return cads_df
-    c = cads_df.copy()
-    c["key"] = c.apply(lambda r: normalize_key(r.get("ad_year"), r.get("ad_make"), r.get("ad_model"), r.get("ad_trim")), axis=1)
-    m = maps_df.copy()
-    for col in ["year","make","model","trim","model_code"]:
-        if col not in m.columns:
-            m[col] = ""
-    m["key"] = m.apply(lambda r: normalize_key(r.get("year"), r.get("make"), r.get("model"), r.get("trim")), axis=1)
-    c = c.merge(m[["key","model_code"]], on="key", how="left")
-    c["ad_mfgcode"] = c["model_code"].fillna(c["ad_mfgcode"])
-    return c.drop(columns=["key","model_code"], errors="ignore")
-
-def fuzzy_filter(df, year, make, model, trim, threshold=80):
+def fuzzy_filter_cads(df, year, make, model, trim, threshold=80):
+    """Fuzzy match on CADS within the selected year (if provided)."""
     filtered = df.copy()
     if year:
-        filtered = filtered[filtered["ad_year"] == year]
+        filtered = filtered[filtered["ad_year"].apply(norm) == norm(year)]
     candidates = []
     for idx, row in filtered.iterrows():
         score = 0; parts = 0
-        if make:  score += fuzz.partial_ratio(make.lower(),  row["ad_make"].lower());  parts += 1
-        if model: score += fuzz.partial_ratio(model.lower(), row["ad_model"].lower()); parts += 1
-        if trim:  score += fuzz.partial_ratio(trim.lower(),  row["ad_trim"].lower());  parts += 1
+        if make:
+            score += fuzz.partial_ratio(norm(make), norm(row["ad_make"]));   parts += 1
+        if model:
+            score += fuzz.partial_ratio(norm(model), norm(row["ad_model"])); parts += 1
+        if trim:
+            score += fuzz.partial_ratio(norm(trim), norm(row["ad_trim"]));   parts += 1
         avg = score / (parts or 1)
         if avg >= threshold:
             candidates.append((idx, avg))
     candidates.sort(key=lambda x: x[1], reverse=True)
     return filtered.loc[[c[0] for c in candidates]]
 
+# External trim normalizer (example rules; adjust as you learn your source)
+SYNONYMS = {
+    # wheelbase words → CADS language
+    "swb": "",           # treat SWB as the 'standard' (non-7 seat) trim
+    "lwb": "7 seat",     # map LWB to "7 Seat" variant in CADS
+}
+def normalize_external_trim(t: str) -> str:
+    s = norm(t)
+    for k, v in SYNONYMS.items():
+        if k in s:
+            s = s.replace(k, v).strip()
+    return " ".join(s.split())
+
+def parse_vehicle(vehicle_text, cads_df):
+    """CADS-aware parse for external strings (handles multi-word make/model via CADS lists)."""
+    vt = str(vehicle_text or "").strip()
+    if not vt:
+        return "", "", "", ""
+    tokens = vt.split()
+    year = tokens[0] if tokens and tokens[0].isdigit() and len(tokens[0]) == 4 else ""
+    if year:
+        tokens = tokens[1:]
+    seq = " ".join(tokens).lower()
+
+    makes = sorted(pd.Series(cads_df["ad_make"]).dropna().unique().tolist(), key=len, reverse=True)
+    models = sorted(pd.Series(cads_df["ad_model"]).dropna().unique().tolist(), key=len, reverse=True)
+    makes_l = [" ".join(str(m).lower().split()) for m in makes]
+    models_l = [" ".join(str(m).lower().split()) for m in models]
+
+    make_l = ""
+    for m in makes_l:
+        if seq.startswith(m + " ") or seq == m:
+            make_l = m; break
+    if make_l:
+        rest = seq[len(make_l):].strip()
+    else:
+        parts = seq.split(); make_l = parts[0] if parts else ""; rest = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+    model_l = ""
+    for mdl in models_l:
+        if rest.startswith(mdl + " ") or rest == mdl:
+            model_l = mdl; break
+    if model_l:
+        trim_l = rest[len(model_l):].strip()
+    else:
+        rem = rest.split()
+        model_l = rem[0] if rem else ""; trim_l = " ".join(rem[1:]) if len(rem) > 1 else ""
+
+    make_human  = next((m for m in makes  if norm(m) == make_l), make_l)
+    model_human = next((m for m in models if norm(m) == model_l), model_l)
+    return year, make_human, model_human, trim_l
+
 # -------------------------------
-# GitHub helpers
+# Load CADS
 # -------------------------------
-def gh_headers():
-    return {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
-
-def github_get_file_content(path):
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
-    params = {"ref": GITHUB_BRANCH}
-    r = requests.get(url, headers=gh_headers(), params=params)
-    if r.status_code == 200:
-        b64 = r.json().get("content", "")
-        return base64.b64decode(b64)
-    return None
-
-def github_get_file_sha(path):
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
-    params = {"ref": GITHUB_BRANCH}
-    r = requests.get(url, headers=gh_headers(), params=params)
-    if r.status_code == 200:
-        return r.json().get("sha")
-    return None
-
-def github_put_file(path, content_bytes, message):
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
-    sha = github_get_file_sha(path)
-    data = {
-        "message": message,
-        "content": base64.b64encode(content_bytes).decode("utf-8"),
-        "branch": GITHUB_BRANCH
-    }
-    if sha:
-        data["sha"] = sha
-    r = requests.put(url, headers=gh_headers(), data=json.dumps(data))
-    return r.status_code in (200, 201), r.text
-
-def github_load_csv(path, required=None):
-    content = github_get_file_content(path)
-    if content:
-        df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False)
-        df.columns = [c.strip().lower() for c in df.columns]
-        if required:
-            missing = set(required) - set(df.columns)
-            if missing:
-                raise ValueError(f"{path} missing columns: {sorted(missing)}")
-        return df
-    return None
-
-# -------------------------------
-# Load CADS, Adjustments, Mappings
-# -------------------------------
-cads_df = load_csv_local(CADS_FILE, required={"ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"})
+cads_df = load_csv(
+    CADS_FILE,
+    required={"ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"},
+    usecols=["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"],
+)
 if cads_df is None:
-    st.error("CADS.csv not found."); st.stop()
-
-adj_df = github_load_csv(ADJ_FILE)
-cads_df = apply_adjustments(cads_df, adj_df)
-
-maps_df = github_load_csv(MAP_FILE)
-if maps_df is None:
-    maps_df = pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
-
-cads_df = apply_mappings_to_cads(cads_df, maps_df)
+    st.error("CADS.csv not found in repo root with required headers.")
+    st.stop()
 
 # -------------------------------
-# UI Mode
+# Load/create SourceMappings (external→CADS)
 # -------------------------------
-st.set_page_config(page_title="CADS Mapper", layout="wide")
-st.title("🔒 CADS Vehicle Mapper")
+src_required = {"src_year","src_make","src_model","src_trim","cad_year","cad_make","cad_model","cad_trim","model_code","source"}
+src_maps_df = load_csv(SRC_MAP_FILE)
+if src_maps_df is None:
+    # Auto-create with headers
+    src_maps_df = pd.DataFrame(columns=list(src_required))
+    src_maps_df.to_csv(SRC_MAP_FILE, index=False)
+else:
+    # Ensure all columns exist
+    for col in src_required:
+        if col not in src_maps_df.columns:
+            src_maps_df[col] = ""
+
+# -------------------------------
+# API MODE (for Mozenda)
+# -------------------------------
+params = st.experimental_get_query_params()
+APP_TOKEN = os.getenv("API_TOKEN", "mozenda-token")  # optional; for now hardcoded default
+
+if params.get("api_token", [""])[0] == APP_TOKEN:
+    # /?api_token=...&get_model_code=true&src_year=...&src_make=...&src_model=...&src_trim=...
+    if "get_model_code" in params:
+        sy = params.get("src_year",  [""])[0]
+        sm = params.get("src_make",  [""])[0]
+        sMo = params.get("src_model", [""])[0]
+        sT = params.get("src_trim",  [""])[0]
+
+        # 1) Try saved SourceMapping first
+        src_key = normalize_key(sy, sm, sMo, sT)
+        src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
+        hit = src_maps_df[src_maps_df["__key__"] == src_key]
+        if not hit.empty:
+            st.json({"model_code": hit.iloc[0]["model_code"], "source": "source_mapping"}); st.stop()
+
+        # 2) CADS fallback: normalize external trim synonyms; exact → fuzzy
+        sT_norm = normalize_external_trim(sT)
+        exact = cads_df.copy()
+        if sy:   exact = exact[exact["ad_year"].apply(norm)  == norm(sy)]
+        if sm:   exact = exact[exact["ad_make"].apply(norm)  == norm(sm)]
+        if sMo:  exact = exact[exact["ad_model"].apply(norm) == norm(sMo)]
+        if sT_norm: exact = exact[exact["ad_trim"].apply(norm) == norm(sT_norm)]
+        if not exact.empty:
+            st.json({"model_code": exact.iloc[0]["ad_mfgcode"], "source": "cads_exact"}); st.stop()
+        fuzzy = fuzzy_filter_cads(cads_df, sy, sm, sMo, sT_norm)
+        if not fuzzy.empty:
+            st.json({"model_code": fuzzy.iloc[0]["ad_mfgcode"], "source": "cads_fuzzy"}); st.stop()
+        st.json({"model_code": "", "source": "none"}); st.stop()
+
+    # /?api_token=...&save_source_mapping=true&src_year=...&src_make=...&src_model=...&src_trim=...&cad_year=...&cad_make=...&cad_model=...&cad_trim=...&code=...
+    if "save_source_mapping" in params:
+        sy   = params.get("src_year",  [""])[0]
+        sm   = params.get("src_make",  [""])[0]
+        sMo  = params.get("src_model", [""])[0]
+        sT   = params.get("src_trim",  [""])[0]
+        cy   = params.get("cad_year",  [""])[0]
+        cm   = params.get("cad_make",  [""])[0]
+        cMo  = params.get("cad_model", [""])[0]
+        cT   = params.get("cad_trim",  [""])[0]
+        code = params.get("code",       [""])[0]
+        if not all([sy, sm, sMo, sT, cy, cm, cMo, cT, code]):
+            st.json({"ok": False, "error": "missing params"}); st.stop()
+
+        # Upsert by normalized source key
+        src_key = normalize_key(sy, sm, sMo, sT)
+        if not src_maps_df.empty:
+            src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
+            src_maps_df = src_maps_df[src_maps_df["__key__"] != src_key].drop(columns=["__key__"], errors="ignore")
+
+        new_row = {
+            "src_year": sy, "src_make": sm, "src_model": sMo, "src_trim": sT,
+            "cad_year": cy, "cad_make": cm, "cad_model": cMo, "cad_trim": cT,
+            "model_code": code, "source": "api"
+        }
+        src_maps_df = pd.concat([src_maps_df, pd.DataFrame([new_row])], ignore_index=True)
+        src_maps_df.to_csv(SRC_MAP_FILE, index=False)
+        st.json({"ok": True, "message": "saved"}); st.stop()
+
+    st.json({"error": "unknown api call"}); st.stop()
+
+# -------------------------------
+# UI MODE
+# -------------------------------
+st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
+st.title("🔒 External → CADS Vehicle Mapper (POC)")
 
 pw = st.text_input("Enter password", type="password")
 if pw != APP_PASSWORD:
     st.stop()
-
 st.success("Authenticated ✅")
 
-st.subheader("Search by Vehicle or Y/M/M/T")
-vehicle_input = st.text_input("Vehicle (e.g., '2025 Land Rover Range Rover P400 SE SWB')")
+# External inputs
+st.subheader("Search by External Vehicle string or External Y/M/M/T")
+vehicle_text = st.text_input("External Vehicle (e.g., '2025 Land Rover Range Rover P400 SE SWB')")
 
-yr, mk, mdl, trm = "", "", "", ""
-parts = vehicle_input.split()
-if parts and parts[0].isdigit():
-    yr = parts[0]; parts = parts[1:]
-if parts: mk = parts[0]
-if len(parts) > 1: mdl = parts[1]
-if len(parts) > 2: trm = " ".join(parts[2:])
+py, pmake, pmodel, ptrim = parse_vehicle(vehicle_text, cads_df)
 
 c1, c2, c3, c4 = st.columns(4)
-with c1: sel_year = st.text_input("Year", yr)
-with c2: sel_make = st.text_input("Make", mk)
-with c3: sel_model = st.text_input("Model", mdl)
-with c4: sel_trim = st.text_input("Trim", trm)
+with c1: src_year  = st.text_input("External Year",  py)
+with c2: src_make  = st.text_input("External Make",  pmake)
+with c3: src_model = st.text_input("External Model", pmodel)
+with c4: src_trim  = st.text_input("External Trim",  ptrim)
 
-threshold = st.slider("Fuzzy threshold", 60, 95, 80)
+threshold = st.slider("Fuzzy threshold (CADS fallback)", 60, 95, 80)
 
-if st.button("Search"):
-    norm = lambda s: str(s or "").strip().lower()
-    exact = cads_df.copy()
-    if sel_year: exact = exact[exact["ad_year"] == sel_year]
-    if sel_make: exact = exact[exact["ad_make"].apply(norm) == norm(sel_make)]
-    if sel_model: exact = exact[exact["ad_model"].apply(norm) == norm(sel_model)]
-    if sel_trim: exact = exact[exact["ad_trim"].apply(norm) == norm(sel_trim)]
-    results = exact if not exact.empty else fuzzy_filter(cads_df, sel_year, sel_make, sel_model, sel_trim, threshold)
-
-    if results.empty:
-        st.error("No matches found.")
+if st.button("Search / Resolve"):
+    # 1) Try SourceMappings first
+    src_key = normalize_key(src_year, src_make, src_model, src_trim)
+    src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
+    hit = src_maps_df[src_maps_df["__key__"] == src_key]
+    if not hit.empty:
+        r = hit.iloc[0]
+        st.success("Found saved Source Mapping ✅")
+        st.write({
+            "model_code": r["model_code"],
+            "mapped_to": f"{r['cad_year']} {r['cad_make']} {r['cad_model']} {r['cad_trim']}"
+        })
     else:
-        st.write(f"Found {len(results)} match(es). Edit Model Code and click Save:")
-        editable = results[["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]].copy()
-        editable.rename(columns={"ad_mfgcode": "model_code"}, inplace=True)
-        edited = st.data_editor(editable, num_rows="dynamic", use_container_width=True)
+        # 2) CADS fallback: normalize external trim synonyms; exact → fuzzy
+        sT_norm = normalize_external_trim(src_trim)
+        exact = cads_df.copy()
+        if src_year:  exact = exact[exact["ad_year"].apply(norm)  == norm(src_year)]
+        if src_make:  exact = exact[exact["ad_make"].apply(norm)  == norm(src_make)]
+        if src_model: exact = exact[exact["ad_model"].apply(norm) == norm(src_model)]
+        if sT_norm:   exact = exact[exact["ad_trim"].apply(norm)  == norm(sT_norm)]
 
-        if st.button("💾 Save All Changes"):
-            for _, row in edited.iterrows():
-                y, m, mo, t, code = row["ad_year"], row["ad_make"], row["ad_model"], row["ad_trim"], row["model_code"]
-                maps_df = maps_df[
-                    ~((maps_df["year"] == y) &
-                      (maps_df["make"].str.lower() == m.lower()) &
-                      (maps_df["model"].str.lower() == mo.lower()) &
-                      (maps_df["trim"].str.lower() == t.lower()))
-                ]
-                maps_df = pd.concat([maps_df, pd.DataFrame([{
-                    "year": y, "make": m, "model": mo, "trim": t, "model_code": code, "source": "ui"
-                }])], ignore_index=True)
-            ok, msg = github_put_file(MAP_FILE, maps_df.to_csv(index=False).encode("utf-8"), f"UI save mappings")
-            st.write("🔍 GitHub API response:", msg)
-            if ok:
-                st.success("Mappings committed to GitHub. They will be remembered.")
-                cads_df[:] = apply_mappings_to_cads(cads_df, maps_df)
-            else:
-                st.error("Failed to persist mappings.")
+        results = exact if not exact.empty else fuzzy_filter_cads(cads_df, src_year, src_make, src_model, sT_norm, threshold)
 
+        if results.empty:
+            st.error("No CADS candidates found.")
+        else:
+            st.write(f"Found {len(results)} CADS candidate(s). Select the correct one, set Model Code if needed, and Save Mapping.")
+
+            # Candidate viewer + selector
+            view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+            st.dataframe(results[view_cols], use_container_width=True)
+
+            # Simple selector by index
+            options = results.index.tolist()
+            def fmt(i): 
+                row = results.loc[i]
+                return f"{row['ad_year']} / {row['ad_make']} / {row['ad_model']} / {row['ad_trim']} ({row['ad_mfgcode']})"
+            sel_idx = st.selectbox("Pick CADS row", options, format_func=fmt)
+
+            if sel_idx is not None:
+                cad_row = results.loc[sel_idx]
+                # Allow overriding code (optional)
+                code = st.text_input("Model Code", value=cad_row["ad_mfgcode"])
+
+                if st.button("💾 Save Source → CADS Mapping"):
+                    # Upsert by normalized source key
+                    if not src_maps_df.empty:
+                        src_maps_df["__key__"] = src_maps_df.apply(
+                            lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+                        )
+                        src_maps_df = src_maps_df[src_maps_df["__key__"] != src_key].drop(columns=["__key__"], errors="ignore")
+
+                    new_row = {
+                        "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
+                        "cad_year": cad_row["ad_year"], "cad_make": cad_row["ad_make"],
+                        "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
+                        "model_code": code, "source": "ui"
+                    }
+                    src_maps_df = pd.concat([src_maps_df, pd.DataFrame([new_row])], ignore_index=True)
+                    src_maps_df.to_csv(SRC_MAP_FILE, index=False)
+
+                    st.success("Saved. This external Y/M/M/T will now return the mapped CADS code on the next search.")
+                    # Show immediate confirmation
+                    st.write({
+                        "external": f"{src_year} {src_make} {src_model} {src_trim}",
+                        "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}",
+                        "model_code": code
+                    })
+
+# Download current source mappings (persist manually by uploading to GitHub)
 st.divider()
-st.subheader("Current mappings (loaded)")
-st.download_button("Download Mappings.csv", maps_df.to_csv(index=False), "Mappings.csv", "text/csv")
+st.subheader("Source Mappings (external → CADS)")
+st.download_button("Download SourceMappings.csv", src_maps_df.to_csv(index=False), "SourceMappings.csv", "text/csv")
