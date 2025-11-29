@@ -1,4 +1,3 @@
-
 import os
 import streamlit as st
 import pandas as pd
@@ -38,6 +37,7 @@ SYNONYMS = {
     "long wheelbase": "7 seat",
     "7-seater": "7 seat",
 }
+
 def normalize_external_trim(t: str) -> str:
     s = norm(t)
     for k, v in SYNONYMS.items():
@@ -45,9 +45,11 @@ def normalize_external_trim(t: str) -> str:
             s = s.replace(k, v).strip()
     return " ".join(s.split())
 
+
 def normalize_source_key_ymmt(year, make, model, trim) -> str:
     """Synonym-aware EXTERNAL key: Y|Make|Model|Trim (with trim normalization)."""
     return "|".join([norm(year), norm(make), norm(model), norm(normalize_external_trim(trim))])
+
 
 def normalize_source_key_ymm(year, make, model) -> str:
     """Vehicle-line EXTERNAL key: Y|Make|Model (ignores trim)."""
@@ -73,6 +75,7 @@ def load_cads(path: str) -> pd.DataFrame:
         raise ValueError(f"{path} missing columns: {sorted(missing)}")
     return df[["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]]
 
+
 def load_source_mappings(path: str) -> pd.DataFrame:
     """
     Loads SourceMappings (external→CADS crosswalk) FRESH every time
@@ -93,6 +96,7 @@ def load_source_mappings(path: str) -> pd.DataFrame:
             df[c] = "" if c != "scope" else "ymmt"  # default to exact scope
     return df[cols]
 
+
 def save_source_mappings(df: pd.DataFrame, path: str):
     """Saves SourceMappings.csv (no caching)."""
     df.to_csv(path, index=False)
@@ -100,6 +104,7 @@ def save_source_mappings(df: pd.DataFrame, path: str):
 # -----------------------------------
 # Fuzzy matching (CADS)
 # -----------------------------------
+
 def fuzzy_filter_cads(df: pd.DataFrame, year, make, model, trim, threshold=80) -> pd.DataFrame:
     """
     Fuzzy match Make/Model/Trim within the requested Year subset.
@@ -112,11 +117,14 @@ def fuzzy_filter_cads(df: pd.DataFrame, year, make, model, trim, threshold=80) -
     for idx, row in filtered.iterrows():
         score = 0; parts = 0
         if make:
-            score += fuzz.partial_ratio(norm(make),  norm(row["ad_make"]));   parts += 1
+            score += fuzz.partial_ratio(norm(make),  norm(row["ad_make"]))
+            parts += 1
         if model:
-            score += fuzz.partial_ratio(norm(model), norm(row["ad_model"]));  parts += 1
+            score += fuzz.partial_ratio(norm(model), norm(row["ad_model"]))
+            parts += 1
         if trim:
-            score += fuzz.partial_ratio(norm(trim),  norm(row["ad_trim"]));   parts += 1
+            score += fuzz.partial_ratio(norm(trim),  norm(row["ad_trim"]))
+            parts += 1
         avg = score / (parts or 1)
         if avg >= threshold:
             candidates.append((idx, avg))
@@ -126,6 +134,7 @@ def fuzzy_filter_cads(df: pd.DataFrame, year, make, model, trim, threshold=80) -
 # -----------------------------------
 # Parse external vehicle string (CADS-aware make/model, multi-word)
 # -----------------------------------
+
 def parse_vehicle(vehicle_text: str, cads_df: pd.DataFrame):
     vt = str(vehicle_text or "").strip()
     if not vt: return "", "", "", ""
@@ -393,9 +402,7 @@ if st.button("Search / Resolve"):
                 if q:
                     results = results[
                         results.apply(
-                            lambda r: q in norm(r["ad_model"])
-                                   or q in norm(r["ad_trim"])
-                                   or q in norm(r["ad_mfgcode"]),
+                            lambda r: q in norm(r["ad_model"]) or q in norm(r["ad_trim"]) or q in norm(r["ad_mfgcode"]),
                             axis=1
                         )
                     ]
