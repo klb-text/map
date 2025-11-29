@@ -8,7 +8,7 @@ from rapidfuzz import fuzz
 # Page config FIRST
 # -----------------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-22 6:40 PM ET — External→CADS mapping v1.4 (robust selector)")
+st.info("Build: 2025-11-22 6:55 PM ET — External→CADS mapping v1.5 (robust filters & selector)")
 
 # -----------------------------------
 # POC CONFIG (no secrets needed for now)
@@ -285,46 +285,88 @@ if st.button("Search / Resolve"):
         if sT_norm:   exact = exact[exact["ad_trim"].apply(norm)  == norm(sT_norm)]
         results = exact if not exact.empty else fuzzy_filter_cads(cads_df, src_year, src_make, src_model, sT_norm, threshold)
 
+        # Keep an unfiltered baseline for recovery display if filters empty the set
+        base_df = results.copy()
+
         if results.empty:
             st.error("No CADS candidates found.")
         else:
             st.write(f"Found {len(results)} CADS candidate(s). Use the filters below to narrow, then pick the exact row.")
 
             # --------------------------
+            # FILTER WIDGET STATE (session_state)
+            # --------------------------
+            # Initialize keys once
+            for k, v in {
+                "only_model_eq": bool(src_model),
+                "apply_trim_tokens": bool(src_trim),
+                "apply_quick_filter": False,
+                "quick_filter_text": "",
+            }.items():
+                if k not in st.session_state:
+                    st.session_state[k] = v
+
+            # Reset filters button
+            rcol1, rcol2 = st.columns([1, 3])
+            with rcol1:
+                if st.button("♻️ Reset filters"):
+                    st.session_state["only_model_eq"] = bool(src_model)
+                    st.session_state["apply_trim_tokens"] = bool(src_trim)
+                    st.session_state["apply_quick_filter"] = False
+                    st.session_state["quick_filter_text"] = ""
+
+            # --------------------------
             # NARROWING FILTERS
             # --------------------------
             colA, colB, colC = st.columns([1, 1, 2])
 
-            # Only show rows where CADS Model == external Model (e.g., 'Range Rover Sport')
+            # 1) Only rows where CADS Model == external Model (e.g., 'Range Rover Sport')
             with colA:
-                only_model_eq = st.checkbox("Model must equal external model", value=bool(src_model))
-            if only_model_eq and src_model:
+                st.session_state["only_model_eq"] = st.checkbox(
+                    "Model must equal external model",
+                    value=st.session_state["only_model_eq"]
+                )
+            if st.session_state["only_model_eq"] and src_model:
                 results = results[results["ad_model"].apply(norm) == norm(src_model)]
 
-            # Filter by external trim tokens (e.g., "P360 SE")
+            # 2) Filter by external trim tokens (e.g., "P360 SE")
             ext_tokens = [t for t in norm(src_trim).split() if t not in {"swb", "short", "wheelbase", "lwb", "long", "seat"}]
             with colB:
-                apply_trim_tokens = st.checkbox("Filter by external trim tokens", value=bool(ext_tokens))
-            if apply_trim_tokens and ext_tokens:
+                st.session_state["apply_trim_tokens"] = st.checkbox(
+                    "Filter by external trim tokens",
+                    value=st.session_state["apply_trim_tokens"]
+                )
+            if st.session_state["apply_trim_tokens"] and ext_tokens:
                 results = results[results["ad_trim"].apply(lambda s: all(tok in norm(s) for tok in ext_tokens))]
 
-            # Free-form quick filter (across model/trim/code)
+            # 3) Quick filter (user-controlled and empty by default)
             with colC:
-                quick = st.text_input("Quick filter (model/trim/code)", value=" ".join(ext_tokens))
-            if quick:
-                q = norm(quick)
-                results = results[
-                    results.apply(
-                        lambda r: q in norm(r["ad_model"])
-                               or q in norm(r["ad_trim"])
-                               or q in norm(r["ad_mfgcode"]),
-                        axis=1
-                    )
-                ]
+                st.session_state["apply_quick_filter"] = st.checkbox(
+                    "Apply quick filter", value=st.session_state["apply_quick_filter"]
+                )
+                st.session_state["quick_filter_text"] = st.text_input(
+                    "Quick filter (model/trim/code)",
+                    value=st.session_state["quick_filter_text"],
+                    placeholder="type any text and tick 'Apply quick filter'"
+                )
 
-            # If filters removed everything, let the user relax them
+            if st.session_state["apply_quick_filter"]:
+                q = norm(st.session_state["quick_filter_text"])
+                if q:
+                    results = results[
+                        results.apply(
+                            lambda r: q in norm(r["ad_model"])
+                                   or q in norm(r["ad_trim"])
+                                   or q in norm(r["ad_mfgcode"]),
+                            axis=1
+                        )
+                    ]
+
+            # If filters removed everything, show guidance but keep UI alive
             if results.empty:
-                st.warning("All candidates were filtered out. Try unchecking filters or clearing Quick filter.")
+                st.warning("All candidates were filtered out. Uncheck filters or clear quick filter text.")
+                base_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+                st.dataframe(base_df[base_cols].head(20))
             else:
                 st.write(f"Filtered down to {len(results)} row(s).")
                 view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
