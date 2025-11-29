@@ -517,3 +517,4 @@ st.download_button(
     data=load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
     file_name="SourceMappings.csv",
     mime="text/csv"
+)
