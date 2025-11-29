@@ -4,7 +4,7 @@ import pandas as pd
 from rapidfuzz import fuzz
 
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-22 8:10 PM ET — External→CADS mapping v1.9 (auto-save default ON)")
+st.info("Build: 2025-11-22 8:25 PM ET — External→CADS mapping v2.0 (row-id selection, robust save)")
 
 APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")
 CADS_FILE    = "CADS.csv"
@@ -200,7 +200,7 @@ if st.button("Search / Resolve"):
                 "apply_trim_tokens": (scope_val == "ymmt") and bool(src_trim),
                 "apply_quick_filter": False,
                 "quick_filter_text": "",
-                "auto_save": True,  # default ON
+                "auto_save": True,
             }.items():
                 if k not in st.session_state:
                     st.session_state[k] = v
@@ -239,28 +239,38 @@ if st.button("Search / Resolve"):
             else:
                 st.write(f"Filtered down to {len(results)} row(s). Tick exactly one row to select.")
                 view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
-                display_df = results[view_cols].copy()
+
+                # Keep a stable row id to map back reliably
+                display_df = results.reset_index().rename(columns={"index": "__row_id__"})
+                display_df = display_df[["__row_id__"] + view_cols].copy()
                 display_df.insert(0, "Select", pd.Series([False]*len(display_df), index=display_df.index))
+
                 edited = st.data_editor(
                     display_df,
                     use_container_width=True,
                     num_rows="fixed",
-                    disabled=view_cols,
-                    hide_index=False,
+                    disabled=view_cols + ["__row_id__"],
+                    hide_index=True,
                     key="cads_editor"
                 )
-                selected_idxs = edited.index[edited["Select"] == True].tolist()
 
-                if len(selected_idxs) == 0:
+                # Robust selection detection (handles None/strings)
+                sel_mask = edited["Select"].fillna(False)
+                if sel_mask.dtype != bool:
+                    sel_mask = sel_mask.astype(str).str.lower().isin(["true", "1", "yes"])  # normalize
+                selected_rows = edited[sel_mask]
+
+                if selected_rows.empty:
                     st.info("Tick a checkbox in the leftmost column to select a row.")
-                elif len(selected_idxs) > 1:
+                elif len(selected_rows) > 1:
                     st.warning("Please select exactly one row.")
                 else:
-                    sel_idx = selected_idxs[0]
-                    cad_row = results.loc[sel_idx]
+                    sel_row = selected_rows.iloc[0]
+                    original_idx = int(sel_row["__row_id__"])  # maps back to results
+                    cad_row = results.loc[original_idx]
                     code = st.text_input("Model Code (override optional)", value=cad_row["ad_mfgcode"], key="override_code")
 
-                    st.session_state["auto_save"] = st.checkbox("Save immediately when a single row is selected", value=st.session_state["auto_save"])  # default True
+                    st.session_state["auto_save"] = st.checkbox("Save immediately when a single row is selected", value=True)
 
                     def _save_mapping(selected_code: str):
                         src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)
@@ -282,14 +292,19 @@ if st.button("Search / Resolve"):
                         }
                         src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
                         save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
+
                         st.success("Saved ✅ This external input will now resolve to the mapped CADS code.")
-                        st.write({"external": f"{src_year} {src_make} {src_model} {src_trim} (scope: {scope_val})", "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}", "model_code": selected_code})
+                        st.write({
+                            "external": f"{src_year} {src_make} {src_model} {src_trim} (scope: {scope_val})",
+                            "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}",
+                            "model_code": selected_code,
+                            "srckey": srckey
+                        })
                         try:
                             st.rerun()
                         except Exception:
                             st.experimental_rerun()
 
-                    # Auto-save when selected and toggle is ON
                     if st.session_state["auto_save"]:
                         _save_mapping(cad_row["ad_mfgcode"])
                     else:
