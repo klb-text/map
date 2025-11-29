@@ -8,7 +8,7 @@ from rapidfuzz import fuzz
 # Page config FIRST
 # -----------------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-22 6:55 PM ET — External→CADS mapping v1.5 (robust filters & selector)")
+st.info("Build: 2025-11-22 7:10 PM ET — External→CADS mapping v1.6 (synonym-aware keys, no cache on saves)")
 
 # -----------------------------------
 # POC CONFIG (no secrets needed for now)
@@ -27,7 +27,7 @@ def norm(s: str) -> str:
     return " ".join(s.split())
 
 def normalize_key(year, make, model, trim) -> str:
-    """Normalized composite key (Y|Make|Model|Trim)."""
+    """Normalized composite key (Y|Make|Model|Trim) — used for CADS-side keys."""
     return "|".join([norm(year), norm(make), norm(model), norm(trim)])
 
 # External trim synonyms: adjust/extend as your source vocabulary evolves
@@ -36,6 +36,7 @@ SYNONYMS = {
     "short wheelbase": "",
     "lwb": "7 seat",          # map LWB to CADS "7 Seat"
     "long wheelbase": "7 seat",
+    "7-seater": "7 seat",
 }
 def normalize_external_trim(t: str) -> str:
     s = norm(t)
@@ -44,8 +45,15 @@ def normalize_external_trim(t: str) -> str:
             s = s.replace(k, v).strip()
     return " ".join(s.split())
 
+def normalize_source_key(year, make, model, trim) -> str:
+    """
+    Build a key for EXTERNAL input that also collapses wheelbase synonyms:
+    SWB → '' (standard); LWB/Long Wheelbase/7-Seater → '7 seat'.
+    """
+    return "|".join([norm(year), norm(make), norm(model), norm(normalize_external_trim(trim))])
+
 # -----------------------------------
-# Case-insensitive CSV loaders (NO usecols during read)
+# Case-insensitive CSV loaders
 # -----------------------------------
 @st.cache_data
 def load_cads(path: str) -> pd.DataFrame:
@@ -64,11 +72,10 @@ def load_cads(path: str) -> pd.DataFrame:
         raise ValueError(f"{path} missing columns: {sorted(missing)}")
     return df[["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]]
 
-@st.cache_data
 def load_source_mappings(path: str) -> pd.DataFrame:
     """
-    Loads SourceMappings (external→CADS crosswalk).
-    If missing, returns an empty DF with correct headers.
+    Loads SourceMappings (external→CADS crosswalk) FRESH every time
+    (uncached so new saves are picked up immediately).
     """
     cols = [
         "src_year","src_make","src_model","src_trim",
@@ -144,7 +151,7 @@ def parse_vehicle(vehicle_text: str, cads_df: pd.DataFrame):
 
     model_l = ""
     for mdl in models_l:
-        if rest.startswith(mdl + " ") or rest == mdl:
+        if rest.startswith(mdl + " ") or seq == mdl or rest == mdl:
             model_l = mdl; break
     if model_l:
         trim_l = rest[len(model_l):].strip()
@@ -162,7 +169,7 @@ def parse_vehicle(vehicle_text: str, cads_df: pd.DataFrame):
 # -----------------------------------
 params = st.experimental_get_query_params()
 if params.get("api_token", [""])[0] == API_TOKEN:
-    # Load CADS + SourceMappings
+    # Load CADS + SourceMappings (fresh mappings)
     try:
         cads_df = load_cads(CADS_FILE)
     except Exception as e:
@@ -177,10 +184,12 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         sMo = params.get("src_model", [""])[0]
         sT  = params.get("src_trim",  [""])[0]
 
-        # 1) Try saved source mapping first
-        src_key = normalize_key(sy, sm, sMo, sT)
-        src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
-        hit = src_maps_df[src_maps_df["__key__"] == src_key]
+        # 1) Try saved source mapping first (synonym-aware)
+        src_key = normalize_source_key(sy, sm, sMo, sT)
+        src_maps_df["__srckey__"] = src_maps_df.apply(
+            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+        )
+        hit = src_maps_df[src_maps_df["__srckey__"] == src_key]
         if not hit.empty:
             st.json({"model_code": hit.iloc[0]["model_code"], "source": "source_mapping"}); st.stop()
 
@@ -198,7 +207,7 @@ if params.get("api_token", [""])[0] == API_TOKEN:
             st.json({"model_code": fuzzy.iloc[0]["ad_mfgcode"], "source": "cads_fuzzy"}); st.stop()
         st.json({"model_code": "", "source": "none"}); st.stop()
 
-    # Save a source mapping programmatically
+    # Save a source mapping programmatically (synonym-aware upsert)
     if "save_source_mapping" in params:
         sy  = params.get("src_year",  [""])[0]
         sm  = params.get("src_make",  [""])[0]
@@ -213,11 +222,13 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         if not all([sy, sm, sMo, sT, cy, cm, cMo, cT, code]):
             st.json({"ok": False, "error": "missing params"}); st.stop()
 
-        src_maps_df = load_source_mappings(SRC_MAP_FILE)  # uncached write path
-        src_key = normalize_key(sy, sm, sMo, sT)
+        src_maps_df = load_source_mappings(SRC_MAP_FILE)  # fresh
+        src_key = normalize_source_key(sy, sm, sMo, sT)
         if not src_maps_df.empty:
-            src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
-            src_maps_df = src_maps_df[src_maps_df["__key__"] != src_key].drop(columns=["__key__"], errors="ignore")
+            src_maps_df["__srckey__"] = src_maps_df.apply(
+                lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+            )
+            src_maps_df = src_maps_df[src_maps_df["__srckey__"] != src_key].drop(columns=["__srckey__"], errors="ignore")
 
         new_row = {
             "src_year": sy, "src_make": sm, "src_model": sMo, "src_trim": sT,
@@ -241,7 +252,7 @@ if pw != APP_PASSWORD:
     st.stop()
 st.success("Authenticated ✅")
 
-# Load CADS + SourceMappings (UI)
+# Load CADS + SourceMappings (UI — mappings fresh)
 try:
     cads_df = load_cads(CADS_FILE)
 except Exception as e:
@@ -264,10 +275,13 @@ with c4: src_trim  = st.text_input("External Trim",  ptrim)
 threshold = st.slider("Fuzzy threshold (CADS fallback)", 60, 95, 80)
 
 if st.button("Search / Resolve"):
-    # 1) Check SourceMappings first (instant recall)
-    src_key = normalize_key(src_year, src_make, src_model, src_trim)
-    src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
-    hit = src_maps_df[src_maps_df["__key__"] == src_key]
+    # 1) Check SourceMappings first (instant recall — synonym-aware)
+    src_key = normalize_source_key(src_year, src_make, src_model, src_trim)
+    src_maps_df = load_source_mappings(SRC_MAP_FILE)  # ensure fresh
+    src_maps_df["__srckey__"] = src_maps_df.apply(
+        lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+    )
+    hit = src_maps_df[src_maps_df["__srckey__"] == src_key]
     if not hit.empty:
         r = hit.iloc[0]
         st.success("Found saved Source Mapping ✅")
@@ -302,6 +316,8 @@ if st.button("Search / Resolve"):
                 "apply_trim_tokens": bool(src_trim),
                 "apply_quick_filter": False,
                 "quick_filter_text": "",
+                "auto_save": False,
+                "prev_sel_idx": None,
             }.items():
                 if k not in st.session_state:
                     st.session_state[k] = v
@@ -310,10 +326,12 @@ if st.button("Search / Resolve"):
             rcol1, rcol2 = st.columns([1, 3])
             with rcol1:
                 if st.button("♻️ Reset filters"):
-                    st.session_state["only_model_eq"] = bool(src_model)
+                    st.session_state["only_model_eq"]     = bool(src_model)
                     st.session_state["apply_trim_tokens"] = bool(src_trim)
                     st.session_state["apply_quick_filter"] = False
                     st.session_state["quick_filter_text"] = ""
+                    st.session_state["prev_sel_idx"] = None
+                    # No early return; we rebuild results below
 
             # --------------------------
             # NARROWING FILTERS
@@ -330,7 +348,7 @@ if st.button("Search / Resolve"):
                 results = results[results["ad_model"].apply(norm) == norm(src_model)]
 
             # 2) Filter by external trim tokens (e.g., "P360 SE")
-            ext_tokens = [t for t in norm(src_trim).split() if t not in {"swb", "short", "wheelbase", "lwb", "long", "seat"}]
+            ext_tokens = [t for t in norm(src_trim).split() if t not in {"swb", "short", "wheelbase", "lwb", "long", "seat", "7-seater"}]
             with colB:
                 st.session_state["apply_trim_tokens"] = st.checkbox(
                     "Filter by external trim tokens",
@@ -349,7 +367,6 @@ if st.button("Search / Resolve"):
                     value=st.session_state["quick_filter_text"],
                     placeholder="type any text and tick 'Apply quick filter'"
                 )
-
             if st.session_state["apply_quick_filter"]:
                 q = norm(st.session_state["quick_filter_text"])
                 if q:
@@ -376,45 +393,68 @@ if st.button("Search / Resolve"):
                 # ERGONOMIC SELECTORS (robust)
                 # --------------------------
                 # Default selection is first result, so the selector always shows
-                sel_idx = results.index.tolist()[0]
+                sel_idx_default = results.index.tolist()[0]
 
-                # 1) Pick by model code (only if multiple candidates & codes present)
+                # Optional: quick pick by model code
                 codes = results["ad_mfgcode"].dropna().unique().tolist()
                 if len(results) > 1 and len(codes) > 0:
-                    sel_code = st.selectbox("Pick by model code (optional)", [""] + codes, index=0)
+                    sel_code = st.selectbox("Pick by model code (optional)", [""] + codes, index=0, key="sel_code_key")
                     if sel_code:
-                        # Prefer the first row with that code
                         ix = results.index[results["ad_mfgcode"] == sel_code]
                         if len(ix) > 0:
-                            sel_idx = ix[0]
+                            sel_idx_default = ix[0]
 
-                # 2) Or pick by detailed row descriptor (always rendered)
+                # Always-rendered descriptor selectbox
                 options = results.index.tolist()
                 def fmt(i):
                     r = results.loc[i]
                     return f"{r['ad_model']} • {r['ad_trim']} • {r['ad_mfgcode']} ({r['ad_year']} {r['ad_make']})"
+                default_pos = options.index(sel_idx_default) if sel_idx_default in options else 0
 
-                # Determine the default index in the selectbox
-                default_pos = 0
-                if sel_idx in options:
-                    default_pos = options.index(sel_idx)
-
-                sel_idx = st.selectbox("Pick CADS row", options, format_func=fmt, index=default_pos)
+                sel_idx = st.selectbox("Pick CADS row", options, format_func=fmt, index=default_pos, key="sel_idx_key")
 
                 # Allow override of code (optional)
                 cad_row = results.loc[sel_idx]
-                code = st.text_input("Model Code (override optional)", value=cad_row["ad_mfgcode"])
+                code = st.text_input("Model Code (override optional)", value=cad_row["ad_mfgcode"], key="override_code")
 
-                if st.button("💾 Save Source → CADS Mapping"):
-                    # Upsert by normalized SOURCE key (external Y/M/M/T)
-                    src_maps_df = load_source_mappings(SRC_MAP_FILE)  # uncached write path
-                    src_key = normalize_key(src_year, src_make, src_model, src_trim)
-                    if not src_maps_df.empty:
-                        src_maps_df["__key__"] = src_maps_df.apply(
-                            lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
-                            axis=1
+                # Save-on-selection convenience
+                st.session_state["auto_save"] = st.checkbox("Save on selection (no extra click)", value=st.session_state["auto_save"])
+                if st.session_state["auto_save"] and st.session_state.get("prev_sel_idx") != sel_idx:
+                    # Auto-save with the row's current code
+                    src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)
+                    src_key_auto = normalize_source_key(src_year, src_make, src_model, src_trim)
+                    if not src_maps_df_fresh.empty:
+                        src_maps_df_fresh["__srckey__"] = src_maps_df_fresh.apply(
+                            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
                         )
-                        src_maps_df = src_maps_df[src_maps_df["__key__"] != src_key].drop(columns=["__key__"], errors="ignore")
+                        src_maps_df_fresh = src_maps_df_fresh[src_maps_df_fresh["__srckey__"] != src_key_auto] \
+                            .drop(columns=["__srckey__"], errors="ignore")
+                    new_row = {
+                        "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
+                        "cad_year": cad_row["ad_year"], "cad_make": cad_row["ad_make"],
+                        "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
+                        "model_code": cad_row["ad_mfgcode"], "source": "ui-auto"
+                    }
+                    src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
+                    save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
+                    st.session_state["prev_sel_idx"] = sel_idx
+                    st.success("Saved on selection ✅")
+                    # Re-resolve immediately so the source-mapping path takes effect
+                    try:
+                        st.rerun()
+                    except Exception:
+                        st.experimental_rerun()
+
+                # Manual save
+                if st.button("💾 Save Source → CADS Mapping"):
+                    src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)  # fresh
+                    src_key_save = normalize_source_key(src_year, src_make, src_model, src_trim)
+                    if not src_maps_df_fresh.empty:
+                        src_maps_df_fresh["__srckey__"] = src_maps_df_fresh.apply(
+                            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+                        )
+                        src_maps_df_fresh = src_maps_df_fresh[src_maps_df_fresh["__srckey__"] != src_key_save] \
+                            .drop(columns=["__srckey__"], errors="ignore")
 
                     new_row = {
                         "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
@@ -422,8 +462,8 @@ if st.button("Search / Resolve"):
                         "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
                         "model_code": code, "source": "ui"
                     }
-                    src_maps_df = pd.concat([src_maps_df, pd.DataFrame([new_row])], ignore_index=True)
-                    save_source_mappings(src_maps_df, SRC_MAP_FILE)
+                    src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
+                    save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
 
                     st.success("Saved ✅ This external Y/M/M/T will now resolve to the mapped CADS code.")
                     st.write({
@@ -431,6 +471,11 @@ if st.button("Search / Resolve"):
                         "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}",
                         "model_code": code
                     })
+                    # Re-resolve immediately so the source-mapping path takes effect
+                    try:
+                        st.rerun()
+                    except Exception:
+                        st.experimental_rerun()
 
 # -----------------------------------
 # Download current source mappings (persist manually to GitHub)
