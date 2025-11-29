@@ -5,10 +5,10 @@ import pandas as pd
 from rapidfuzz import fuzz
 
 # -----------------------------------
-# Page config FIRST (recommended by Streamlit)
+# Page config FIRST
 # -----------------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-22 6:15 PM ET — External→CADS mapping v1.2 (case-insensitive loader, no usecols)")
+st.info("Build: 2025-11-22 6:40 PM ET — External→CADS mapping v1.4 (robust selector)")
 
 # -----------------------------------
 # POC CONFIG (no secrets needed for now)
@@ -16,7 +16,7 @@ st.info("Build: 2025-11-22 6:15 PM ET — External→CADS mapping v1.2 (case-ins
 APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")   # password gate
 CADS_FILE    = "CADS.csv"                                 # must exist in repo root
 SRC_MAP_FILE = "SourceMappings.csv"                       # external→CADS crosswalk
-API_TOKEN    = os.getenv("API_TOKEN", "mozenda-token")    # simple token for API mode
+API_TOKEN    = os.getenv("API_TOKEN", "mozenda-token")    # token for API mode
 
 # -----------------------------------
 # Helpers
@@ -251,7 +251,7 @@ except Exception as e:
 src_maps_df = load_source_mappings(SRC_MAP_FILE)
 
 st.subheader("External input")
-vehicle_text = st.text_input("External Vehicle (e.g., '2025 Land Rover Range Rover P400 SE SWB')")
+vehicle_text = st.text_input("External Vehicle (e.g., '2025 Land Rover Range Rover Sport P360 SE')")
 
 py, pmake, pmodel, ptrim = parse_vehicle(vehicle_text, cads_df)
 
@@ -288,26 +288,90 @@ if st.button("Search / Resolve"):
         if results.empty:
             st.error("No CADS candidates found.")
         else:
-            st.write(f"Found {len(results)} CADS candidate(s). Select the correct one and Save Mapping.")
-            view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
-            st.dataframe(results[view_cols], use_container_width=True)
+            st.write(f"Found {len(results)} CADS candidate(s). Use the filters below to narrow, then pick the exact row.")
 
-            # pick exact CADS row to link to this external key
-            options = results.index.tolist()
-            def fmt(i):
-                row = results.loc[i]
-                return f"{row['ad_year']} / {row['ad_make']} / {row['ad_model']} / {row['ad_trim']} ({row['ad_mfgcode']})"
-            sel_idx = st.selectbox("Pick CADS row", options, format_func=fmt)
+            # --------------------------
+            # NARROWING FILTERS
+            # --------------------------
+            colA, colB, colC = st.columns([1, 1, 2])
 
-            if sel_idx is not None:
+            # Only show rows where CADS Model == external Model (e.g., 'Range Rover Sport')
+            with colA:
+                only_model_eq = st.checkbox("Model must equal external model", value=bool(src_model))
+            if only_model_eq and src_model:
+                results = results[results["ad_model"].apply(norm) == norm(src_model)]
+
+            # Filter by external trim tokens (e.g., "P360 SE")
+            ext_tokens = [t for t in norm(src_trim).split() if t not in {"swb", "short", "wheelbase", "lwb", "long", "seat"}]
+            with colB:
+                apply_trim_tokens = st.checkbox("Filter by external trim tokens", value=bool(ext_tokens))
+            if apply_trim_tokens and ext_tokens:
+                results = results[results["ad_trim"].apply(lambda s: all(tok in norm(s) for tok in ext_tokens))]
+
+            # Free-form quick filter (across model/trim/code)
+            with colC:
+                quick = st.text_input("Quick filter (model/trim/code)", value=" ".join(ext_tokens))
+            if quick:
+                q = norm(quick)
+                results = results[
+                    results.apply(
+                        lambda r: q in norm(r["ad_model"])
+                               or q in norm(r["ad_trim"])
+                               or q in norm(r["ad_mfgcode"]),
+                        axis=1
+                    )
+                ]
+
+            # If filters removed everything, let the user relax them
+            if results.empty:
+                st.warning("All candidates were filtered out. Try unchecking filters or clearing Quick filter.")
+            else:
+                st.write(f"Filtered down to {len(results)} row(s).")
+                view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+                st.dataframe(results[view_cols], use_container_width=True)
+
+                # --------------------------
+                # ERGONOMIC SELECTORS (robust)
+                # --------------------------
+                # Default selection is first result, so the selector always shows
+                sel_idx = results.index.tolist()[0]
+
+                # 1) Pick by model code (only if multiple candidates & codes present)
+                codes = results["ad_mfgcode"].dropna().unique().tolist()
+                if len(results) > 1 and len(codes) > 0:
+                    sel_code = st.selectbox("Pick by model code (optional)", [""] + codes, index=0)
+                    if sel_code:
+                        # Prefer the first row with that code
+                        ix = results.index[results["ad_mfgcode"] == sel_code]
+                        if len(ix) > 0:
+                            sel_idx = ix[0]
+
+                # 2) Or pick by detailed row descriptor (always rendered)
+                options = results.index.tolist()
+                def fmt(i):
+                    r = results.loc[i]
+                    return f"{r['ad_model']} • {r['ad_trim']} • {r['ad_mfgcode']} ({r['ad_year']} {r['ad_make']})"
+
+                # Determine the default index in the selectbox
+                default_pos = 0
+                if sel_idx in options:
+                    default_pos = options.index(sel_idx)
+
+                sel_idx = st.selectbox("Pick CADS row", options, format_func=fmt, index=default_pos)
+
+                # Allow override of code (optional)
                 cad_row = results.loc[sel_idx]
                 code = st.text_input("Model Code (override optional)", value=cad_row["ad_mfgcode"])
 
                 if st.button("💾 Save Source → CADS Mapping"):
-                    # Upsert by normalized source key
+                    # Upsert by normalized SOURCE key (external Y/M/M/T)
                     src_maps_df = load_source_mappings(SRC_MAP_FILE)  # uncached write path
+                    src_key = normalize_key(src_year, src_make, src_model, src_trim)
                     if not src_maps_df.empty:
-                        src_maps_df["__key__"] = src_maps_df.apply(lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
+                        src_maps_df["__key__"] = src_maps_df.apply(
+                            lambda r: normalize_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
+                            axis=1
+                        )
                         src_maps_df = src_maps_df[src_maps_df["__key__"] != src_key].drop(columns=["__key__"], errors="ignore")
 
                     new_row = {
@@ -332,8 +396,8 @@ if st.button("Search / Resolve"):
 st.divider()
 st.subheader("Source Mappings (external → CADS)")
 st.download_button(
-    "Download SourceMappings.csv",
-    load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
-    "SourceMappings.csv",
-    "text/csv"
+    label="Download SourceMappings.csv",
+    data=load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
+    file_name="SourceMappings.csv",
+    mime="text/csv"
 )
