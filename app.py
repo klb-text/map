@@ -8,10 +8,10 @@ from rapidfuzz import fuzz
 # Page config FIRST
 # -----------------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-22 7:10 PM ET — External→CADS mapping v1.6 (synonym-aware keys, no cache on saves)")
+st.info("Build: 2025-11-22 7:35 PM ET — External→CADS mapping v1.7 (scope: exact vs. vehicle line)")
 
 # -----------------------------------
-# POC CONFIG (no secrets needed for now)
+# POC CONFIG
 # -----------------------------------
 APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")   # password gate
 CADS_FILE    = "CADS.csv"                                 # must exist in repo root
@@ -27,7 +27,7 @@ def norm(s: str) -> str:
     return " ".join(s.split())
 
 def normalize_key(year, make, model, trim) -> str:
-    """Normalized composite key (Y|Make|Model|Trim) — used for CADS-side keys."""
+    """Normalized composite key (Y|Make|Model|Trim) — CADS-side keys."""
     return "|".join([norm(year), norm(make), norm(model), norm(trim)])
 
 # External trim synonyms: adjust/extend as your source vocabulary evolves
@@ -45,12 +45,13 @@ def normalize_external_trim(t: str) -> str:
             s = s.replace(k, v).strip()
     return " ".join(s.split())
 
-def normalize_source_key(year, make, model, trim) -> str:
-    """
-    Build a key for EXTERNAL input that also collapses wheelbase synonyms:
-    SWB → '' (standard); LWB/Long Wheelbase/7-Seater → '7 seat'.
-    """
+def normalize_source_key_ymmt(year, make, model, trim) -> str:
+    """Synonym-aware EXTERNAL key: Y|Make|Model|Trim (with trim normalization)."""
     return "|".join([norm(year), norm(make), norm(model), norm(normalize_external_trim(trim))])
+
+def normalize_source_key_ymm(year, make, model) -> str:
+    """Vehicle-line EXTERNAL key: Y|Make|Model (ignores trim)."""
+    return "|".join([norm(year), norm(make), norm(model)])
 
 # -----------------------------------
 # Case-insensitive CSV loaders
@@ -78,6 +79,7 @@ def load_source_mappings(path: str) -> pd.DataFrame:
     (uncached so new saves are picked up immediately).
     """
     cols = [
+        "scope",  # 'ymmt' (exact) or 'ymm' (vehicle line)
         "src_year","src_make","src_model","src_trim",
         "cad_year","cad_make","cad_model","cad_trim",
         "model_code","source"
@@ -88,7 +90,8 @@ def load_source_mappings(path: str) -> pd.DataFrame:
     df.columns = [c.strip().lower() for c in df.columns]
     for c in cols:
         if c not in df.columns:
-            df[c] = ""
+            # default scope is 'ymmt' if absent
+            df[c] = "" if c != "scope" else "ymmt"
     return df[cols]
 
 def save_source_mappings(df: pd.DataFrame, path: str):
@@ -184,14 +187,27 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         sMo = params.get("src_model", [""])[0]
         sT  = params.get("src_trim",  [""])[0]
 
-        # 1) Try saved source mapping first (synonym-aware)
-        src_key = normalize_source_key(sy, sm, sMo, sT)
-        src_maps_df["__srckey__"] = src_maps_df.apply(
-            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+        # Scope param: 'ymmt' (exact) or 'ymm' (vehicle line), default to exact
+        scope = params.get("scope", ["ymmt"])[0].lower()
+
+        # 1) Try saved source mapping first (synonym-aware, both scopes)
+        # exact key
+        srckey_ymmt = normalize_source_key_ymmt(sy, sm, sMo, sT)
+        src_maps_df["__srckey_ymmt__"] = src_maps_df.apply(
+            lambda r: normalize_source_key_ymmt(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
         )
-        hit = src_maps_df[src_maps_df["__srckey__"] == src_key]
+        hit_exact = src_maps_df[(src_maps_df["scope"].str.lower() == "ymmt") & (src_maps_df["__srckey_ymmt__"] == srckey_ymmt)]
+
+        # line-level key
+        srckey_ymm = normalize_source_key_ymm(sy, sm, sMo)
+        src_maps_df["__srckey_ymm__"] = src_maps_df.apply(
+            lambda r: normalize_source_key_ymm(r["src_year"], r["src_make"], r["src_model"]), axis=1
+        )
+        hit_line = src_maps_df[(src_maps_df["scope"].str.lower() == "ymm") & (src_maps_df["__srckey_ymm__"] == srckey_ymm)]
+
+        hit = hit_exact if not hit_exact.empty else hit_line
         if not hit.empty:
-            st.json({"model_code": hit.iloc[0]["model_code"], "source": "source_mapping"}); st.stop()
+            st.json({"model_code": hit.iloc[0]["model_code"], "source": "source_mapping", "scope": hit.iloc[0]["scope"]}); st.stop()
 
         # 2) CADS fallback: normalize external trim synonyms; exact → fuzzy
         sT_norm = normalize_external_trim(sT)
@@ -199,15 +215,16 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         if sy:   exact = exact[exact["ad_year"].apply(norm)  == norm(sy)]
         if sm:   exact = exact[exact["ad_make"].apply(norm)  == norm(sm)]
         if sMo:  exact = exact[exact["ad_model"].apply(norm) == norm(sMo)]
-        if sT_norm: exact = exact[exact["ad_trim"].apply(norm) == norm(sT_norm)]
+        if sT_norm and scope == "ymmt":
+            exact = exact[exact["ad_trim"].apply(norm) == norm(sT_norm)]
         if not exact.empty:
             st.json({"model_code": exact.iloc[0]["ad_mfgcode"], "source": "cads_exact"}); st.stop()
-        fuzzy = fuzzy_filter_cads(cads_df, sy, sm, sMo, sT_norm)
+        fuzzy = fuzzy_filter_cads(cads_df, sy, sm, sMo, sT_norm if scope == "ymmt" else "", threshold=80)
         if not fuzzy.empty:
             st.json({"model_code": fuzzy.iloc[0]["ad_mfgcode"], "source": "cads_fuzzy"}); st.stop()
         st.json({"model_code": "", "source": "none"}); st.stop()
 
-    # Save a source mapping programmatically (synonym-aware upsert)
+    # Save a source mapping programmatically (synonym-aware upsert, scoped)
     if "save_source_mapping" in params:
         sy  = params.get("src_year",  [""])[0]
         sm  = params.get("src_make",  [""])[0]
@@ -218,19 +235,29 @@ if params.get("api_token", [""])[0] == API_TOKEN:
         cMo = params.get("cad_model", [""])[0]
         cT  = params.get("cad_trim",  [""])[0]
         code= params.get("code",      [""])[0]
+        scope = params.get("scope",   ["ymmt"])[0].lower()
 
-        if not all([sy, sm, sMo, sT, cy, cm, cMo, cT, code]):
+        if not all([sy, sm, sMo, cy, cm, cMo, cT, code]) or (scope == "ymmt" and not sT):
             st.json({"ok": False, "error": "missing params"}); st.stop()
 
         src_maps_df = load_source_mappings(SRC_MAP_FILE)  # fresh
-        src_key = normalize_source_key(sy, sm, sMo, sT)
-        if not src_maps_df.empty:
-            src_maps_df["__srckey__"] = src_maps_df.apply(
-                lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+        if scope == "ymmt":
+            srckey = normalize_source_key_ymmt(sy, sm, sMo, sT)
+            src_maps_df["__srckey_ymmt__"] = src_maps_df.apply(
+                lambda r: normalize_source_key_ymmt(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
             )
-            src_maps_df = src_maps_df[src_maps_df["__srckey__"] != src_key].drop(columns=["__srckey__"], errors="ignore")
+            src_maps_df = src_maps_df[~((src_maps_df["scope"].str.lower() == "ymmt") & (src_maps_df["__srckey_ymmt__"] == srckey))] \
+                          .drop(columns=["__srckey_ymmt__"], errors="ignore")
+        else:
+            srckey = normalize_source_key_ymm(sy, sm, sMo)
+            src_maps_df["__srckey_ymm__"] = src_maps_df.apply(
+                lambda r: normalize_source_key_ymm(r["src_year"], r["src_make"], r["src_model"]), axis=1
+            )
+            src_maps_df = src_maps_df[~((src_maps_df["scope"].str.lower() == "ymm") & (src_maps_df["__srckey_ymm__"] == srckey))] \
+                          .drop(columns=["__srckey_ymm__"], errors="ignore")
 
         new_row = {
+            "scope": scope,
             "src_year": sy, "src_make": sm, "src_model": sMo, "src_trim": sT,
             "cad_year": cy, "cad_make": cm, "cad_model": cMo, "cad_trim": cT,
             "model_code": code, "source": "api"
@@ -272,32 +299,48 @@ with c2: src_make  = st.text_input("External Make",  pmake)
 with c3: src_model = st.text_input("External Model", pmodel)
 with c4: src_trim  = st.text_input("External Trim",  ptrim)
 
+# New: mapping scope (exact vs. vehicle line)
+scope = st.radio("Mapping scope", ["Exact (Y+Make+Model+Trim)", "Vehicle line (Y+Make+Model)"], index=0)
+scope_val = "ymmt" if scope.startswith("Exact") else "ymm"
+
 threshold = st.slider("Fuzzy threshold (CADS fallback)", 60, 95, 80)
 
 if st.button("Search / Resolve"):
-    # 1) Check SourceMappings first (instant recall — synonym-aware)
-    src_key = normalize_source_key(src_year, src_make, src_model, src_trim)
+    # 1) Check SourceMappings first (instant recall — synonym-aware, both scopes)
     src_maps_df = load_source_mappings(SRC_MAP_FILE)  # ensure fresh
-    src_maps_df["__srckey__"] = src_maps_df.apply(
-        lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+
+    # exact key
+    srckey_ymmt = normalize_source_key_ymmt(src_year, src_make, src_model, src_trim)
+    src_maps_df["__srckey_ymmt__"] = src_maps_df.apply(
+        lambda r: normalize_source_key_ymmt(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
     )
-    hit = src_maps_df[src_maps_df["__srckey__"] == src_key]
+    hit_exact = src_maps_df[(src_maps_df["scope"].str.lower() == "ymmt") & (src_maps_df["__srckey_ymmt__"] == srckey_ymmt)]
+
+    # line-level key
+    srckey_ymm = normalize_source_key_ymm(src_year, src_make, src_model)
+    src_maps_df["__srckey_ymm__"] = src_maps_df.apply(
+        lambda r: normalize_source_key_ymm(r["src_year"], r["src_make"], r["src_model"]), axis=1
+    )
+    hit_line = src_maps_df[(src_maps_df["scope"].str.lower() == "ymm") & (src_maps_df["__srckey_ymm__"] == srckey_ymm)]
+
+    hit = hit_exact if not hit_exact.empty else hit_line
     if not hit.empty:
         r = hit.iloc[0]
-        st.success("Found saved Source Mapping ✅")
+        st.success(f"Found saved Source Mapping ✅ (scope: {r['scope']})")
         st.write({
             "model_code": r["model_code"],
             "mapped_to": f"{r['cad_year']} {r['cad_make']} {r['cad_model']} {r['cad_trim']}"
         })
     else:
-        # 2) CADS fallback: normalize external trim; exact → fuzzy
+        # 2) CADS fallback: normalize external trim; exact → fuzzy (respect scope)
         sT_norm = normalize_external_trim(src_trim)
         exact = cads_df.copy()
         if src_year:  exact = exact[exact["ad_year"].apply(norm)  == norm(src_year)]
         if src_make:  exact = exact[exact["ad_make"].apply(norm)  == norm(src_make)]
         if src_model: exact = exact[exact["ad_model"].apply(norm) == norm(src_model)]
-        if sT_norm:   exact = exact[exact["ad_trim"].apply(norm)  == norm(sT_norm)]
-        results = exact if not exact.empty else fuzzy_filter_cads(cads_df, src_year, src_make, src_model, sT_norm, threshold)
+        if sT_norm and scope_val == "ymmt":
+            exact = exact[exact["ad_trim"].apply(norm)  == norm(sT_norm)]
+        results = exact if not exact.empty else fuzzy_filter_cads(cads_df, src_year, src_make, src_model, sT_norm if scope_val=="ymmt" else "", threshold)
 
         # Keep an unfiltered baseline for recovery display if filters empty the set
         base_df = results.copy()
@@ -310,10 +353,9 @@ if st.button("Search / Resolve"):
             # --------------------------
             # FILTER WIDGET STATE (session_state)
             # --------------------------
-            # Initialize keys once
             for k, v in {
                 "only_model_eq": bool(src_model),
-                "apply_trim_tokens": bool(src_trim),
+                "apply_trim_tokens": (scope_val == "ymmt") and bool(src_trim),
                 "apply_quick_filter": False,
                 "quick_filter_text": "",
                 "auto_save": False,
@@ -326,19 +368,18 @@ if st.button("Search / Resolve"):
             rcol1, rcol2 = st.columns([1, 3])
             with rcol1:
                 if st.button("♻️ Reset filters"):
-                    st.session_state["only_model_eq"]     = bool(src_model)
-                    st.session_state["apply_trim_tokens"] = bool(src_trim)
+                    st.session_state["only_model_eq"]      = bool(src_model)
+                    st.session_state["apply_trim_tokens"]  = (scope_val == "ymmt") and bool(src_trim)
                     st.session_state["apply_quick_filter"] = False
-                    st.session_state["quick_filter_text"] = ""
-                    st.session_state["prev_sel_idx"] = None
-                    # No early return; we rebuild results below
+                    st.session_state["quick_filter_text"]  = ""
+                    st.session_state["prev_sel_idx"]       = None
 
             # --------------------------
             # NARROWING FILTERS
             # --------------------------
             colA, colB, colC = st.columns([1, 1, 2])
 
-            # 1) Only rows where CADS Model == external Model (e.g., 'Range Rover Sport')
+            # 1) Only rows where CADS Model == external Model
             with colA:
                 st.session_state["only_model_eq"] = st.checkbox(
                     "Model must equal external model",
@@ -347,14 +388,15 @@ if st.button("Search / Resolve"):
             if st.session_state["only_model_eq"] and src_model:
                 results = results[results["ad_model"].apply(norm) == norm(src_model)]
 
-            # 2) Filter by external trim tokens (e.g., "P360 SE")
+            # 2) Filter by external trim tokens (only relevant for exact scope)
             ext_tokens = [t for t in norm(src_trim).split() if t not in {"swb", "short", "wheelbase", "lwb", "long", "seat", "7-seater"}]
             with colB:
                 st.session_state["apply_trim_tokens"] = st.checkbox(
                     "Filter by external trim tokens",
-                    value=st.session_state["apply_trim_tokens"]
+                    value=st.session_state["apply_trim_tokens"],
+                    disabled=(scope_val != "ymmt")
                 )
-            if st.session_state["apply_trim_tokens"] and ext_tokens:
+            if st.session_state["apply_trim_tokens"] and ext_tokens and scope_val == "ymmt":
                 results = results[results["ad_trim"].apply(lambda s: all(tok in norm(s) for tok in ext_tokens))]
 
             # 3) Quick filter (user-controlled and empty by default)
@@ -419,63 +461,51 @@ if st.button("Search / Resolve"):
 
                 # Save-on-selection convenience
                 st.session_state["auto_save"] = st.checkbox("Save on selection (no extra click)", value=st.session_state["auto_save"])
-                if st.session_state["auto_save"] and st.session_state.get("prev_sel_idx") != sel_idx:
-                    # Auto-save with the row's current code
+                def _save_mapping(selected_code):
+                    # Upsert fresh mappings by scope
                     src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)
-                    src_key_auto = normalize_source_key(src_year, src_make, src_model, src_trim)
-                    if not src_maps_df_fresh.empty:
-                        src_maps_df_fresh["__srckey__"] = src_maps_df_fresh.apply(
-                            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
+                    if scope_val == "ymmt":
+                        srckey = normalize_source_key_ymmt(src_year, src_make, src_model, src_trim)
+                        src_maps_df_fresh["__srckey_ymmt__"] = src_maps_df_fresh.apply(
+                            lambda r: normalize_source_key_ymmt(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
                         )
-                        src_maps_df_fresh = src_maps_df_fresh[src_maps_df_fresh["__srckey__"] != src_key_auto] \
-                            .drop(columns=["__srckey__"], errors="ignore")
+                        src_maps_df_fresh = src_maps_df_fresh[~((src_maps_df_fresh["scope"].str.lower()=="ymmt") & (src_maps_df_fresh["__srckey_ymmt__"]==srckey))] \
+                            .drop(columns=["__srckey_ymmt__"], errors="ignore")
+                    else:
+                        srckey = normalize_source_key_ymm(src_year, src_make, src_model)
+                        src_maps_df_fresh["__srckey_ymm__"] = src_maps_df_fresh.apply(
+                            lambda r: normalize_source_key_ymm(r["src_year"], r["src_make"], r["src_model"]), axis=1
+                        )
+                        src_maps_df_fresh = src_maps_df_fresh[~((src_maps_df_fresh["scope"].str.lower()=="ymm") & (src_maps_df_fresh["__srckey_ymm__"]==srckey))] \
+                            .drop(columns=["__srckey_ymm__"], errors="ignore")
+
                     new_row = {
+                        "scope": scope_val,
                         "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
                         "cad_year": cad_row["ad_year"], "cad_make": cad_row["ad_make"],
                         "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
-                        "model_code": cad_row["ad_mfgcode"], "source": "ui-auto"
+                        "model_code": selected_code, "source": "ui-auto" if st.session_state["auto_save"] else "ui"
                     }
                     src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
                     save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
-                    st.session_state["prev_sel_idx"] = sel_idx
-                    st.success("Saved on selection ✅")
-                    # Re-resolve immediately so the source-mapping path takes effect
-                    try:
-                        st.rerun()
-                    except Exception:
-                        st.experimental_rerun()
-
-                # Manual save
-                if st.button("💾 Save Source → CADS Mapping"):
-                    src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)  # fresh
-                    src_key_save = normalize_source_key(src_year, src_make, src_model, src_trim)
-                    if not src_maps_df_fresh.empty:
-                        src_maps_df_fresh["__srckey__"] = src_maps_df_fresh.apply(
-                            lambda r: normalize_source_key(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
-                        )
-                        src_maps_df_fresh = src_maps_df_fresh[src_maps_df_fresh["__srckey__"] != src_key_save] \
-                            .drop(columns=["__srckey__"], errors="ignore")
-
-                    new_row = {
-                        "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
-                        "cad_year": cad_row["ad_year"], "cad_make": cad_row["ad_make"],
-                        "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
-                        "model_code": code, "source": "ui"
-                    }
-                    src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
-                    save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
-
-                    st.success("Saved ✅ This external Y/M/M/T will now resolve to the mapped CADS code.")
+                    st.success("Saved ✅ This external input will now resolve to the mapped CADS code.")
                     st.write({
-                        "external": f"{src_year} {src_make} {src_model} {src_trim}",
+                        "external": f"{src_year} {src_make} {src_model} {src_trim} (scope: {scope_val})",
                         "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}",
-                        "model_code": code
+                        "model_code": selected_code
                     })
                     # Re-resolve immediately so the source-mapping path takes effect
                     try:
                         st.rerun()
                     except Exception:
                         st.experimental_rerun()
+
+                if st.session_state["auto_save"] and st.session_state.get("prev_sel_idx") != sel_idx:
+                    _save_mapping(cad_row["ad_mfgcode"])
+                    st.session_state["prev_sel_idx"] = sel_idx
+
+                if st.button("💾 Save Source → CADS Mapping"):
+                    _save_mapping(code)
 
 # -----------------------------------
 # Download current source mappings (persist manually to GitHub)
@@ -487,4 +517,3 @@ st.download_button(
     data=load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
     file_name="SourceMappings.csv",
     mime="text/csv"
-)
