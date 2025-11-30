@@ -1,8 +1,8 @@
-# External → CADS Vehicle Mapper (POC) — v2.2
+
+# External → CADS Vehicle Mapper (POC) — v2.2.1
 # Build: 2025-11-30 4:41 PM ET
 
 import os
-import re
 import unicodedata
 from datetime import datetime, timezone
 import streamlit as st
@@ -13,7 +13,7 @@ from rapidfuzz import fuzz
 # Config & constants
 # ---------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-30 4:41 PM ET — External→CADS mapping v2.2 (uploads, better fuzzy, manage & delete)")
+st.info("Build: 2025-11-30 4:41 PM ET — External→CADS mapping v2.2.1 (persistent resolve, radio select, saved banner)")
 
 APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")
 APP_USER = os.getenv("APP_USER", "anonymous")
@@ -24,6 +24,10 @@ SRC_MAP_FILE = "SourceMappings.csv"
 SRC_MAP_LOG = "SourceMappings.log.csv"  # optional audit log
 
 REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
+
+# Session keys
+RESOLVE_FLAG = "resolve_triggered"
+LAST_SAVE_KEY = "last_save_info"
 
 # Synonyms / token replacements commonly seen in external trims
 SYNONYMS = {
@@ -38,7 +42,6 @@ SYNONYMS = {
 # Normalization helpers
 # ---------------------------
 def ascii_fold(s: str) -> str:
-    # Remove accents/symbols reliably (e.g., ®, ™ issues)
     if s is None:
         return ""
     s = str(s)
@@ -49,9 +52,7 @@ def ascii_fold(s: str) -> str:
 def norm(s: str) -> str:
     s = ascii_fold(s or "")
     s = s.lower().strip()
-    # unify separators
     s = s.replace("_", " ").replace("-", " ")
-    # collapse whitespace
     s = " ".join(s.split())
     return s
 
@@ -60,8 +61,7 @@ def normalize_external_trim(t: str) -> str:
     for k, v in SYNONYMS.items():
         k_norm = norm(k)
         if k_norm and k_norm in s:
-            repl = norm(v)
-            s = s.replace(k_norm, repl).strip()
+            s = s.replace(k_norm, norm(v)).strip()
     return " ".join(s.split())
 
 def normalize_source_key_ymmt(year, make, model, trim) -> str:
@@ -80,18 +80,13 @@ def _lower_cols(df: pd.DataFrame) -> pd.DataFrame:
 
 @st.cache_data
 def load_table(path_or_buf, file_hint: str = "") -> pd.DataFrame:
-    """
-    Supports CSV and XLSX (openpyxl). If 'file_hint' is provided, uses it to choose parser.
-    """
     try:
         if isinstance(path_or_buf, str):
             ext = (os.path.splitext(path_or_buf)[1] or "").lower()
         else:
-            # Uploaded file-like: rely on hint or try CSV first
             ext = (file_hint or "").lower()
 
         if ext in [".xlsx", "xlsx"]:
-            # Excel reader requires openpyxl
             df = pd.read_excel(path_or_buf, dtype=str, engine="openpyxl")
         else:
             df = pd.read_csv(path_or_buf, dtype=str, keep_default_na=False)
@@ -135,8 +130,7 @@ def append_log_row(row: dict):
         else:
             log_df.to_csv(SRC_MAP_LOG, index=False)
     except Exception:
-        # Non-blocking
-        pass
+        pass  # non-blocking
 
 # ---------------------------
 # Matching logic
@@ -145,22 +139,16 @@ def fuzzy_filter_cads(
     df: pd.DataFrame,
     year: str, make: str, model: str, trim: str,
     threshold: int = 80,
-    weights = (0.35, 0.40, 0.25)  # (make, model, trim)
+    weights = (0.35, 0.40, 0.25)
 ) -> pd.DataFrame:
-    """
-    Weighted fuzzy: partial_ratio for make, model; token_set_ratio for trim.
-    Returns rows with weighted score >= threshold (0-100).
-    """
     filtered = df.copy()
     if year:
         filtered = filtered[filtered["ad_year"].apply(norm) == norm(year)]
 
     candidates = []
     for idx, row in filtered.iterrows():
-        # base scores
         s_make = fuzz.partial_ratio(norm(make), norm(row["ad_make"])) if make else 0
         s_model = fuzz.partial_ratio(norm(model), norm(row["ad_model"])) if model else 0
-        # trim uses token_set to be order-insensitive
         s_trim = fuzz.token_set_ratio(norm(trim), norm(row["ad_trim"])) if trim else 0
 
         w_make, w_model, w_trim = weights
@@ -218,21 +206,24 @@ def parse_vehicle(vehicle_text: str, cads_df: pd.DataFrame):
 # UI — Auth
 # ---------------------------
 st.title("🔒 External → CADS Vehicle Mapper (POC)")
-
 pw = st.text_input("Enter password", type="password")
 if pw != APP_PASSWORD:
     st.stop()
 st.success("Authenticated ✅")
 
+# Show last save banner after rerun
+if LAST_SAVE_KEY in st.session_state:
+    info = st.session_state[LAST_SAVE_KEY]
+    st.success(
+        f"Saved ✅  {info['external']} → {info['mapped_to']}  (code: {info['model_code']}, scope: {info['scope']})"
+    )
+    del st.session_state[LAST_SAVE_KEY]
+
 # ---------------------------
 # UI — CADS source
 # ---------------------------
 st.subheader("CADS source")
-cads_choice = st.radio(
-    "Load CADS from:",
-    ["Local file (CADS.csv)", "Upload file (CSV/XLSX)"],
-    horizontal=True
-)
+cads_choice = st.radio("Load CADS from:", ["Local file (CADS.csv)", "Upload file (CSV/XLSX)"], horizontal=True)
 cads_df = None
 
 if cads_choice.startswith("Local"):
@@ -247,7 +238,6 @@ else:
         st.info("Upload a CADS file to continue.")
         st.stop()
     try:
-        # infer hint by file name extension
         fname = getattr(up, "name", "")
         hint = (os.path.splitext(fname)[1] or "").lower().replace(".", "")
         cads_df = load_cads(up if hint != "xlsx" else up)
@@ -281,10 +271,15 @@ with col_wmd:
 with col_wt:
     w_trim = st.slider("Weight: Trim", 0.0, 1.0, 0.25)
 
+# Trigger persistent resolve
+if st.button("Search / Resolve", type="primary"):
+    st.session_state[RESOLVE_FLAG] = True
+
 # ---------------------------
-# Search / Resolve
+# Resolve block (persistent)
 # ---------------------------
-if st.button("Search / Resolve"):
+if st.session_state.get(RESOLVE_FLAG, False):
+
     src_maps_df = load_source_mappings(SRC_MAP_FILE)
 
     srckey_ymmt = normalize_source_key_ymmt(src_year, src_make, src_model, src_trim)
@@ -325,32 +320,21 @@ if st.button("Search / Resolve"):
             sT_norm if scope_val == "ymmt" else "",
             threshold=threshold, weights=(w_make, w_model, w_trim)
         )
-        base_df = results.copy()
 
         if results.empty:
             st.error("No CADS candidates found.")
         else:
-            st.write(f"Found {len(results)} CADS candidate(s). Use filters to narrow, then tick a row to save.")
-
-            # defaults
+            st.write(f"Found {len(results)} CADS candidate(s). Choose one below to save mapping.")
+            # Optional quick filters
             defaults = {
                 "only_model_eq": bool(src_model),
                 "apply_trim_tokens": (scope_val == "ymmt") and bool(src_trim),
                 "apply_quick_filter": False,
                 "quick_filter_text": "",
-                "auto_save": True,
             }
             for k, v in defaults.items():
                 if k not in st.session_state:
                     st.session_state[k] = v
-
-            rcol1, rcol2 = st.columns([1, 3])
-            with rcol1:
-                if st.button("♻️ Reset filters"):
-                    st.session_state["only_model_eq"] = bool(src_model)
-                    st.session_state["apply_trim_tokens"] = (scope_val == "ymmt") and bool(src_trim)
-                    st.session_state["apply_quick_filter"] = False
-                    st.session_state["quick_filter_text"] = ""
 
             colA, colB, colC = st.columns([1, 1, 2])
             with colA:
@@ -371,9 +355,7 @@ if st.button("Search / Resolve"):
                     disabled=(scope_val != "ymmt")
                 )
                 if st.session_state["apply_trim_tokens"] and ext_tokens and scope_val == "ymmt":
-                    results = results[results["ad_trim"].apply(
-                        lambda s: all(tok in norm(s) for tok in ext_tokens)
-                    )]
+                    results = results[results["ad_trim"].apply(lambda s: all(tok in norm(s) for tok in ext_tokens))]
 
             with colC:
                 st.session_state["apply_quick_filter"] = st.checkbox(
@@ -394,59 +376,41 @@ if st.button("Search / Resolve"):
 
             if results.empty:
                 st.warning("All candidates were filtered out. Uncheck filters or clear quick filter text.")
+            else:
+                # --- Radio-based selection (robust) ---
+                view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+                display_df = results.reset_index().rename(columns={"index": "__row_id__"})[["__row_id__"] + view_cols].copy()
 
-            st.dataframe(base_df[["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]].head(20))
+                st.dataframe(display_df[view_cols], use_container_width=True, height=240)
 
-            if not results.empty:
-                st.write(f"Filtered down to {len(results)} row(s). Tick exactly one row to select.")
-                view_cols = ["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]
+                labels = [
+                    f"{r['ad_year']} {r['ad_make']} {r['ad_model']} | {r['ad_trim']} | code={r['ad_mfgcode']}"
+                    for _, r in display_df.iterrows()
+                ]
+                idx_to_label = dict(zip(display_df["__row_id__"], labels))
+                label_to_idx = {v: k for k, v in idx_to_label.items()}
 
-                # Keep a stable row id to map back reliably
-                display_df = results.reset_index().rename(columns={"index": "__row_id__"})
-                display_df = display_df[["__row_id__"] + view_cols].copy()
-                display_df.insert(0, "Select", pd.Series([False] * len(display_df), index=display_df.index))
+                selected_label = st.radio("Choose a candidate to map", options=labels, index=0 if labels else None)
+                selected_idx = label_to_idx.get(selected_label, None)
 
-                edited = st.data_editor(
-                    display_df,
-                    use_container_width=True,
-                    num_rows="fixed",
-                    disabled=view_cols + ["__row_id__"],
-                    hide_index=True,
-                    key="cads_editor"
-                )
-
-                # Robust selection detection (handles None/strings)
-                sel_mask = edited["Select"].fillna(False)
-                if sel_mask.dtype != bool:
-                    sel_mask = sel_mask.astype(str).str.lower().isin(["true", "1", "yes"])  # normalize
-
-                selected_rows = edited[sel_mask]
-                if selected_rows.empty:
-                    st.info("Tick a checkbox in the leftmost column to select a row.")
-                elif len(selected_rows) > 1:
-                    st.warning("Please select exactly one row.")
+                if selected_idx is None:
+                    st.info("Select one candidate above.")
                 else:
-                    sel_row = selected_rows.iloc[0]
-                    original_idx = int(sel_row["__row_id__"])  # maps back to results
-                    cad_row = results.loc[original_idx]
-
+                    cad_row = results.loc[selected_idx]
                     code = st.text_input(
                         "Model Code (override optional)",
                         value=str(cad_row["ad_mfgcode"]),
                         key="override_code"
                     )
-                    st.session_state["auto_save"] = st.checkbox(
-                        "Save immediately when a single row is selected",
-                        value=True
-                    )
+                    auto_save = st.checkbox("Save immediately after choosing", value=True)
 
                     def _save_mapping(selected_code: str):
+                        # fresh load to dedupe by srckey/scope
                         src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)
                         if scope_val == "ymmt":
                             srckey = normalize_source_key_ymmt(src_year, src_make, src_model, src_trim)
                             src_maps_df_fresh["__srckey_ymmt__"] = src_maps_df_fresh.apply(
-                                lambda r: normalize_source_key_ymmt(
-                                    r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
+                                lambda r: normalize_source_key_ymmt(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
                                 axis=1
                             )
                             src_maps_df_fresh = src_maps_df_fresh[
@@ -471,35 +435,36 @@ if st.button("Search / Resolve"):
                             "cad_model": cad_row["ad_model"], "cad_trim": cad_row["ad_trim"],
                             "model_code": selected_code, "source": "ui"
                         }
-                        src_maps_df_fresh = pd.concat(
-                            [src_maps_df_fresh, pd.DataFrame([new_row])],
-                            ignore_index=True
-                        )
+                        src_maps_df_fresh = pd.concat([src_maps_df_fresh, pd.DataFrame([new_row])], ignore_index=True)
                         save_source_mappings(src_maps_df_fresh, SRC_MAP_FILE)
 
-                        # append audit log (best-effort)
+                        # audit log (best-effort)
                         append_log_row({
                             **new_row,
                             "saved_by": APP_USER,
                             "saved_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")
                         })
 
-                        st.success("Saved ✅ This external input will now resolve to the mapped CADS code.")
-                        st.write({
+                        # persistent banner after rerun
+                        st.session_state[LAST_SAVE_KEY] = {
                             "external": f"{src_year} {src_make} {src_model} {src_trim} (scope: {scope_val})",
                             "mapped_to": f"{cad_row['ad_year']} {cad_row['ad_make']} {cad_row['ad_model']} {cad_row['ad_trim']}",
                             "model_code": selected_code,
-                            "srckey": srckey
-                        })
+                            "scope": scope_val,
+                        }
+                        try:
+                            st.toast("Saved mapping.", icon="✅")
+                        except Exception:
+                            pass
                         try:
                             st.rerun()
                         except Exception:
                             st.experimental_rerun()
 
-                    if st.session_state["auto_save"]:
+                    if auto_save:
                         _save_mapping(str(cad_row["ad_mfgcode"]))
                     else:
-                        if st.button("💾 Save Source → CADS Mapping"):
+                        if st.button("💾 Save Source → CADS Mapping", type="primary"):
                             _save_mapping(code)
 
 # ---------------------------
@@ -542,7 +507,6 @@ display_cols = [
 if filtered.empty:
     st.info("No mappings yet.")
 else:
-    # add helper columns for deletion
     show_df = filtered.reset_index().rename(columns={"index": "__row_id__"})
     show_df.insert(0, "Delete", pd.Series([False] * len(show_df), index=show_df.index))
 
@@ -555,19 +519,16 @@ else:
         key="maps_editor"
     )
 
-    # Delete workflow
     del_mask = edited_maps["Delete"].fillna(False)
     if del_mask.dtype != bool:
         del_mask = del_mask.astype(str).str.lower().isin(["true", "1", "yes"])
-
     to_delete = edited_maps[del_mask]
+
     if not to_delete.empty:
         dcount = len(to_delete)
         if st.button(f"🗑️ Delete selected ({dcount})"):
-            # Remove by row index from original 'filtered' mapping
             keep_idx = set(filtered.index) - set(to_delete["__row_id__"].astype(int).tolist())
             new_df = filtered.loc[sorted(keep_idx)]
-            # Merge back with rows excluded due filters (preserve others)
             survivors = pd.concat([new_df, maps_df.loc[set(maps_df.index) - set(filtered.index)]], ignore_index=True)
             save_source_mappings(survivors, SRC_MAP_FILE)
             st.success(f"Deleted {dcount} mapping(s).")
@@ -579,7 +540,6 @@ else:
 st.download_button("Download SourceMappings.csv", load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
                    "SourceMappings.csv", "text/csv")
 
-# Optional: download audit log (if exists)
 if os.path.exists(SRC_MAP_LOG):
     log_bytes = open(SRC_MAP_LOG, "rb").read()
     st.download_button("Download SourceMappings.log.csv", log_bytes, "SourceMappings.log.csv", "text/csv")
