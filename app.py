@@ -1,8 +1,10 @@
-# External → CADS Vehicle Mapper (POC) — v2.2.2
+
+# External → CADS Vehicle Mapper (POC) — v2.2.3
 # Build: 2025-11-30 5:25 PM ET
 
 import os
 import unicodedata
+import hashlib
 from datetime import datetime, timezone
 import streamlit as st
 import pandas as pd
@@ -12,7 +14,7 @@ from rapidfuzz import fuzz
 # Config & constants
 # ---------------------------
 st.set_page_config(page_title="External → CADS Vehicle Mapper (POC)", layout="wide")
-st.info("Build: 2025-11-30 5:25 PM ET — v2.2.2 (strict source key, replace-or-append, explicit save)")
+st.info("Build: 2025-11-30 5:25 PM ET — v2.2.3 (strict source key, replace-or-append, explicit save, verify & path display)")
 
 APP_PASSWORD = os.getenv("APP_PASSWORD", "mypassword")
 APP_USER = os.getenv("APP_USER", "anonymous")
@@ -27,6 +29,7 @@ REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
 # Session keys
 RESOLVE_FLAG = "resolve_triggered"
 LAST_SAVE_KEY = "last_save_info"
+EXTERNAL_INPUTS_KEY = "external_inputs_hash"
 
 # Synonyms used ONLY for matching (not for source key)
 SYNONYMS = {
@@ -69,12 +72,18 @@ def source_key_ymmt_strict(year, make, model, trim) -> str:
     STRICT source key for de-dupe:
     - Year/Make/Model: norm()
     - Trim: norm() ONLY (NO synonyms)
-    This avoids collisions like 'P400 SE SWB' → 'p400 se' overwriting 'P400 SE'.
+    Avoids collisions like 'P400 SE SWB' and 'P400 SE' normalizing to same key.
     """
     return "\n".join([norm(year), norm(make), norm(model), norm(trim)])
 
 def source_key_ymm_strict(year, make, model) -> str:
     return "\n".join([norm(year), norm(make), norm(model)])
+
+def inputs_hash(*vals) -> str:
+    m = hashlib.sha256()
+    for v in vals:
+        m.update((str(v) + "|").encode("utf-8"))
+    return m.hexdigest()
 
 # ---------------------------
 # Data IO
@@ -149,16 +158,19 @@ def fuzzy_filter_cads(
     filtered = df.copy()
     if year:
         filtered = filtered[filtered["ad_year"].apply(norm) == norm(year)]
+
     candidates = []
     for idx, row in filtered.iterrows():
         s_make = fuzz.partial_ratio(norm(make), norm(row["ad_make"])) if make else 0
         s_model = fuzz.partial_ratio(norm(model), norm(row["ad_model"])) if model else 0
-        # matching uses synonym-normalized trim
+        # matching uses synonym-normalized trim (passed in as 'trim')
         s_trim = fuzz.token_set_ratio(norm(trim), norm(row["ad_trim"])) if trim else 0
+
         w_make, w_model, w_trim = weights
         score = s_make * w_make + s_model * w_model + s_trim * w_trim
         if score >= threshold:
             candidates.append((idx, score))
+
     candidates.sort(key=lambda x: x[1], reverse=True)
     return filtered.loc[[c[0] for c in candidates]]
 
@@ -171,30 +183,36 @@ def parse_vehicle(vehicle_text: str, cads_df: pd.DataFrame):
     if year:
         tokens = tokens[1:]
     seq = " ".join(tokens).lower()
+
     makes = sorted(pd.Series(cads_df["ad_make"]).dropna().unique().tolist(), key=len, reverse=True)
     models = sorted(pd.Series(cads_df["ad_model"]).dropna().unique().tolist(), key=len, reverse=True)
     makes_l = [" ".join(str(m).lower().split()) for m in makes]
     models_l = [" ".join(str(m).lower().split()) for m in models]
+
     make_l = ""
     for m in makes_l:
         if seq.startswith(m + " ") or seq == m:
-            make_l = m; break
+            make_l = m
+            break
     if make_l:
         rest = seq[len(make_l):].strip()
     else:
         parts = seq.split()
         make_l = parts[0] if parts else ""
         rest = " ".join(parts[1:]) if len(parts) > 1 else ""
+
     model_l = ""
     for mdl in models_l:
         if rest.startswith(mdl + " ") or seq == mdl or rest == mdl:
-            model_l = mdl; break
+            model_l = mdl
+            break
     if model_l:
         trim_l = rest[len(model_l):].strip()
     else:
         rem = rest.split()
         model_l = rem[0] if rem else ""
         trim_l = " ".join(rem[1:]) if len(rem) > 1 else ""
+
     make_human = next((m for m in makes if norm(m) == make_l), make_l)
     model_human = next((m for m in models if norm(m) == model_l), model_l)
     return year, make_human, model_human, trim_l
@@ -222,6 +240,7 @@ if LAST_SAVE_KEY in st.session_state:
 st.subheader("CADS source")
 cads_choice = st.radio("Load CADS from:", ["Local file (CADS.csv)", "Upload file (CSV/XLSX)"], horizontal=True)
 cads_df = None
+
 if cads_choice.startswith("Local"):
     try:
         cads_df = load_cads(CADS_FILE_DEFAULT)
@@ -267,6 +286,13 @@ with col_wmd:
 with col_wt:
     w_trim = st.slider("Weight: Trim", 0.0, 1.0, 0.25)
 
+# Input change detection — clear resolve state when inputs change
+current_hash = inputs_hash(vehicle_text, src_year, src_make, src_model, src_trim, scope_val)
+last_hash = st.session_state.get(EXTERNAL_INPUTS_KEY)
+if last_hash and last_hash != current_hash:
+    st.session_state[RESOLVE_FLAG] = False
+st.session_state[EXTERNAL_INPUTS_KEY] = current_hash
+
 # Trigger persistent resolve
 if st.button("Search / Resolve", type="primary"):
     st.session_state[RESOLVE_FLAG] = True
@@ -278,7 +304,7 @@ if st.session_state.get(RESOLVE_FLAG, False):
 
     src_maps_df = load_source_mappings(SRC_MAP_FILE)
 
-    # Hit existing mapping?
+    # Hit existing mapping under STRICT key?
     strict_srckey_ymmt = source_key_ymmt_strict(src_year, src_make, src_model, src_trim)
     src_maps_df["__srckey_ymmt__strict"] = src_maps_df.apply(
         lambda r: source_key_ymmt_strict(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
@@ -304,7 +330,7 @@ if st.session_state.get(RESOLVE_FLAG, False):
             "mapped_to": f"{r['cad_year']} {r['cad_make']} {r['cad_model']} {r['cad_trim']}"
         })
 
-    # Candidate search
+    # Candidate search (matching may use synonym-normalized trim)
     sT_match = normalize_external_trim_for_match(src_trim)
     exact = cads_df.copy()
     if src_year:  exact = exact[exact["ad_year"].apply(norm) == norm(src_year)]
@@ -393,13 +419,13 @@ if st.session_state.get(RESOLVE_FLAG, False):
             selected_idx = label_to_idx.get(selected_label, None)
 
             # --- Save controls ---
-            # Source key preview & existing count under strict key
+            # Source key preview (STRICT, used for de-dupe)
             srckey_preview = (source_key_ymmt_strict(src_year, src_make, src_model, src_trim)
                               if scope_val == "ymmt"
                               else source_key_ymm_strict(src_year, src_make, src_model))
-            st.caption(f"Source key (strict, used for de-dupe): {srckey_preview}")
+            st.caption(f"Source key (strict): {srckey_preview}")
 
-            # Count existing rows that would match this key+scope
+            # Count existing rows with this key+scope
             existing_count = 0
             if scope_val == "ymmt":
                 existing_count = int(((src_maps_df["scope"].str.lower() == "ymmt") &
@@ -426,7 +452,7 @@ if st.session_state.get(RESOLVE_FLAG, False):
                     # fresh load for write operations
                     src_maps_df_fresh = load_source_mappings(SRC_MAP_FILE)
 
-                    # remove only if 'replace_existing' is ON
+                    # optional replace (otherwise append even if key matches)
                     if scope_val == "ymmt":
                         srckey = source_key_ymmt_strict(src_year, src_make, src_model, src_trim)
                         src_maps_df_fresh["__srckey_ymmt__strict"] = src_maps_df_fresh.apply(
@@ -490,7 +516,7 @@ if st.session_state.get(RESOLVE_FLAG, False):
                         verify_df = verify_df.drop(columns=["__srckey_ymm__strict"], errors="ignore")
 
                     if not saved_ok:
-                        st.error("Save attempted, but verification failed. Check write permissions/path.")
+                        st.error("Save attempted, but verification failed. Check file path/permissions below.")
                         return
 
                     # audit log (best-effort)
@@ -566,6 +592,7 @@ if filtered.empty:
 else:
     show_df = filtered.reset_index().rename(columns={"index": "__row_id__"})
     show_df.insert(0, "Delete", pd.Series([False] * len(show_df), index=show_df.index))
+
     edited_maps = st.data_editor(
         show_df[["Delete", "__row_id__"] + display_cols],
         use_container_width=True,
@@ -574,10 +601,12 @@ else:
         hide_index=True,
         key="maps_editor"
     )
+
     del_mask = edited_maps["Delete"].fillna(False)
     if del_mask.dtype != bool:
         del_mask = del_mask.astype(str).str.lower().isin(["true", "1", "yes"])
     to_delete = edited_maps[del_mask]
+
     if not to_delete.empty:
         dcount = len(to_delete)
         if st.button(f"🗑️ Delete selected ({dcount})"):
@@ -591,9 +620,24 @@ else:
             except Exception:
                 st.experimental_rerun()
 
-st.download_button("Download SourceMappings.csv", load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
-                   "SourceMappings.csv", "text/csv")
+# Working directory & file path/timestamp display
+st.caption(f"Working directory: {os.getcwd()}")
+st.caption(f"SourceMappings.csv path: {os.path.abspath(SRC_MAP_FILE)}")
+if os.path.exists(SRC_MAP_FILE):
+    ts = datetime.fromtimestamp(os.path.getmtime(SRC_MAP_FILE))
+    st.caption(f"SourceMappings.csv last modified: {ts.strftime('%Y-%m-%d %H:%M:%S')}")
+else:
+    st.warning("SourceMappings.csv does not exist yet in this folder.")
 
+st.download_button(
+    "Download SourceMappings.csv",
+    load_source_mappings(SRC_MAP_FILE).to_csv(index=False),
+    "SourceMappings.csv",
+    "text/csv"
+)
+
+# Optional: download audit log (if exists)
 if os.path.exists(SRC_MAP_LOG):
-    log_bytes = open(SRC_MAP_LOG, "rb").read()
+    with open(SRC_MAP_LOG, "rb") as fh:
+        log_bytes = fh.read()
     st.download_button("Download SourceMappings.log.csv", log_bytes, "SourceMappings.log.csv", "text/csv")
