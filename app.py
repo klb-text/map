@@ -14,7 +14,7 @@ st.set_page_config(page_title="Simple Vehicle Mapper", layout="wide")
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CADS_FILE_DEFAULT = "CADS.csv"         # local CADS default name (in working dir)
-DEFAULT_MAPS_FILE = os.path.join(SCRIPT_DIR, "Mappings.csv")  # pin next to script by default
+DEFAULT_MAPS_FILE = os.path.join(SCRIPT_DIR, "Mappings.csv")  # pinned next to script by default
 
 REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
 
@@ -60,7 +60,7 @@ def load_cads(source):
         raise ValueError(f"CADS file missing columns: {sorted(missing)}")
     return df
 
-def ensure_maps_path(path_text: str | None) -> str:
+def ensure_maps_path(path_text=None) -> str:
     """
     Determine the maps file path:
     - If user provided a path, use it (absolute or relative to working dir).
@@ -90,7 +90,7 @@ def read_maps(path: str) -> pd.DataFrame:
     if not os.path.exists(path):
         return pd.DataFrame(columns=cols)
 
-    df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8", on_bad_lines="skip")
+    df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8")
     df.columns = [c.strip().lower() for c in df.columns]
     for c in cols:
         if c not in df.columns:
@@ -242,7 +242,7 @@ def verify_srckey(path: str, src_year, src_make, src_model, src_trim) -> dict:
     if not details["exists"]:
         return details
 
-    df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8", on_bad_lines="skip")
+    df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8")
     df.columns = [c.strip().lower() for c in df.columns]
     details["rows"] = len(df)
 
@@ -414,4 +414,5 @@ else:
 # Footer: paths (helps verify you're writing to the right files)
 st.caption(f"Script directory: {SCRIPT_DIR}")
 st.caption(f"Working directory (cwd): {os.getcwd()}")
-st.caption(f"CADS path: {os.path.abspath(CADS_FILE_DEFAULT) if cads_choice.startswith('Localst.caption(f"CADS path: {os.path.abspath(CADS_FILE_DEFAULT) if cads_choice.startswith('Local') else '(uploaded)'}")
+st.caption(f"CADS path: {os.path.abspath(CADS_FILE_DEFAULT) if cads_choice.startswith('Local') else '(uploaded)'}")
+st
