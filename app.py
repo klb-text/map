@@ -571,7 +571,7 @@ with b3:
                 st.dataframe(results, use_container_width=True)
         except FileNotFoundError as fnf:
             st.error(str(fnf))
-            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_RE            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
+            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
@@ -595,5 +595,5 @@ if st.session_state.mappings:
         })
     st.dataframe(rows, use_container_width=True)
 else:
-    st.info("No mappings yet. Add one above.")
+    st.info("No mappings yet    st.info("No mappings yet. Add one above.")
 
