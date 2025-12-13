@@ -530,7 +530,7 @@ if st.session_state.mappings:
     for k, v in st.session_state.mappings.items():
         rows.append({
             "Key": k,
-            "Year":            "Year": v.get("year", ""),
+            "Year": v.get("year", ""),
             "Make": v.get("make", ""),
             "Model": v.get("model", ""),
             "Trim": v.get("trim", ""),
