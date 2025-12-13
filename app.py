@@ -1,12 +1,14 @@
 
 # app.py
-# AFF Vehicle Mapping – Streamlit + GitHub persistence
+# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search
 # Repo: klb/aff-vehicle-mapping, Branch: main
 
 import base64
 import json
 import time
+import io
 import requests
+import pandas as pd
 import streamlit as st
 
 # ---------------------------------------------------------------------
@@ -29,8 +31,11 @@ GH_OWNER  = gh_cfg.get("owner")
 GH_REPO   = gh_cfg.get("repo")
 GH_BRANCH = gh_cfg.get("branch", "main")
 
-MAPPINGS_PATH  = "data/mappings.json"       # JSON file in repo to store mappings
+# Paths in your repo
+MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings
 AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
+CADS_PATH      = "data/cads.csv"            # change to "data/cads.xlsx" if Excel
+CADS_IS_EXCEL  = False                      # set True if CADS is Excel
 
 # ---------------------------------------------------------------------
 # GitHub helpers (Contents API + refs)
@@ -183,6 +188,99 @@ def append_jsonl_to_github(
         raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
 
 # ---------------------------------------------------------------------
+# CADS loaders (CSV or Excel) + caching
+# ---------------------------------------------------------------------
+@st.cache_data(ttl=600)
+def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
+    """
+    Load a CSV CADS file from GitHub Contents API and return a DataFrame.
+    """
+    params = {"ref": ref} if ref else {}
+    r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
+    if r.status_code == 200:
+        j = r.json()
+        decoded = base64.b64decode(j["content"])
+        df = pd.read_csv(io.BytesIO(decoded))
+        return df
+    elif r.status_code == 404:
+        raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
+    else:
+        raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
+
+@st.cache_data(ttl=600)
+def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
+    """
+    Load an Excel CADS file from GitHub Contents API and return a DataFrame.
+    """
+    params = {"ref": ref} if ref else {}
+    r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
+    if r.status_code == 200:
+        j = r.json()
+        decoded = base64.b64decode(j["content"])
+        df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheet_name, engine="openpyxl")
+        return df
+    elif r.status_code == 404:
+        raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
+    else:
+        raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
+
+def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, vehicle: str) -> pd.DataFrame:
+    """
+    Filter CADS by YMMT first; fallback to Make+Model or Make+Vehicle if YMMT incomplete.
+    Adjust column names here to match your CADS schema.
+    """
+    y  = (year or "").strip()
+    mk = (make or "").strip()
+    md = (model or "").strip()
+    tr = (trim or "").strip()
+    vh = (vehicle or "").strip()
+
+    df2 = df.copy()
+
+    # Normalize caps/spacing (adjust to your column names)
+    for col in ["Year", "Make", "Model", "Trim", "Vehicle"]:
+        if col in df2.columns:
+            df2[col] = df2[col].astype(str).str.strip()
+
+    # Primary: YMMT filter (AND across provided fields)
+    conds = []
+    if y and "Year" in df2.columns:
+        conds.append(df2["Year"].astype(str).str.contains(y, case=False, na=False))
+    if mk and "Make" in df2.columns:
+        conds.append(df2["Make"].str.contains(mk, case=False, na=False))
+    if md and "Model" in df2.columns:
+        conds.append(df2["Model"].str.contains(md, case=False, na=False))
+    if tr and "Trim" in df2.columns:
+        conds.append(df2["Trim"].str.contains(tr, case=False, na=False))
+
+    if conds:
+        mask = conds[0]
+        for c in conds[1:]:
+            mask = mask & c
+        result = df2[mask]
+        if len(result) > 0:
+            return result
+
+    # Fallback: Make + Model
+    if mk and md and {"Make", "Model"}.issubset(df2.columns):
+        mm = (df2["Make"].str.contains(mk, case=False, na=False)) & \
+             (df2["Model"].str.contains(md, case=False, na=False))
+        res_mm = df2[mm]
+        if len(res_mm) > 0:
+            return res_mm
+
+    # Fallback: Make + Vehicle
+    if mk and vh and "Vehicle" in df2.columns:
+        mv = (df2["Make"].str.contains(mk, case=False, na=False)) & \
+             (df2["Vehicle"].astype(str).str.contains(vh, case=False, na=False))
+        res_mv = df2[mv]
+        if len(res_mv) > 0:
+            return res_mv
+
+    # No matches
+    return df2.iloc[0:0]
+
+# ---------------------------------------------------------------------
 # Utility
 # ---------------------------------------------------------------------
 def secrets_status():
@@ -311,6 +409,14 @@ if uploaded:
     except Exception as e:
         st.sidebar.error(f"Failed to parse uploaded JSON: {e}")
 
+# Sidebar: CADS settings
+st.sidebar.subheader("CADS Settings")
+CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")
+CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL, key="cads_is_excel_checkbox")
+CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value="0", key="cads_sheet_input")
+# Optional: local CADS upload for testing
+cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv", "xlsx"], key="cads_upload")
+
 # ---------------------------------------------------------------------
 # Mapping editor (YMMT or Make+Vehicle)
 # ---------------------------------------------------------------------
@@ -331,7 +437,7 @@ with c5:
 with c6:
     mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
 
-b1, b2 = st.columns([1, 1])
+b1, b2, b3 = st.columns([1, 1, 1])
 with b1:
     if st.button("Add/Update (local)", key="add_update_local"):
         k = build_key(year, make, model, trim, vehicle)
@@ -355,6 +461,41 @@ with b2:
             st.success(f"Deleted local mapping `{k}`.")
         else:
             st.warning("Mapping not found.")
+with b3:
+    if st.button("🔎 Search CADS", key="search_cads"):
+        try:
+            # Prefer locally uploaded CADS if provided
+            if cads_upload is not None:
+                # Detect type by filename
+                if cads_upload.name.lower().endswith(".xlsx"):
+                    df_cads = pd.read_excel(cads_upload, engine="openpyxl")
+                else:
+                    df_cads = pd.read_csv(cads_upload)
+            else:
+                # Load from GitHub based on settings
+                if CADS_IS_EXCEL:
+                    # sheet name or index
+                    sheet_arg = CADS_SHEET_NAME
+                    try:
+                        sheet_arg = int(sheet_arg)
+                    except Exception:
+                        # keep as string if not int
+                        pass
+                    df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+                else:
+                    df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
+
+            results = filter_cads(df_cads, year, make, model, trim, vehicle)
+            if len(results) == 0:
+                st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., omit Trim).")
+            else:
+                st.success(f"Found {len(results)} CADS rows.")
+                st.dataframe(results, use_container_width=True)
+        except FileNotFoundError as fnf:
+            st.error(str(fnf))
+            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
+        except Exception as e:
+            st.error(f"CADS search failed: {e}")
 
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
 
@@ -367,7 +508,7 @@ if st.session_state.mappings:
     for k, v in st.session_state.mappings.items():
         rows.append({
             "Key": k,
-            "Year": v.get("year", ""),
+            "Year":            "Year": v.get("year", ""),
             "Make": v.get("make", ""),
             "Model": v.get("model", ""),
             "Trim": v.get("trim", ""),
@@ -378,4 +519,3 @@ if st.session_state.mappings:
 else:
     st.info("No mappings yet. Add one above.")
 
-# --- EOF ---
