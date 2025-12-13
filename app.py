@@ -534,4 +534,4 @@ if st.button("💾 Save Mapping", type="primary"):
 
     saved = write_maps(new_maps)
        if saved:
-        st.success("✅ Mapping saved")
+               st.success("✅ Mapping saved")
