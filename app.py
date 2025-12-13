@@ -1,7 +1,6 @@
 
 # app.py
 import os
-import sys
 from typing import Optional
 
 import pandas as pd
@@ -92,8 +91,7 @@ def candidates_by_ymmt(
         & (df["ad_make"].str.casefold() == src_make.casefold())
         & (df["ad_model"].str.casefold() == src_model.casefold())
     )
-    # You may choose to include trim in the strict filter or present all trims for the chosen YMM.
-    # Here we show all trims for selected YMM:
+    # Present all trims for selected YMM:
     return df.loc[mask].reset_index(drop=True)
 
 
@@ -124,7 +122,7 @@ def save_mapping(
         "ad_mfgcode": str(cad_row.get("ad_mfgcode")),
     }
 
-    # Deduplicate: remove any existing row for the same src key, then append
+    # Deduplicate on the src key, then append
     dedup_mask = (
         (maps_df["src_year"] == src_year)
         & (maps_df["src_make"].str.casefold() == src_make.casefold())
@@ -197,7 +195,6 @@ if st.button("💾 Save Mapping", type="primary"):
 
     cad_row = cands.iloc[selected_pos]
 
-    # ✅ Single, complete call
     new_maps = save_mapping(
         maps_df=maps_df,
         src_year=src_year,
@@ -207,5 +204,6 @@ if st.button("💾 Save Mapping", type="primary"):
         cad_row=cad_row,
     )
 
-       write_maps(new_maps)
+    write_maps(new_maps)
     st.success("✅ Mapping saved")
+    st.toast("Vehicle mapped.", icon="✅")
