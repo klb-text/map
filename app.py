@@ -10,6 +10,7 @@ import streamlit as st
 import pandas as pd
 from rapidfuzz import fuzz
 
+
 # ======================================
 # Config
 # ======================================
@@ -19,11 +20,16 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CADS_FILE_DEFAULT = "CADS.csv"
 REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
 
-# GitHub settings from Streamlit Secrets
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-REPO = st.secrets["REPO"]          # e.g., "klb-text/map"
-BRANCH = st.secrets["BRANCH"]      # e.g., "main"
-FILE_PATH = st.secrets["FILE_PATH"]  # e.g., "Mappings.csv"
+# --- Secrets/env with graceful fallback ---
+# Do NOT index st.secrets[...] directly; use .get() and env fallbacks.
+GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")
+REPO = st.secrets.get("REPO") or os.environ.get("REPO")            # e.g., "klb-text/map"
+BRANCH = st.secrets.get("BRANCH") or os.environ.get("BRANCH", "main")
+FILE_PATH = st.secrets.get("FILE_PATH") or os.environ.get("FILE_PATH")  # e.g., "Mappings.csv"
+
+# If any# If any of the GitHub settings are missing, we’ll still run the app,
+# but read/write to GitHub will be disabled with clear messages.
+
 
 # ======================================
 # Helpers
