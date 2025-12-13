@@ -595,5 +595,5 @@ if st.session_state.mappings:
         })
     st.dataframe(rows, use_container_width=True)
 else:
-    st.info("No mappings yet    st.info("No mappings yet. Add one above.")
+    st.info("No mappings yet. Add one above.")
 
