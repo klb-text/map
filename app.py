@@ -35,7 +35,7 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 # Paths in your repo
 MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings (created by app)
 AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
-CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv (per your repo screenshot)
+CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv per your repo screenshot
 CADS_IS_EXCEL  = False                      # set True if CADS is Excel
 
 # ---------------------------------------------------------------------
@@ -89,11 +89,11 @@ def get_branch_head_sha(owner, repo, branch, token):
 def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     base_sha = get_branch_head_sha(owner, repo, source_branch, token)
     if not base_sha:
-        return False  # source branch missing; caller may fallback to source_branch
+        return False
 
     r_feat = requests.get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200:
-        return True  # already exists
+        return True
     elif r_feat.status_code != 404:
         raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
 
@@ -102,7 +102,6 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
         headers=gh_headers(token),
         json={"ref": f"refs/heads/{feature_branch}", "sha": base_sha},
     )
-    # 201 created; 422 unprocessable if race/exists—treat as success
     return r_create.status_code in (201, 422)
 
 def save_json_to_github(
@@ -110,11 +109,6 @@ def save_json_to_github(
     commit_message, author_name=None, author_email=None,
     use_feature_branch=False, feature_branch_name="aff-mapping-app"
 ):
-    """
-    Create/update a JSON file via the GitHub Contents API with robust handling:
-    - Optional write to a feature branch (to avoid main protection).
-    - Retry once on 409 by re-fetching the latest SHA.
-    """
     content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
 
@@ -126,7 +120,7 @@ def save_json_to_github(
     sha = get_file_sha(owner, repo, path, token, ref=target_branch)
     data = {"message": commit_message, "content": content_b64, "branch": target_branch}
     if sha:
-        data["sha"] = sha  # update
+        data["sha"] = sha
 
     if author_name and author_email:
         data["committer"] = {"name": author_name, "email": author_email}
@@ -135,7 +129,6 @@ def save_json_to_github(
     if r.status_code in (200, 201):
         return r.json()
 
-    # Retry if conflict: refresh SHA and attempt update
     if r.status_code == 409:
         latest_sha = get_file_sha(owner, repo, path, token, ref=target_branch)
         if latest_sha and not data.get("sha"):
@@ -150,15 +143,11 @@ def append_jsonl_to_github(
     owner, repo, path, token, branch, record, commit_message,
     use_feature_branch=False, feature_branch_name="aff-mapping-app"
 ):
-    """
-    Append a JSON line to an audit file, writing to main or feature branch.
-    """
     target_branch = branch
     if use_feature_branch:
         if ensure_feature_branch(owner, repo, token, branch, feature_branch_name):
             target_branch = feature_branch_name
 
-    # Read existing
     r = get_file(owner, repo, path, token, ref=target_branch)
     lines = ""
     sha = None
@@ -171,7 +160,6 @@ def append_jsonl_to_github(
     elif r.status_code != 404:
         raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
 
-    # Append record
     lines += json.dumps(record, ensure_ascii=False) + "\n"
     content_b64 = base64.b64encode(lines.encode("utf-8")).decode("utf-8")
 
@@ -190,7 +178,6 @@ def append_jsonl_to_github(
 # ---------------------------------------------------------------------
 @st.cache_data(ttl=600)
 def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
-    """Detect BOM/encoding and decode bytes to text; return (text, encoding_label)."""
     if not raw or raw.strip() == b"":
         return ("", "empty")
     encoding = "utf-8"
@@ -203,10 +190,6 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
 
 @st.cache_data(ttl=600)
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
-    """
-    Load a CSV CADS file from GitHub Contents API and return a DataFrame.
-    Robust to BOM/UTF-16 and different delimiters; falls back to download_url for large files.
-    """
     import csv
 
     params = {"ref": ref} if ref else {}
@@ -214,7 +197,6 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
     if r.status_code == 200:
         j = r.json()
 
-        # Prefer base64 content if present; otherwise fetch via download_url
         raw = None
         if "content" in j and j["content"]:
             try:
@@ -232,7 +214,6 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
 
         text, _enc = _decode_bytes_to_text(raw)
 
-        # Sniff delimiter; fallback to common ones
         sample = text[:4096]
         delimiter = None
         try:
@@ -249,7 +230,6 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
         else:
             df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
 
-        # Normalize columns/cells
         df.columns = [str(c).strip() for c in df.columns]
         df = df.dropna(how="all")
         if df.empty or len(df.columns) == 0:
@@ -265,10 +245,6 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
 
 @st.cache_data(ttl=600)
 def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
-    """
-    Load an Excel CADS file from GitHub Contents API and return a DataFrame.
-    Falls back to download_url for large files.
-    """
     params = {"ref": ref} if ref else {}
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
@@ -302,12 +278,9 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
 # CADS filter (robust across column name variants)
 # ---------------------------------------------------------------------
 def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
-    """Return the first matching column name (case-sensitive or insensitive)."""
-    # Exact match first
     for c in candidates:
         if c in df.columns:
             return c
-    # Case-insensitive fallback
     lower_map = {c.lower(): c for c in df.columns}
     for c in candidates:
         lc = c.lower()
@@ -316,10 +289,6 @@ def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
     return None
 
 def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, vehicle: str) -> pd.DataFrame:
-    """
-    Filter CADS by YMMT first; fallback to Make+Model or Make+Vehicle if YMMT incomplete.
-    Adjust candidates below if your headers differ.
-    """
     y  = (year or "").strip()
     mk = (make or "").strip()
     md = (model or "").strip()
@@ -334,12 +303,10 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
     trim_col    = _find_col(df2, ["Trim", "Grade", "Variant", "Submodel"])
     vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName"])
 
-    # Normalize string columns
     for col in [year_col, make_col, model_col, trim_col, vehicle_col]:
         if col and col in df2.columns:
             df2[col] = df2[col].astype(str).str.strip()
 
-    # YMMT filter (AND across provided fields)
     conds = []
     if y and year_col:
         conds.append(df2[year_col].astype(str).str.contains(y, case=False, na=False))
@@ -358,7 +325,6 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
         if len(res) > 0:
             return res
 
-    # Fallback: Make + Model
     if mk and md and make_col and model_col:
         mm = (df2[make_col].astype(str).str.contains(mk, case=False, na=False)) & \
              (df2[model_col].astype(str).str.contains(md, case=False, na=False))
@@ -366,7 +332,6 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
         if len(res_mm) > 0:
             return res_mm
 
-    # Fallback: Make + Vehicle
     if mk and vh and make_col and vehicle_col:
         mv = (df2[make_col].astype(str).str.contains(mk, case=False, na=False)) & \
              (df2[vehicle_col].astype(str).str.contains(vh, case=False, na=False))
@@ -374,7 +339,6 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
         if len(res_mv) > 0:
             return res_mv
 
-    # No matches
     return df2.iloc[0:0]
 
 # ---------------------------------------------------------------------
@@ -382,14 +346,17 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
 # ---------------------------------------------------------------------
 def secrets_status():
     missing = []
-    if not GH_TOKEN:  missing.append("github.token")
-    if not GH_OWNER:  missing.append("github.owner")
-    if not GH_REPO:   missing.append("github.repo")
-    if not GH_BRANCH: missing.append("github.branch")
+    if not GH_TOKEN:
+        missing.append("github.token")
+    if not GH_OWNER:
+        missing.append("github.owner")
+    if not GH_REPO:
+        missing.append("github.repo")
+    if not GH_BRANCH:
+        missing.append("github.branch")
     return missing
 
 def build_key(year: str, make: str, model: str, trim: str, vehicle: str):
-    # Prefer YMMT if present; otherwise use Make+Vehicle or Make+Model
     y  = (year or "").strip()
     mk = (make or "").strip()
     md = (model or "").strip()
@@ -462,7 +429,6 @@ if st.sidebar.button("💾 Commit mappings to GitHub", key="commit_button"):
             )
             st.sidebar.success("Mappings committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
-            # Optional audit line (non-blocking)
             try:
                 append_jsonl_to_github(
                     GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH,
@@ -508,10 +474,9 @@ if uploaded:
 
 # Sidebar: CADS settings
 st.sidebar.subheader("CADS Settings")
-CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")  # default CADS.csv at repo root
+CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL, key="cads_is_excel_checkbox")
 CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value="0", key="cads_sheet_input")
-# Optional: local CADS upload for testing
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv", "xlsx"], key="cads_upload")
 
 # ---------------------------------------------------------------------
@@ -519,7 +484,6 @@ cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type
 # ---------------------------------------------------------------------
 st.subheader("Edit / Add Mapping")
 
-# Inputs (unique keys so they never collide)
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1:
     year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
@@ -534,7 +498,7 @@ with c5:
 with c6:
     mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
 
-b1, b2, b3 = st.columns([1, 1, 1])
+b1, b2, b3 = st.columns(3)
 with b1:
     if st.button("Add/Update (local)", key="add_update_local"):
         k = build_key(year, make, model, trim, vehicle)
@@ -561,20 +525,18 @@ with b2:
 with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
-            # Prefer locally uploaded CADS if provided
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
                 else:
                     df_cads = pd.read_csv(cads_upload)
             else:
-                # Load from GitHub based on settings
                 if CADS_IS_EXCEL:
                     sheet_arg = CADS_SHEET_NAME
                     try:
                         sheet_arg = int(sheet_arg)
                     except Exception:
-                        pass  # keep as string if not int
+                        pass
                     df_cads = load_cads_from_github_excel(
                         GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg
                     )
@@ -611,7 +573,8 @@ if st.session_state.mappings:
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
         })
-       st.dataframe(rows, use_container_width=True)
+    st.dataframe(rows, use_container_width=True)
 else:
     st.info("No mappings yet. Add one above.")
 
+# --- EOF ---
