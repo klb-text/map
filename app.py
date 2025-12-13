@@ -182,7 +182,6 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
     if not raw or raw.strip() == b"":
         return ("", "empty")
     encoding = "utf-8"
-    # Corrected: no stray parenthesis
     if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
         encoding = "utf-16"
     elif raw.startswith(b"\xef\xbb\xbf"):
@@ -285,12 +284,15 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
         raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
-# CADS filter (robust across column name variants + exact/contains)
+# CADS filter (column-aware + exact/contains matching)
 # ---------------------------------------------------------------------
 def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
+    """Return the first matching column name (case-insensitive)."""
+    # Exact case first
     for c in candidates:
         if c in df.columns:
             return c
+    # Case-insensitive fallback
     lower_map = {c.lower(): c for c in df.columns}
     for c in candidates:
         lc = c.lower()
@@ -325,6 +327,8 @@ def filter_cads(
     - exact_mmt=True enforces exact equality on Make/Model/Trim (case-sensitive optional).
     - case_sensitive controls whether comparisons are case sensitive.
     """
+
+    # Normalize user inputs
     y  = _normalize(year)
     mk = _normalize(make)
     md = _normalize(model)
@@ -333,16 +337,25 @@ def filter_cads(
 
     df2 = df.copy()
 
-    year_col    = _find_col(df2, ["Year", "MY", "ModelYear"])
-    make_col    = _find_col(df2, ["Make", "MakeName", "Manufacturer"])
-    model_col   = _find_col(df2, ["Model", "Line", "Carline", "Series"])
-    trim_col    = _find_col(df2, ["Trim", "Grade", "Variant", "Submodel"])
-    vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName"])
+    # Recognize CADS column names (adds AD_* variants seen in your table)
+    YEAR_CANDS    = ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"]
+    MAKE_CANDS    = ["AD_MAKE", "Make", "MakeName", "Manufacturer"]
+    MODEL_CANDS   = ["AD_MODEL", "Model", "Line", "Carline", "Series"]
+    TRIM_CANDS    = ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"]
+    VEHICLE_CANDS = ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"]
 
+    year_col    = _find_col(df2, YEAR_CANDS)
+    make_col    = _find_col(df2, MAKE_CANDS)
+    model_col   = _find_col(df2, MODEL_CANDS)
+    trim_col    = _find_col(df2, TRIM_CANDS)
+    vehicle_col = _find_col(df2, VEHICLE_CANDS)
+
+    # Normalize selected columns to strings
     for col in [year_col, make_col, model_col, trim_col, vehicle_col]:
         if col and col in df2.columns:
             df2[col] = df2[col].astype(str).str.strip()
 
+    # Helpers for matching
     def col_contains(col, val):
         if not col or val == "":
             return None
@@ -359,7 +372,7 @@ def filter_cads(
 
     masks = []
 
-    # Year exact handling
+    # Year: exact numeric/string match preferred
     if y and year_col:
         y_parsed = _to_int_or_str(y)
         try:
@@ -371,7 +384,7 @@ def filter_cads(
         except Exception:
             masks.append(col_equals(year_col, y) if exact_year else col_contains(year_col, y))
 
-    # Make/Model/Trim handling
+    # Make/Model/Trim: exact vs contains based on toggle
     if make_col and mk:
         masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
     if model_col and md:
@@ -379,18 +392,22 @@ def filter_cads(
     if trim_col and tr:
         masks.append(col_equals(trim_col, tr) if exact_mmt else col_contains(trim_col, tr))
 
+    # Combine masks (AND)
     primary = None
     for m in masks:
         if m is None:
             continue
         primary = m if primary is None else (primary & m)
 
+    # Primary results
     if primary is not None:
         res = df2[primary]
         if len(res) > 0:
             return res
 
     # Fallbacks
+
+    # Make + Model
     if make_col and model_col and mk and md:
         mm = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
         mo = (col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
@@ -399,6 +416,7 @@ def filter_cads(
             if len(res_mm) > 0:
                 return res_mm
 
+    # Make + Vehicle (when available)
     if make_col and vehicle_col and mk and vh:
         mv = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
         vv = (col_equals(vehicle_col, vh) if exact_mmt else col_contains(vehicle_col, vh))
@@ -407,6 +425,7 @@ def filter_cads(
             if len(res_mv) > 0:
                 return res_mv
 
+    # No matches
     return df2.iloc[0:0]
 
 # ---------------------------------------------------------------------
