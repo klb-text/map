@@ -178,10 +178,12 @@ def append_jsonl_to_github(
 # ---------------------------------------------------------------------
 @st.cache_data(ttl=600)
 def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
+    """Detect BOM/encoding and decode bytes to text; return (text, encoding_label)."""
     if not raw or raw.strip() == b"":
         return ("", "empty")
     encoding = "utf-8"
-    if raw.startswith(b"\xff\xfe")) or raw.startswith(b"\xfe\xff"):
+    # Corrected: no stray parenthesis
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
         encoding = "utf-16"
     elif raw.startswith(b"\xef\xbb\xbf"):
         encoding = "utf-8-sig"
@@ -249,6 +251,10 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
 
 @st.cache_data(ttl=600)
 def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
+    """
+    Load an Excel CADS file from GitHub Contents API and return a DataFrame.
+    Falls back to download_url for large files.
+    """
     params = {"ref": ref} if ref else {}
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
@@ -611,7 +617,7 @@ with b3:
                 else:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-            results            results = filter_cads(
+            results = filter_cads(
                 df_cads, year, make, model, trim, vehicle,
                 exact_year=EXACT_YEAR,
                 exact_mmt=EXACT_MMT,
@@ -648,6 +654,6 @@ if st.session_state.mappings:
             "Code": v.get("code", ""),
         })
     st.dataframe(rows, use_container_width=True)
-else:
+elseelse:
     st.info("No mappings yet. Add one above.")
 
