@@ -35,7 +35,7 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 # Paths in your repo
 MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings (created by app)
 AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
-CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv per your repo screenshot
+CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv (per your repo screenshot)
 CADS_IS_EXCEL  = False                      # set True if CADS is Excel
 
 # ---------------------------------------------------------------------
@@ -49,6 +49,9 @@ def gh_headers(token: str):
 
 def gh_contents_url(owner, repo, path):
     return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+
+def gh_ref_heads(owner, repo, branch):
+    return f"https://api.github.com/repos/{owner}/{repo}/git/ref/heads/{branch}"
 
 def get_file(owner, repo, path, token, ref=None):
     params = {"ref": ref} if ref else {}
@@ -75,10 +78,7 @@ def load_json_from_github(owner, repo, path, token, ref=None):
         raise RuntimeError(f"Failed to load file ({r.status_code}): {r.text}")
 
 def get_branch_head_sha(owner, repo, branch, token):
-    r = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}/git/ref/heads/{branch}",
-        headers=gh_headers(token),
-    )
+    r = requests.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token))
     if r.status_code == 200:
         return r.json()["object"]["sha"]
     elif r.status_code == 404:
@@ -91,10 +91,7 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     if not base_sha:
         return False  # source branch missing; caller may fallback to source_branch
 
-    r_feat = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}/git/ref/heads/{feature_branch}",
-        headers=gh_headers(token),
-    )
+    r_feat = requests.get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200:
         return True  # already exists
     elif r_feat.status_code != 404:
@@ -192,10 +189,23 @@ def append_jsonl_to_github(
 # CADS loaders (CSV or Excel) + caching
 # ---------------------------------------------------------------------
 @st.cache_data(ttl=600)
+def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
+    """Detect BOM/encoding and decode bytes to text; return (text, encoding_label)."""
+    if not raw or raw.strip() == b"":
+        return ("", "empty")
+    encoding = "utf-8"
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+        encoding = "utf-16"
+    elif raw.startswith(b"\xef\xbb\xbf"):
+        encoding = "utf-8-sig"
+    text = raw.decode(encoding, errors="replace")
+    return (text, encoding)
+
+@st.cache_data(ttl=600)
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
     """
     Load a CSV CADS file from GitHub Contents API and return a DataFrame.
-    Robust to BOM, UTF-16, and different delimiters (comma/tab/semicolon/pipe).
+    Robust to BOM/UTF-16 and different delimiters; falls back to download_url for large files.
     """
     import csv
 
@@ -204,21 +214,25 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
     if r.status_code == 200:
         j = r.json()
 
-        # GitHub returns base64 content; decode to bytes
-        raw = base64.b64decode(j["content"])
-        if (raw is None) or (raw.strip() == b""):
-            raise ValueError(f"CADS file `{path}` appears to be empty.")
+        # Prefer base64 content if present; otherwise fetch via download_url
+        raw = None
+        if "content" in j and j["content"]:
+            try:
+                raw = base64.b64decode(j["content"])
+            except Exception:
+                raw = None
 
-        # Detect common BOMs / encodings
-        encoding = "utf-8"
-        if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
-            encoding = "utf-16"
-        elif raw.startswith(b"\xef\xbb\xbf"):
-            encoding = "utf-8-sig"
+        if (raw is None or raw.strip() == b"") and j.get("download_url"):
+            r2 = requests.get(j["download_url"])
+            if r2.status_code == 200:
+                raw = r2.content
 
-        text = raw.decode(encoding, errors="replace")
+        if raw is None or raw.strip() == b"":
+            raise ValueError(f"CADS file `{path}` appears to be empty or unavailable via API.")
 
-        # Use csv.Sniffer to detect delimiter; fallback to common ones
+        text, _enc = _decode_bytes_to_text(raw)
+
+        # Sniff delimiter; fallback to common ones
         sample = text[:4096]
         delimiter = None
         try:
@@ -231,27 +245,15 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
                     break
 
         if delimiter is None:
-            # As a last resort, attempt pandas with python engine (auto sep=None)
             df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
         else:
-            # Use detected delimiter, keep everything as string
-            df = pd.read_csv(
-                io.StringIO(text),
-                sep=delimiter,
-                dtype=str,
-                on_bad_lines="skip",
-                engine="python",
-            )
+            df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
 
-        # Strip whitespace from column names
+        # Normalize columns/cells
         df.columns = [str(c).strip() for c in df.columns]
-
-        # Drop completely empty rows
         df = df.dropna(how="all")
         if df.empty or len(df.columns) == 0:
             raise ValueError("CADS CSV parsed but produced no columns or rows. Check delimiter and headers.")
-
-        # Normalize cells to trimmed strings
         df = df.applymap(lambda x: str(x).strip() if pd.notnull(x) else "")
 
         return df
@@ -265,16 +267,32 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
 def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
     """
     Load an Excel CADS file from GitHub Contents API and return a DataFrame.
+    Falls back to download_url for large files.
     """
     params = {"ref": ref} if ref else {}
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
-        decoded = base64.b64decode(j["content"])
-        df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheet_name, engine="openpyxl")
-        # Normalize to strings/trim
+
+        raw = None
+        if "content" in j and j["content"]:
+            try:
+                raw = base64.b64decode(j["content"])
+            except Exception:
+                raw = None
+
+        if (raw is None or raw.strip() == b"") and j.get("download_url"):
+            r2 = requests.get(j["download_url"])
+            if r2.status_code == 200:
+                raw = r2.content
+
+        if raw is None or raw.strip() == b"":
+            raise ValueError(f"CADS file `{path}` appears to be empty or unavailable via API.")
+
+        df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
         df = df.astype(str).applymap(lambda x: str(x).strip())
         return df
+
     elif r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
     else:
@@ -593,7 +611,7 @@ if st.session_state.mappings:
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
         })
-    st.dataframe(rows, use_container_width=True)
+       st.dataframe(rows, use_container_width=True)
 else:
     st.info("No mappings yet. Add one above.")
 
