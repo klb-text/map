@@ -7,6 +7,7 @@ import base64
 import json
 import time
 import io
+from typing import Optional
 import requests
 import pandas as pd
 import streamlit as st
@@ -34,7 +35,7 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 # Paths in your repo
 MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings (created by app)
 AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
-CADS_PATH      = "CADS.csv"                 # <-- default to root-level CADS.csv
+CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv per your repo screenshot
 CADS_IS_EXCEL  = False                      # set True if CADS is Excel
 
 # ---------------------------------------------------------------------
@@ -194,14 +195,67 @@ def append_jsonl_to_github(
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
     """
     Load a CSV CADS file from GitHub Contents API and return a DataFrame.
+    Robust to BOM, UTF-16, and different delimiters (comma/tab/semicolon/pipe).
     """
+    import csv
+
     params = {"ref": ref} if ref else {}
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
-        decoded = base64.b64decode(j["content"])
-        df = pd.read_csv(io.BytesIO(decoded))
+
+        # GitHub returns base64 content; decode to bytes
+        raw = base64.b64decode(j["content"])
+        if (raw is None) or (raw.strip() == b""):
+            raise ValueError(f"CADS file `{path}` appears to be empty.")
+
+        # Detect common BOMs / encodings
+        encoding = "utf-8"
+        if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+            encoding = "utf-16"
+        elif raw.startswith(b"\xef\xbb\xbf"):
+            encoding = "utf-8-sig"
+
+        text = raw.decode(encoding, errors="replace")
+
+        # Use csv.Sniffer to detect delimiter; fallback to common ones
+        sample = text[:4096]
+        delimiter = None
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=[",", "\t", ";", "|"])
+            delimiter = dialect.delimiter
+        except Exception:
+            for cand in [",", "\t", ";", "|"]:
+                if cand in sample:
+                    delimiter = cand
+                    break
+
+        if delimiter is None:
+            # As a last resort, attempt pandas with python engine (auto sep=None)
+            df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
+        else:
+            # Use detected delimiter, keep everything as string
+            df = pd.read_csv(
+                io.StringIO(text),
+                sep=delimiter,
+                dtype=str,
+                on_bad_lines="skip",
+                engine="python",
+            )
+
+        # Strip whitespace from column names
+        df.columns = [str(c).strip() for c in df.columns]
+
+        # Drop completely empty rows
+        df = df.dropna(how="all")
+        if df.empty or len(df.columns) == 0:
+            raise ValueError("CADS CSV parsed but produced no columns or rows. Check delimiter and headers.")
+
+        # Normalize cells to trimmed strings
+        df = df.applymap(lambda x: str(x).strip() if pd.notnull(x) else "")
+
         return df
+
     elif r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
     else:
@@ -218,6 +272,8 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
         j = r.json()
         decoded = base64.b64decode(j["content"])
         df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheet_name, engine="openpyxl")
+        # Normalize to strings/trim
+        df = df.astype(str).applymap(lambda x: str(x).strip())
         return df
     elif r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
@@ -227,7 +283,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
 # ---------------------------------------------------------------------
 # CADS filter (robust across column name variants)
 # ---------------------------------------------------------------------
-def _find_col(df: pd.DataFrame, candidates) -> str | None:
+def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
     """Return the first matching column name (case-sensitive or insensitive)."""
     # Exact match first
     for c in candidates:
@@ -265,7 +321,7 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
         if col and col in df2.columns:
             df2[col] = df2[col].astype(str).str.strip()
 
-    # YMMT filter
+    # YMMT filter (AND across provided fields)
     conds = []
     if y and year_col:
         conds.append(df2[year_col].astype(str).str.contains(y, case=False, na=False))
@@ -434,7 +490,7 @@ if uploaded:
 
 # Sidebar: CADS settings
 st.sidebar.subheader("CADS Settings")
-CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")  # default CADS.csv
+CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")  # default CADS.csv at repo root
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL, key="cads_is_excel_checkbox")
 CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value="0", key="cads_sheet_input")
 # Optional: local CADS upload for testing
@@ -515,7 +571,7 @@ with b3:
                 st.dataframe(results, use_container_width=True)
         except FileNotFoundError as fnf:
             st.error(str(fnf))
-            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
+            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_RE            st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
