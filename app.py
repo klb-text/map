@@ -1,6 +1,6 @@
 
 # app.py
-# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
+# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection + existing mapping notice
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -548,6 +548,28 @@ with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Base"
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="e.g., MDX 3.5L")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
 
+# --- NEW: show existing mapping if current inputs already mapped ---
+existing_key = build_key(year, make, model, trim, vehicle)
+existing_mapping = st.session_state.mappings.get(existing_key)
+st.subheader("Existing Mapping (for current inputs)")
+if existing_mapping:
+    # Show message and full attributes in a table
+    st.success("This YMMT/Vehicle is already mapped.")
+    st.dataframe(
+        [{
+            "Key": existing_key,
+            "Year": existing_mapping.get("year", ""),
+            "Make": existing_mapping.get("make", ""),
+            "Model": existing_mapping.get("model", ""),
+            "Trim": existing_mapping.get("trim", ""),
+            "Vehicle": existing_mapping.get("vehicle", ""),
+            "Code": existing_mapping.get("code", ""),
+        }],
+        use_container_width=True,
+    )
+else:
+    st.info("No existing mapping for current inputs.")
+
 b1, b2, b3 = st.columns(3)
 with b1:
     if st.button("Add/Update (local)", key="add_update_local"):
@@ -703,8 +725,9 @@ if st.session_state.mappings:
             "Model": v.get("model", ""),
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
-            "Code": v.get("code", ""),
+            "Code": v.get("code",            "Code": v.get("code", ""),
         })
     st.dataframe(rows, use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
+
