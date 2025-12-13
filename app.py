@@ -31,6 +31,7 @@ MAPPINGS_PATH   = "data/mappings.json"
 AUDIT_LOG_PATH  = "data/mappings_log.jsonl"
 CADS_PATH       = "CADS.csv"         # default root-level CADS.csv
 CADS_IS_EXCEL   = False
+CADS_SHEET_NAME_DEFAULT = "0"
 CADS_CODE_PREFS = ["STYLE_ID", "AD_MFGCODE", "AD_VEH_ID"]  # preferred code column order
 
 # ---------------------------------------------------------------------
@@ -283,9 +284,10 @@ def filter_cads(
     def col_equals(col, val):
         if not col or val == "":
             return None
-        series = df2[col].astype str if False else df2[col].astype(str)  # no-op line to avoid accidental editor issues
         series = df2[col].astype(str)
-        return (series == val) if case_sensitive else (series.str.lower() == val.lower())
+        if not case_sensitive:
+            return series.str.lower() == val.lower()
+        return series == val
 
     masks = []
     if y and year_col:
@@ -368,11 +370,11 @@ def find_existing_mappings(
     """
     Returns a list of (key, mapping, reason) for existing mappings that match the current inputs,
     under multiple strategies:
-      - strict_ymmt: exact Year/Make/Model/Trim
-      - lenient_no_year: ignore Year
-      - lenient_no_trim: ignore Trim
       - by_code: mapping.code equals code_input (if provided)
-      - make_model_only: exact Make+Model (if provided)
+      - strict_ymmt: exact Year/Make/Model/Trim (unless ignored)
+      - lenient_no_year: ignore Year if Make/Model (+ Trim if provided) match
+      - lenient_no_trim: ignore Trim if Year/Make/Model match
+      - make_model_only: exact Make+Model
     """
     y, mk, md, tr, vh, code_in = map(_normalize, (year, make, model, trim, vehicle, code_input))
     results = []
@@ -385,40 +387,29 @@ def find_existing_mappings(
         vvh = _normalize(v.get("vehicle", ""))
         vcode = _normalize(v.get("code", ""))
 
-        # Strategy: by_code (most definitive if code is a unique identifier)
+        # by_code (definitive if codes are unique)
         if code_in and vcode and _eq(vcode, code_in, case_sensitive):
             results.append((k, v, "by_code"))
             continue
 
-        # Strategy: strict YMMT (if all provided)
+        # strict_ymmt
         strict_ok = True
-        # Year check (unless ignore_year)
         if y and not ignore_year:
             if exact_year:
                 try:
-                    if int(vy) != int(y):
-                        strict_ok = False
+                    if int(vy) != int(y): strict_ok = False
                 except Exception:
-                    if not _eq(vy, y, case_sensitive):
-                        strict_ok = False
+                    if not _eq(vy, y, case_sensitive): strict_ok = False
             else:
-                if not _eq(vy, y, case_sensitive):
-                    strict_ok = False
-        # Make
-        if mk and not _eq(vmk, mk, case_sensitive):
-            strict_ok = False
-        # Model
-        if md and not _eq(vmd, md, case_sensitive):
-            strict_ok = False
-        # Trim check (unless ignore_trim)
-        if tr and not ignore_trim and not _eq(vtr, tr, case_sensitive):
-            strict_ok = False
-
+                if not _eq(vy, y, case_sensitive): strict_ok = False
+        if mk and not _eq(vmk, mk, case_sensitive): strict_ok = False
+        if md and not _eq(vmd, md, case_sensitive): strict_ok = False
+        if tr and not ignore_trim and not _eq(vtr, tr, case_sensitive): strict_ok = False
         if strict_ok and (mk or md or tr or y):
             results.append((k, v, "strict_ymmt"))
             continue
 
-        # Strategy: lenient_no_year (ignore year if other attrs match)
+        # lenient_no_year
         if mk and md:
             ly_ok = True
             if not _eq(vmk, mk, case_sensitive): ly_ok = False
@@ -428,7 +419,7 @@ def find_existing_mappings(
                 results.append((k, v, "lenient_no_year"))
                 continue
 
-        # Strategy: lenient_no_trim (ignore trim if other attrs match)
+        # lenient_no_trim
         lt_ok = True
         if mk and not _eq(vmk, mk, case_sensitive): lt_ok = False
         if md and not _eq(vmd, md, case_sensitive): lt_ok = False
@@ -444,7 +435,7 @@ def find_existing_mappings(
             results.append((k, v, "lenient_no_trim"))
             continue
 
-        # Strategy: make_model_only
+        # make_model_only
         if mk and md and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
             results.append((k, v, "make_model_only"))
             continue
@@ -455,6 +446,26 @@ def find_existing_mappings(
 # UI
 # ---------------------------------------------------------------------
 st.title("AFF Vehicle Mapping")
+
+# Diagnostics: show data source and file metadata
+with st.expander("📦 Data source / diagnostics"):
+    try:
+        st.write({"owner": GH_OWNER, "repo": GH_REPO, "branch": GH_BRANCH, "mappings_path": MAPPINGS_PATH})
+        st.write({"loaded_mappings_count": len(st.session_state.get("mappings", {}))})
+        r_meta = get_file(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
+        if r_meta.status_code == 200:
+            meta = r_meta.json()
+            st.write({"file_sha": meta.get("sha", ""), "path": meta.get("path", ""), "size_bytes": meta.get("size", "")})
+        elif r_meta.status_code == 404:
+            st.info("Mappings file does not exist yet (it will be created on first commit).")
+        else:
+            st.warning(f"Could not read file metadata ({r_meta.status_code}).")
+        if st.button("🔄 Reload mappings (diagnostics)", key="diag_reload_btn"):
+            existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
+            st.session_state.mappings = existing or {}
+            st.success(f"Reloaded. Current count: {len(st.session_state.mappings)}")
+    except Exception as diag_err:
+        st.error(f"Diagnostics error: {diag_err}")
 
 # Load mappings on first run
 if "mappings" not in st.session_state:
@@ -534,7 +545,7 @@ if uploaded:
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH, key="cads_path_input")
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL, key="cads_is_excel_checkbox")
-CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value="0", key="cads_sheet_input")
+CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT, key="cads_sheet_input")
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv", "xlsx"], key="cads_upload")
 
 st.sidebar.subheader("Matching Controls")
@@ -543,7 +554,7 @@ EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False, key
 CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False, key="case_sensitive_checkbox")
 BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exists", value=True, key="block_search_checkbox")
 IGNORE_YEAR = st.sidebar.checkbox("Ignore Year when detecting existing mapping", value=False, key="ignore_year_checkbox")
-IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=True, key="ignore_trim_checkbox")  # default ON; trims often vary
+IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=True, key="ignore_trim_checkbox")  # trims often vary
 
 # ---------------------------------------------------------------------
 # Mapping editor inputs
@@ -556,6 +567,15 @@ with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Ra
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., SE")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID, AD_MFGCODE, etc.)")
+
+# Clear stale CADS results when inputs change
+current_inputs = (_normalize(year), _normalize(make), _normalize(model), _normalize(trim), _normalize(vehicle))
+prev_inputs = st.session_state.get("prev_inputs")
+if prev_inputs != current_inputs:
+    st.session_state.pop("results_df", None)
+    st.session_state.pop("code_candidates", None)
+    st.session_state.pop("code_column", None)
+    st.session_state["prev_inputs"] = current_inputs
 
 # Existing mapping detection (attribute-based & code-aware)
 matches = find_existing_mappings(
@@ -587,9 +607,8 @@ if matches:
             first_code = rows[0]["Code"]
             st.session_state["code_input"] = first_code
             st.success(f"Copied code '{first_code}' to the Mapped Code input.")
-
 else:
-    st.info("No existing mapping detected for current inputs (consider toggling Ignore Year/Trim).")
+    st.info("No existing mapping detected for current inputs (try toggling Ignore Year/Trim or case sensitivity).")
 
 # Add/Update/Delete local mapping
 b1, b2, b3 = st.columns(3)
@@ -720,6 +739,7 @@ if "results_df" in st.session_state:
                 vhv = _normalize(row.get(vehicle_col, "")) if vehicle_col else ""
                 key = build_key(yv, mkv, mdv, trv, vhv)
                 code_val = _normalize(str(row.get(code_col, ""))) if code_col else ""
+
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val,
@@ -743,7 +763,7 @@ if st.session_state.mappings:
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
         })
-       st.dataframe(pd.DataFrame(rows), use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
