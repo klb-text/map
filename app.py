@@ -334,10 +334,14 @@ def run_mozenda_mode(cads_df: pd.DataFrame, maps_df: pd.DataFrame):
         fmo = qp_get(qp, "filter_model", "")
         ft = qp_get(qp, "filter_trim", "")
         df = _normalize_maps_columns(maps_df.copy())
-        if fy:  df = df[df["year"].str.contains(fy, case=False, na=False)]
-        if fm:  df = df[df["make"].str.contains(fm, case=False, na=False)]
-        if fmo: df = df[df["model"].str.contains(fmo, case=False, na=False)]
-        if ft:  df = df[df["trim"].str.contains(ft, case=False, na=False)]
+        if fy:
+            df = df[df["year"].str.contains(fy, case=False, na=False)]
+        if fm:
+            df = df[df["make"].str.contains(fm, case=False, na=False)]
+        if fmo:
+            df = df[df["model"].str.contains(fmo, case=False, na=False)]
+        if ft:
+            df = df[df["trim"].str.contains(ft, case=False, na=False)]
         return _emit_table(df, fmt)
 
     # Allow a single 'vehicle' param plus optional 'make' override
@@ -450,7 +454,7 @@ maps_df = read_maps()
 if run_mozenda_mode(cads_df, maps_df):
     st.stop()
 
-# ⭐ NEW: Vehicle Mappings table (UI)
+# Vehicle Mappings table (UI)
 with st.expander("📘 Vehicle Mappings", expanded=False):
     st.caption(f"{len(maps_df)} mappings loaded from {'GitHub' if GITHUB_ENABLED else 'local file'}")
     f1, f2, f3, f4 = st.columns(4)
@@ -464,10 +468,14 @@ with st.expander("📘 Vehicle Mappings", expanded=False):
         ft = st.text_input("Filter Trim")
 
     maps_view = _normalize_maps_columns(maps_df.copy())
-    if fy:  maps_view = maps_view[maps_view["year"].str.contains(fy, case=False, na=False)]
-    if fm:  maps_view = maps_view[maps_view["make"].str.contains(fm, case=False, na=False)]
-    if fmo: maps_view = maps_view[maps_view["model"].str.contains(fmo, case=False, na=False)]
-    if ft:  maps_view = maps_view[maps_view["trim"].str.contains(ft, case=False, na=False)]
+    if fy:
+        maps_view = maps_view[maps_view["year"].str.contains(fy, case=False, na=False)]
+    if fm:
+        maps_view = maps_view[maps_view["make"].str.contains(fm, case=False, na=False)]
+    if fmo:
+        maps_view = maps_view[maps_view["model"].str.contains(fmo, case=False, na=False)]
+    if ft:
+        maps_view = maps_view[maps_view["trim"].str.contains(ft, case=False, na=False)]
 
     st.dataframe(maps_view, use_container_width=True, height=300)
 
@@ -479,7 +487,7 @@ st.subheader("Search")
 mode = st.radio("Search by:", ["Vehicle string", "Y/M/M/T"], horizontal=True)
 
 if mode == "Vehicle string":
-    # ⭐ Make override next to vehicle text
+    # Make override next to vehicle text
     col_v, col_m = st.columns([3, 2])
     with col_v:
         vehicle_text = st.text_input("Vehicle (e.g., '2025 Range Rover Sport P360 SE')")  # Make may be omitted
@@ -528,10 +536,11 @@ labels = [
 ]
 selected_pos = st.radio("Choose a candidate", options=list(range(len(labels))), format_func=lambda i: labels[i], index=0)
 
+# --- Button to save ---
 if st.button("💾 Save Mapping", type="primary"):
     cad_row = cands.iloc[selected_pos]
     new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
 
     saved = write_maps(new_maps)
-       if saved:
-               st.success("✅ Mapping saved")
+    if saved:
+        st.success("✅ Mapping saved")
