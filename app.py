@@ -217,20 +217,50 @@ if hit is not None:
     st.stop()
 
 st.warning("⚠️ Needs mapping")
+
 cands = candidates_by_ymmt(cads_df, src_year, src_make, src_model, src_trim)
 if cands.empty:
     st.error("No CADS candidates found.")
     st.stop()
 
-view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+view_cols = ["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]
 st.dataframe(cands[view_cols], use_container_width=True, height=260)
 
-labels = [f"{r['ad_year']} {r['ad_make']} {r['ad_model']} {r['ad_trim']} | code={r['ad_mfgcode']}" for _, r in cands[view_cols].reset_index(drop=True).iterrows()]
-selected_pos = st.radio("Choose a candidate", options=list(range(len(labels))), format_func=lambda i: labels[i], index=0)
+labels = [
+    f"{r['ad_year']} {r['ad_make']} {r['ad_model']} {r['ad_trim']} | code={r['ad_mfgcode']}"
+    for _, r in cands[view_cols].reset_index(drop=True).iterrows()
+]
+
+# Guard against empty labels just in case
+selected_pos = st.radio(
+    "Choose a candidate",
+    options=list(range(len(labels))),
+    format_func=lambda i: labels[i] if i < len(labels) else "—",
+    index=0
+)
 
 if st.button("💾 Save Mapping", type="primary"):
+    # Validate selection index (defensive)
+    if len(cands) == 0:
+        st.error("No CADS candidates available to save.")
+        st.stop()
+
+    if selected_pos < 0 or selected_pos >= len(cands):
+        st.error(f"Invalid selection index: {selected_pos}")
+        st.stop()
+
     cad_row = cands.iloc[selected_pos]
-    new_maps = save_mapping(maps_df, src_year, src_make, src_model,    new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
+
+    # ✅ Single, complete call (the duplicated call was the syntax error)
+    new_maps = save_mapping(
+        maps_df,
+        src_year,
+        src_make,
+        src_model,
+        src_trim,
+        cad_row,
+    )
+
     write_maps(new_maps)
     st.success("✅ Mapping saved to GitHub")
     st.toast("Vehicle mapped.", icon="✅")
