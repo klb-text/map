@@ -1,61 +1,16 @@
 
 # app.py
-import os
-from typing import Optional
-
 import pandas as pd
 import streamlit as st
 
-
 # -----------------------------
-# Configuration (Option 2)
-# -----------------------------
-def get_config():
-    """Load config from Streamlit secrets or environment variables with sensible defaults."""
-    REPO = st.secrets.get("REPO") or os.environ.get("REPO")
-    BRANCH = st.secrets.get("BRANCH") or os.environ.get("BRANCH", "main")
-    GH_TOKEN = st.secrets.get("GH_TOKEN") or os.environ.get("GH_TOKEN")
-    GIT_USER_NAME = st.secrets.get("GIT_USER_NAME") or os.environ.get("GIT_USER_NAME")
-    GIT_USER_EMAIL = st.secrets.get("GIT_USER_EMAIL") or os.environ.get("GIT_USER_EMAIL")
-
-    missing = []
-    # REQUIRED: REPO and GH_TOKEN to perform write operations to GitHub
-    if not REPO:
-        missing.append("REPO")
-    if not GH_TOKEN:
-        missing.append("GH_TOKEN")
-
-    if missing:
-        st.error(
-            "Missing required configuration keys: "
-            + ", ".join(missing)
-            + "\n\nSet them in `.streamlit/secrets.toml` (local) or Streamlit Cloud → Manage app → Secrets."
-        )
-        st.stop()
-
-    # Show non-sensitive config for debugging
-    st.caption(f"Repo: {REPO} | Branch: {BRANCH}")
-
-    return {
-        "REPO": REPO,
-        "BRANCH": BRANCH,
-        "GH_TOKEN": GH_TOKEN,
-        "GIT_USER_NAME": GIT_USER_NAME,
-        "GIT_USER_EMAIL": GIT_USER_EMAIL,
-    }
-
-
-CONFIG = get_config()
-
-
-# -----------------------------
-# Utility / Data loading stubs
+# Data loading stubs (replace with your real loaders)
 # -----------------------------
 @st.cache_data
 def load_cads_df() -> pd.DataFrame:
     """
-    TODO: Replace with real CADS loader.
-    This stub returns a small DataFrame to allow the UI to run.
+    Stub: returns a small CADS-like DataFrame so the UI runs without external deps.
+    Replace this with your real CADS loader.
     """
     data = [
         {"ad_year": 2024, "ad_make": "Acura", "ad_model": "TLX", "ad_trim": "A-Spec", "ad_mfgcode": "TLXASPEC"},
@@ -68,35 +23,40 @@ def load_cads_df() -> pd.DataFrame:
 @st.cache_data
 def load_maps_df() -> pd.DataFrame:
     """
-    TODO: Replace with real map file loader (e.g., from GitHub via GH_TOKEN).
+    Stub: returns a small maps DataFrame for demonstration.
+    Replace this with your real maps file loader.
     """
-    # Example existing mappings:
     data = [
         {"src_year": 2024, "src_make": "Acura", "src_model": "TLX", "src_trim": "A-Spec", "ad_mfgcode": "TLXASPEC"},
     ]
     return pd.DataFrame(data)
 
 
+# -----------------------------
+# Candidate filtering (replace/extend with your logic)
+# -----------------------------
 def candidates_by_ymmt(
-    cads_df: pd.DataFrame, src_year: int, src_make: str, src_model: str, src_trim: str
+    cads_df: pd.DataFrame,
+    src_year: int,
+    src_make: str,
+    src_model: str,
+    src_trim: str,
 ) -> pd.DataFrame:
     """
-    TODO: Replace with your real filtering logic.
-    Filters CADS catalog rows by year/make/model/trim (trim relax logic can be applied if needed).
+    Filters CADS rows by Year/Make/Model. Trim is presented as options for the chosen YMM.
+    Adjust normalization or include trim strictness to match your catalog rules.
     """
     df = cads_df.copy()
-    # Basic filter; adjust for normalization as needed (strip, upper, etc.)
     mask = (
         (df["ad_year"] == src_year)
         & (df["ad_make"].str.casefold() == src_make.casefold())
         & (df["ad_model"].str.casefold() == src_model.casefold())
     )
-    # Present all trims for selected YMM:
     return df.loc[mask].reset_index(drop=True)
 
 
 # -----------------------------
-# Mapping write stubs
+# Mapping update + write stubs
 # -----------------------------
 def save_mapping(
     maps_df: pd.DataFrame,
@@ -107,8 +67,8 @@ def save_mapping(
     cad_row: pd.Series,
 ) -> pd.DataFrame:
     """
-    TODO: Replace with your real mapping update logic.
-    Appends/updates a mapping record based on selected CADS row.
+    Appends/updates a mapping record based on the selected CADS row.
+    Deduplicates on the src key. Replace with your exact business rules if needed.
     """
     new_row = {
         "src_year": src_year,
@@ -122,7 +82,7 @@ def save_mapping(
         "ad_mfgcode": str(cad_row.get("ad_mfgcode")),
     }
 
-    # Deduplicate on the src key, then append
+    # Remove any existing mapping for the same src key
     dedup_mask = (
         (maps_df["src_year"] == src_year)
         & (maps_df["src_make"].str.casefold() == src_make.casefold())
@@ -130,20 +90,18 @@ def save_mapping(
         & (maps_df["src_trim"].str.casefold() == src_trim.casefold())
     )
     maps_df = maps_df.loc[~dedup_mask].copy()
+
+    # Append the new mapping
     maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
     return maps_df
 
 
 def write_maps(maps_df: pd.DataFrame) -> None:
     """
-    TODO: Replace with your real persistence to GitHub (using CONFIG["GH_TOKEN"]).
-    This stub just shows the DataFrame in the app.
-
-    For real GitHub writes, you might:
-      - Use the GitHub REST API to PUT file contents (Base64) to a path in CONFIG["REPO"] on CONFIG["BRANCH"].
-      - Or use a lightweight git library if available (ensure compatibility in Streamlit Cloud).
+    Stub: shows the resulting DataFrame.
+    Replace this with your persistence logic (e.g., write to CSV/JSON, push to GitHub, etc.).
     """
-    st.subheader("Preview: Updated mappings (stub)")
+    st.subheader("Updated mappings (preview)")
     st.dataframe(maps_df, use_container_width=True)
 
 
@@ -163,7 +121,7 @@ with st.sidebar:
 cads_df = load_cads_df()
 maps_df = load_maps_df()
 
-# Candidates for selection
+# Build candidate list
 cands = candidates_by_ymmt(cads_df, src_year, src_make, src_model, src_trim)
 if cands.empty:
     st.error("No CADS candidates found.")
@@ -195,6 +153,7 @@ if st.button("💾 Save Mapping", type="primary"):
 
     cad_row = cands.iloc[selected_pos]
 
+    # Single, complete call (no duplication)
     new_maps = save_mapping(
         maps_df=maps_df,
         src_year=src_year,
@@ -206,4 +165,4 @@ if st.button("💾 Save Mapping", type="primary"):
 
     write_maps(new_maps)
     st.success("✅ Mapping saved")
-    st.toast("Vehicle mapped.", icon="✅")
+   
