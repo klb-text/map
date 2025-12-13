@@ -94,6 +94,7 @@ def _normalize_maps_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     df.columns = [c.strip().lower() for c in df.columns]
 
+    # Rename legacy columns if present
     rename_map = {
         "src_year": "year",
         "src_make": "make",
@@ -325,7 +326,21 @@ def run_mozenda_mode(cads_df: pd.DataFrame, maps_df: pd.DataFrame):
     if not mozenda:
         return False  # continue to interactive UI
 
-    # ⭐ NEW: allow a single 'vehicle' param plus optional 'make' override
+    # If mappings=1 → return the mappings table (optionally filtered)
+    if qp_get(qp, "mappings", "0") == "1":
+        fmt = qp_get(qp, "format", "json").lower()
+        fy = qp_get(qp, "filter_year", "")
+        fm = qp_get(qp, "filter_make", "")
+        fmo = qp_get(qp, "filter_model", "")
+        ft = qp_get(qp, "filter_trim", "")
+        df = _normalize_maps_columns(maps_df.copy())
+        if fy:  df = df[df["year"].str.contains(fy, case=False, na=False)]
+        if fm:  df = df[df["make"].str.contains(fm, case=False, na=False)]
+        if fmo: df = df[df["model"].str.contains(fmo, case=False, na=False)]
+        if ft:  df = df[df["trim"].str.contains(ft, case=False, na=False)]
+        return _emit_table(df, fmt)
+
+    # Allow a single 'vehicle' param plus optional 'make' override
     vehicle = qp_get(qp, "vehicle", "")
     if vehicle:
         y, m, mdl, tr = parse_vehicle_text(vehicle, cads_df)
@@ -403,6 +418,14 @@ def _emit_payload(payload: dict, fmt: str) -> bool:
         st.json(payload)
     return True
 
+def _emit_table(df: pd.DataFrame, fmt: str) -> bool:
+    df = _normalize_maps_columns(df)
+    if fmt == "csv":
+        st.write(df.to_csv(index=False))
+    else:
+        st.json({"count": len(df), "rows": df.to_dict(orient="records")})
+    return True
+
 # ======================================
 # UI
 # ======================================
@@ -427,12 +450,36 @@ maps_df = read_maps()
 if run_mozenda_mode(cads_df, maps_df):
     st.stop()
 
+# ⭐ NEW: Vehicle Mappings table (UI)
+with st.expander("📘 Vehicle Mappings", expanded=False):
+    st.caption(f"{len(maps_df)} mappings loaded from {'GitHub' if GITHUB_ENABLED else 'local file'}")
+    f1, f2, f3, f4 = st.columns(4)
+    with f1:
+        fy = st.text_input("Filter Year")
+    with f2:
+        fm = st.text_input("Filter Make")
+    with f3:
+        fmo = st.text_input("Filter Model")
+    with f4:
+        ft = st.text_input("Filter Trim")
+
+    maps_view = _normalize_maps_columns(maps_df.copy())
+    if fy:  maps_view = maps_view[maps_view["year"].str.contains(fy, case=False, na=False)]
+    if fm:  maps_view = maps_view[maps_view["make"].str.contains(fm, case=False, na=False)]
+    if fmo: maps_view = maps_view[maps_view["model"].str.contains(fmo, case=False, na=False)]
+    if ft:  maps_view = maps_view[maps_view["trim"].str.contains(ft, case=False, na=False)]
+
+    st.dataframe(maps_view, use_container_width=True, height=300)
+
+    csv_bytes = maps_view.to_csv(index=False).encode("utf-8")
+    st.download_button("⬇️ Download filtered mappings (CSV)", csv_bytes, file_name="mappings_filtered.csv", mime="text/csv")
+
 # Interactive Search
 st.subheader("Search")
 mode = st.radio("Search by:", ["Vehicle string", "Y/M/M/T"], horizontal=True)
 
 if mode == "Vehicle string":
-    # ⭐ NEW: Make override next to vehicle text
+    # ⭐ Make override next to vehicle text
     col_v, col_m = st.columns([3, 2])
     with col_v:
         vehicle_text = st.text_input("Vehicle (e.g., '2025 Range Rover Sport P360 SE')")  # Make may be omitted
@@ -443,11 +490,7 @@ if mode == "Vehicle string":
     src_year = parsed_year
     src_make = make_override or parsed_make
 
-    # Small diagnostic
-    st.caption(
-        f"Parsed → Year: {src_year or '—'}, Make: {src_make or '—'}, "
-        f"Model: {src_model or '—'}, Trim: {src_trim or '—'}"
-    )
+    st.caption(f"Parsed → Year: {src_year or '—'}, Make: {src_make or '—'}, Model: {src_model or '—'}, Trim: {src_trim or '—'}")
 else:
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -490,5 +533,5 @@ if st.button("💾 Save Mapping", type="primary"):
     new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
 
     saved = write_maps(new_maps)
-    if saved:
+       if saved:
         st.success("✅ Mapping saved")
