@@ -1,6 +1,6 @@
 
 # app.py
-# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection + attribute-based existing mapping detection
+# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection + robust existing-mapping detection
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -132,7 +132,7 @@ def append_jsonl_to_github(
         sha = r.json()["sha"]
         existing = base64.b64decode(r.json()["content"]).decode("utf-8")
         if existing:
-            lines = existing if existing.endswith("\n") else existing + "\n"
+            lines = existing if existing.endswith("\n") else (existing + "\n")
     elif r.status_code != 404:
         raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
     lines += json.dumps(record, ensure_ascii=False) + "\n"
@@ -283,6 +283,7 @@ def filter_cads(
     def col_equals(col, val):
         if not col or val == "":
             return None
+        series = df2[col].astype str if False else df2[col].astype(str)  # no-op line to avoid accidental editor issues
         series = df2[col].astype(str)
         return (series == val) if case_sensitive else (series.str.lower() == val.lower())
 
@@ -334,14 +335,10 @@ def filter_cads(
 # ---------------------------------------------------------------------
 def secrets_status():
     missing = []
-    if not GH_TOKEN:
-        missing.append("github.token")
-    if not GH_OWNER:
-        missing.append("github.owner")
-    if not GH_REPO:
-        missing.append("github.repo")
-    if not GH_BRANCH:
-        missing.append("github.branch")
+    if not GH_TOKEN:  missing.append("github.token")
+    if not GH_OWNER:  missing.append("github.owner")
+    if not GH_REPO:   missing.append("github.repo")
+    if not GH_BRANCH: missing.append("github.branch")
     return missing
 
 def build_key(year: str, make: str, model: str, trim: str, vehicle: str) -> str:
@@ -365,40 +362,94 @@ def _eq(a: str, b: str, case_sensitive: bool = False) -> bool:
 
 def find_existing_mappings(
     mappings: Dict[str, Dict[str, str]],
-    year: str, make: str, model: str, trim: str, vehicle: str,
-    exact_year: bool = True, case_sensitive: bool = False
-) -> List[Tuple[str, Dict[str, str]]]:
-    y, mk, md, tr, vh = map(_normalize, (year, make, model, trim, vehicle))
-    out = []
+    year: str, make: str, model: str, trim: str, vehicle: str, code_input: str,
+    exact_year: bool = True, case_sensitive: bool = False, ignore_year: bool = False, ignore_trim: bool = False
+) -> List[Tuple[str, Dict[str, str], str]]:
+    """
+    Returns a list of (key, mapping, reason) for existing mappings that match the current inputs,
+    under multiple strategies:
+      - strict_ymmt: exact Year/Make/Model/Trim
+      - lenient_no_year: ignore Year
+      - lenient_no_trim: ignore Trim
+      - by_code: mapping.code equals code_input (if provided)
+      - make_model_only: exact Make+Model (if provided)
+    """
+    y, mk, md, tr, vh, code_in = map(_normalize, (year, make, model, trim, vehicle, code_input))
+    results = []
+
     for k, v in mappings.items():
         vy  = _normalize(v.get("year", ""))
         vmk = _normalize(v.get("make", ""))
         vmd = _normalize(v.get("model", ""))
         vtr = _normalize(v.get("trim", ""))
         vvh = _normalize(v.get("vehicle", ""))
+        vcode = _normalize(v.get("code", ""))
 
-        if y:
+        # Strategy: by_code (most definitive if code is a unique identifier)
+        if code_in and vcode and _eq(vcode, code_in, case_sensitive):
+            results.append((k, v, "by_code"))
+            continue
+
+        # Strategy: strict YMMT (if all provided)
+        strict_ok = True
+        # Year check (unless ignore_year)
+        if y and not ignore_year:
             if exact_year:
                 try:
                     if int(vy) != int(y):
-                        continue
+                        strict_ok = False
                 except Exception:
                     if not _eq(vy, y, case_sensitive):
-                        continue
+                        strict_ok = False
             else:
                 if not _eq(vy, y, case_sensitive):
-                    continue
+                    strict_ok = False
+        # Make
         if mk and not _eq(vmk, mk, case_sensitive):
-            continue
+            strict_ok = False
+        # Model
         if md and not _eq(vmd, md, case_sensitive):
-            continue
-        if tr and not _eq(vtr, tr, case_sensitive):
-            continue
-        if vh and not _eq(vvh, vh, case_sensitive):
+            strict_ok = False
+        # Trim check (unless ignore_trim)
+        if tr and not ignore_trim and not _eq(vtr, tr, case_sensitive):
+            strict_ok = False
+
+        if strict_ok and (mk or md or tr or y):
+            results.append((k, v, "strict_ymmt"))
             continue
 
-        out.append((k, v))
-    return out
+        # Strategy: lenient_no_year (ignore year if other attrs match)
+        if mk and md:
+            ly_ok = True
+            if not _eq(vmk, mk, case_sensitive): ly_ok = False
+            if not _eq(vmd, md, case_sensitive): ly_ok = False
+            if tr and not ignore_trim and not _eq(vtr, tr, case_sensitive): ly_ok = False
+            if ly_ok:
+                results.append((k, v, "lenient_no_year"))
+                continue
+
+        # Strategy: lenient_no_trim (ignore trim if other attrs match)
+        lt_ok = True
+        if mk and not _eq(vmk, mk, case_sensitive): lt_ok = False
+        if md and not _eq(vmd, md, case_sensitive): lt_ok = False
+        if y and not ignore_year:
+            if exact_year:
+                try:
+                    if int(vy) != int(y): lt_ok = False
+                except Exception:
+                    if not _eq(vy, y, case_sensitive): lt_ok = False
+            else:
+                if not _eq(vy, y, case_sensitive): lt_ok = False
+        if lt_ok and (mk and md):
+            results.append((k, v, "lenient_no_trim"))
+            continue
+
+        # Strategy: make_model_only
+        if mk and md and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
+            results.append((k, v, "make_model_only"))
+            continue
+
+    return results
 
 # ---------------------------------------------------------------------
 # UI
@@ -491,6 +542,8 @@ EXACT_YEAR = st.sidebar.checkbox("Exact Year match", value=True, key="exact_year
 EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False, key="exact_mmt_checkbox")
 CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False, key="case_sensitive_checkbox")
 BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exists", value=True, key="block_search_checkbox")
+IGNORE_YEAR = st.sidebar.checkbox("Ignore Year when detecting existing mapping", value=False, key="ignore_year_checkbox")
+IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=True, key="ignore_trim_checkbox")  # default ON; trims often vary
 
 # ---------------------------------------------------------------------
 # Mapping editor inputs
@@ -498,27 +551,45 @@ BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exist
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
-with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
-with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
-with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Base")
-with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="e.g., MDX 3.5L")
-with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
+with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Land Rover")
+with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Range Rover Sport")
+with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., SE")
+with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
+with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID, AD_MFGCODE, etc.)")
 
-# Existing mapping detection (attribute-based)
-matches = find_existing_mappings(st.session_state.mappings, year, make, model, trim, vehicle, exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE)
+# Existing mapping detection (attribute-based & code-aware)
+matches = find_existing_mappings(
+    st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
+    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR, ignore_trim=IGNORE_TRIM
+)
+
 st.subheader("Existing Mapping (for current inputs)")
 if matches:
     st.success(f"Already mapped: {len(matches)} match(es) found.")
     rows = []
-    for k, v in matches:
+    for k, v, reason in matches:
         rows.append({
-            "Key": k, "Year": v.get("year", ""), "Make": v.get("make", ""),
-            "Model": v.get("model", ""), "Trim": v.get("trim", ""),
-            "Vehicle": v.get("vehicle", ""), "Code": v.get("code", ""),
+            "Match Level": reason,
+            "Key": k,
+            "Year": v.get("year", ""),
+            "Make": v.get("make", ""),
+            "Model": v.get("model", ""),
+            "Trim": v.get("trim", ""),
+            "Vehicle": v.get("vehicle", ""),
+            "Code": v.get("code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+    # Convenience: copy first existing code into input
+    ccol1, ccol2 = st.columns(2)
+    with ccol1:
+        if st.button("📋 Copy first match's Code to input", key="copy_code_btn"):
+            first_code = rows[0]["Code"]
+            st.session_state["code_input"] = first_code
+            st.success(f"Copied code '{first_code}' to the Mapped Code input.")
+
 else:
-    st.info("No existing mapping for current inputs.")
+    st.info("No existing mapping detected for current inputs (consider toggling Ignore Year/Trim).")
 
 # Add/Update/Delete local mapping
 b1, b2, b3 = st.columns(3)
@@ -549,7 +620,7 @@ with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
             if BLOCK_SEARCH_IF_MAPPED and matches:
-                st.info("Search blocked: this input is already mapped. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
+                st.info("Search blocked: a mapping already exists. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
             else:
                 if cads_upload is not None:
                     if cads_upload.name.lower().endswith(".xlsx"):
@@ -649,7 +720,6 @@ if "results_df" in st.session_state:
                 vhv = _normalize(row.get(vehicle_col, "")) if vehicle_col else ""
                 key = build_key(yv, mkv, mdv, trv, vhv)
                 code_val = _normalize(str(row.get(code_col, ""))) if code_col else ""
-
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val,
@@ -673,8 +743,7 @@ if st.session_state.mappings:
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True)
+       st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
-# --- EOF ---
