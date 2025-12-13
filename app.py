@@ -19,17 +19,16 @@ st.set_page_config(page_title="Simple Vehicle Mapper (POC)", layout="wide")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CADS_FILE_DEFAULT = "CADS.csv"
 LOCAL_MAPS_PATH = os.path.join(SCRIPT_DIR, "Mappings.csv")
+
+# CADS (catalog) must have these columns
 REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
 
-# --- Secrets/env with graceful fallback ---
-# (Do NOT index st.secrets[...] directly; use .get() and env fallbacks.)
+# --- Secrets/env with graceful fallback (GitHub optional) ---
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")
-REPO = st.secrets.get("REPO") or os.environ.get("REPO")            # e.g., "klb-text/map"
+REPO = st.secrets.get("REPO") or os.environ.get("REPO")            # e.g., "owner/repo"
 BRANCH = st.secrets.get("BRANCH") or os.environ.get("BRANCH", "main")
 FILE_PATH = st.secrets.get("FILE_PATH") or os.environ.get("FILE_PATH")  # e.g., "Mappings.csv"
 
-# If any of the GitHub settings are missing, we’ll still run the app,
-# but read/write to GitHub will be disabled with clear messages and a local fallback.
 GITHUB_ENABLED = bool(GITHUB_TOKEN and REPO and FILE_PATH)
 
 # ======================================
@@ -69,18 +68,44 @@ def load_cads(source):
         raise ValueError(f"CADS file missing columns: {sorted(missing)}")
     return df
 
+def _normalize_maps_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize mappings DataFrame to the expected schema:
+    year, make, model, trim, model_code, source
+    Also supports older schema: src_* and ad_mfgcode/saved_by.
+    """
+    expected_cols = ["year", "make", "model", "trim", "model_code", "source"]
+
+    # Lowercase/strip column names
+    df.columns = [c.strip().lower() for c in df.columns]
+
+    # Rename legacy columns if present
+    rename_map = {
+        "src_year": "year",
+        "src_make": "make",
+        "src_model": "model",
+        "src_trim": "trim",
+        "ad_mfgcode": "model_code",
+        "saved_by": "source",
+    }
+    for old, new in rename_map.items():
+        if old in df.columns and new not in df.columns:
+            df = df.rename(columns={old: new})
+
+    # Backfill any missing expected columns
+    for col in expected_cols:
+        if col not in df.columns:
+            df[col] = ""
+
+    # Keep only expected columns, in canonical order
+    df = df[expected_cols].astype(str)
+    return df
+
 # ======================================
 # GitHub / Local Persistence
 # ======================================
 def read_maps() -> pd.DataFrame:
     """Read mappings from GitHub if enabled; otherwise from local CSV; otherwise return empty DataFrame."""
-    columns = [
-        "src_year","src_make","src_model","src_trim",
-        "cad_year","cad_make","cad_model","cad_trim",
-        "ad_mfgcode","saved_by","created_utc"
-    ]
-
-    # Try GitHub first
     if GITHUB_ENABLED:
         url = f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}"
         headers = {
@@ -91,23 +116,29 @@ def read_maps() -> pd.DataFrame:
         if r.status_code == 200:
             content_b64 = r.json()["content"]
             content = base64.b64decode(content_b64).decode("utf-8")
-            return pd.read_csv(io.StringIO(content), dtype=str)
-        # If file doesn't exist yet, start empty
-        return pd.DataFrame(columns=columns)
+            df = pd.read_csv(io.StringIO(content), dtype=str, keep_default_na=False, encoding="utf-8")
+            return _normalize_maps_columns(df)
+        # File not found or inaccessible: start empty in expected schema
+        return pd.DataFrame(columns=["year", "make", "model", "trim", "model_code", "source"])
 
-    # Fallback: local file
+    # Local fallback
     if os.path.exists(LOCAL_MAPS_PATH):
         try:
-            return pd.read_csv(LOCAL_MAPS_PATH, dtype=str, keep_default_na=False, encoding="utf-8")
+            df = pd.read_csv(LOCAL_MAPS_PATH, dtype=str, keep_default_na=False, encoding="utf-8")
+            return _normalize_maps_columns(df)
         except Exception as e:
             st.warning(f"Could not read local mappings: {e}. Starting empty.")
-    return pd.DataFrame(columns=columns)
+
+    return pd.DataFrame(columns=["year", "make", "model", "trim", "model_code", "source"])
 
 def write_maps(df: pd.DataFrame) -> bool:
     """
     Write mappings to GitHub if enabled; otherwise save to local CSV.
     Returns True on success, False on failure.
     """
+    # Ensure canonical schema
+    df = _normalize_maps_columns(df)
+
     # GitHub path
     if GITHUB_ENABLED:
         csv_data = df.to_csv(index=False)
@@ -125,7 +156,6 @@ def write_maps(df: pd.DataFrame) -> bool:
             "message": "Update mappings",
             "content": base64.b64encode(csv_data.encode("utf-8")).decode("utf-8"),
             "branch": BRANCH,
-            # Optional: add committer metadata (will show in history)
             "committer": {
                 "name": os.getenv("APP_USER", "Vehicle Mapper"),
                 "email": os.getenv("APP_USER_EMAIL", "noreply@example.com"),
@@ -203,9 +233,21 @@ def find_existing_mapping(maps_df: pd.DataFrame, year, make, model, trim) -> pd.
     """Return existing mapping row for the given src YMMT or None."""
     if maps_df.empty:
         return None
-    maps_df["_srckey"] = maps_df.apply(
-        lambda r: srckey_strict(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1
-    )
+
+    required = {"year", "make", "model", "trim"}
+    if not required.issubset(set(maps_df.columns)):
+        # Columns not present: treat as no existing mapping
+        return None
+
+    try:
+        maps_df["_srckey"] = maps_df.apply(
+            lambda r: srckey_strict(r.get("year", ""), r.get("make", ""), r.get("model", ""), r.get("trim", "")),
+            axis=1,
+        )
+    except Exception as e:
+        st.warning(f"Could not compute existing mapping keys: {e}")
+        return None
+
     key = srckey_strict(year, make, model, trim)
     hit = maps_df[maps_df["_srckey"] == key]
     return None if hit.empty else hit.iloc[0]
@@ -225,24 +267,35 @@ def candidates_by_ymmt(cads_df: pd.DataFrame, year, make, model, trim=""):
     return base
 
 def save_mapping(maps_df: pd.DataFrame, src_year, src_make, src_model, src_trim, cad_row: pd.Series):
-    """Append/update mapping for the src YMMT to the selected CADS row."""
+    """Append/update mapping for the src YMMT to the selected CADS row using target schema."""
+    # Ensure canonical schema
+    maps_df = _normalize_maps_columns(maps_df)
+
+    # Dedup current key if present
     if not maps_df.empty:
-        maps_df["_srckey"] = maps_df.apply(
-            lambda r: srckey_strict(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
-            axis=1
-        )
-        current_key = srckey_strict(src_year, src_make, src_model, src_trim)
-        maps_df = maps_df[maps_df["_srckey"] != current_key].drop(columns=["_srckey"], errors="ignore")
+        try:
+            maps_df["_srckey"] = maps_df.apply(
+                lambda r: srckey_strict(r.get("year", ""), r.get("make", ""), r.get("model", ""), r.get("trim", "")),
+                axis=1,
+            )
+            current_key = srckey_strict(src_year, src_make, src_model, src_trim)
+            maps_df = maps_df[maps_df["_srckey"] != current_key]
+        finally:
+            maps_df = maps_df.drop(columns=["_srckey"], errors="ignore")
 
     new_row = {
-        "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
-        "cad_year": cad_row.get("ad_year", ""), "cad_make": cad_row.get("ad_make", ""),
-        "cad_model": cad_row.get("ad_model", ""), "cad_trim": cad_row.get("ad_trim", ""),
-        "ad_mfgcode": cad_row.get("ad_mfgcode", ""),
-        "saved_by": os.getenv("APP_USER", "user"),
-        "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "year": str(src_year),
+        "make": str(src_make),
+        "model": str(src_model),
+        "trim": str(src_trim),
+        "model_code": str(cad_row.get("ad_mfgcode", "")),
+        "source": os.getenv("APP_USER", "user"),
     }
-    return pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
+
+    maps_df = pd.concat([maps_df, pd.DataFrame([new_row])], ignore_index=True)
+    # Keep canonical order
+    maps_df = maps_df[["year", "make", "model", "trim", "model_code", "source"]]
+    return maps_df
 
 # ======================================
 # UI
@@ -300,7 +353,7 @@ if cands.empty:
     st.error("No CADS candidates found.")
     st.stop()
 
-view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
+view_cols = ["ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"]
 st.dataframe(cands[view_cols], use_container_width=True, height=260)
 
 labels = [
@@ -316,3 +369,4 @@ if st.button("💾 Save Mapping", type="primary"):
     saved = write_maps(new_maps)
     if saved:
         st.success("✅ Mapping saved")
+        st.toast("Vehicle mapped.", icon="✅")
