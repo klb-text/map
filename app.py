@@ -466,7 +466,6 @@ with b3:
         try:
             # Prefer locally uploaded CADS if provided
             if cads_upload is not None:
-                # Detect type by filename
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
                 else:
@@ -474,14 +473,14 @@ with b3:
             else:
                 # Load from GitHub based on settings
                 if CADS_IS_EXCEL:
-                    # sheet name or index
                     sheet_arg = CADS_SHEET_NAME
                     try:
                         sheet_arg = int(sheet_arg)
                     except Exception:
-                        # keep as string if not int
-                        pass
-                    df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+                        pass  # keep as string if not int
+                    df_cads = load_cads_from_github_excel(
+                        GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg
+                    )
                 else:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
@@ -500,7 +499,7 @@ with b3:
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
 
 # ---------------------------------------------------------------------
-# Current mappings table
+# Current Mappings table (fixed keys)
 # ---------------------------------------------------------------------
 st.subheader("Current Mappings (session)")
 if st.session_state.mappings:
@@ -508,7 +507,7 @@ if st.session_state.mappings:
     for k, v in st.session_state.mappings.items():
         rows.append({
             "Key": k,
-            "Year":            "Year": v.get("year", ""),
+            "Year": v.get("year", ""),
             "Make": v.get("make", ""),
             "Model": v.get("model", ""),
             "Trim": v.get("trim", ""),
@@ -519,3 +518,4 @@ if st.session_state.mappings:
 else:
     st.info("No mappings yet. Add one above.")
 
+# --- EOF
