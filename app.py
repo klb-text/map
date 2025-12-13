@@ -35,7 +35,7 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 # Paths in your repo
 MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings (created by app)
 AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
-CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv per your repo screenshot
+CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv (per your repo screenshot)
 CADS_IS_EXCEL  = False                      # set True if CADS is Excel
 
 # ---------------------------------------------------------------------
@@ -181,7 +181,7 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
     if not raw or raw.strip() == b"":
         return ("", "empty")
     encoding = "utf-8"
-    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+    if raw.startswith(b"\xff\xfe")) or raw.startswith(b"\xfe\xff"):
         encoding = "utf-16"
     elif raw.startswith(b"\xef\xbb\xbf"):
         encoding = "utf-8-sig"
@@ -190,6 +190,10 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
 
 @st.cache_data(ttl=600)
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
+    """
+    Load a CSV CADS file from GitHub Contents API and return a DataFrame.
+    Robust to BOM/UTF-16 and different delimiters; falls back to download_url for large files.
+    """
     import csv
 
     params = {"ref": ref} if ref else {}
@@ -275,7 +279,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
         raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
-# CADS filter (robust across column name variants)
+# CADS filter (robust across column name variants + exact/contains)
 # ---------------------------------------------------------------------
 def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
     for c in candidates:
@@ -288,12 +292,38 @@ def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
             return lower_map[lc]
     return None
 
-def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, vehicle: str) -> pd.DataFrame:
-    y  = (year or "").strip()
-    mk = (make or "").strip()
-    md = (model or "").strip()
-    tr = (trim or "").strip()
-    vh = (vehicle or "").strip()
+def _normalize(val: str) -> str:
+    return (val or "").strip()
+
+def _to_int_or_str(val: str):
+    s = _normalize(val)
+    try:
+        return int(s)
+    except Exception:
+        return s
+
+def filter_cads(
+    df: pd.DataFrame,
+    year: str,
+    make: str,
+    model: str,
+    trim: str,
+    vehicle: str,
+    exact_year: bool = True,
+    exact_mmt: bool = False,
+    case_sensitive: bool = False,
+) -> pd.DataFrame:
+    """
+    Filter CADS by YMMT first; fallback to Make+Model or Make+Vehicle.
+    - exact_year=True enforces numeric equality (or exact string match if non-numeric).
+    - exact_mmt=True enforces exact equality on Make/Model/Trim (case-sensitive optional).
+    - case_sensitive controls whether comparisons are case sensitive.
+    """
+    y  = _normalize(year)
+    mk = _normalize(make)
+    md = _normalize(model)
+    tr = _normalize(trim)
+    vh = _normalize(vehicle)
 
     df2 = df.copy()
 
@@ -307,37 +337,69 @@ def filter_cads(df: pd.DataFrame, year: str, make: str, model: str, trim: str, v
         if col and col in df2.columns:
             df2[col] = df2[col].astype(str).str.strip()
 
-    conds = []
-    if y and year_col:
-        conds.append(df2[year_col].astype(str).str.contains(y, case=False, na=False))
-    if mk and make_col:
-        conds.append(df2[make_col].astype(str).str.contains(mk, case=False, na=False))
-    if md and model_col:
-        conds.append(df2[model_col].astype(str).str.contains(md, case=False, na=False))
-    if tr and trim_col:
-        conds.append(df2[trim_col].astype(str).str.contains(tr, case=False, na=False))
+    def col_contains(col, val):
+        if not col or val == "":
+            return None
+        series = df2[col].astype(str)
+        return series.str.contains(val, case=case_sensitive, na=False)
 
-    if conds:
-        mask = conds[0]
-        for c in conds[1:]:
-            mask = mask & c
-        res = df2[mask]
+    def col_equals(col, val):
+        if not col or val == "":
+            return None
+        series = df2[col].astype(str)
+        if not case_sensitive:
+            return series.str.lower() == val.lower()
+        return series == val
+
+    masks = []
+
+    # Year exact handling
+    if y and year_col:
+        y_parsed = _to_int_or_str(y)
+        try:
+            df_year_int = df2[year_col].astype(int)
+            if isinstance(y_parsed, int):
+                masks.append(df_year_int == y_parsed)
+            else:
+                masks.append(col_equals(year_col, y) if exact_year else col_contains(year_col, y))
+        except Exception:
+            masks.append(col_equals(year_col, y) if exact_year else col_contains(year_col, y))
+
+    # Make/Model/Trim handling
+    if make_col and mk:
+        masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
+    if model_col and md:
+        masks.append(col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
+    if trim_col and tr:
+        masks.append(col_equals(trim_col, tr) if exact_mmt else col_contains(trim_col, tr))
+
+    primary = None
+    for m in masks:
+        if m is None:
+            continue
+        primary = m if primary is None else (primary & m)
+
+    if primary is not None:
+        res = df2[primary]
         if len(res) > 0:
             return res
 
-    if mk and md and make_col and model_col:
-        mm = (df2[make_col].astype(str).str.contains(mk, case=False, na=False)) & \
-             (df2[model_col].astype(str).str.contains(md, case=False, na=False))
-        res_mm = df2[mm]
-        if len(res_mm) > 0:
-            return res_mm
+    # Fallbacks
+    if make_col and model_col and mk and md:
+        mm = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
+        mo = (col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
+        if mm is not None and mo is not None:
+            res_mm = df2[mm & mo]
+            if len(res_mm) > 0:
+                return res_mm
 
-    if mk and vh and make_col and vehicle_col:
-        mv = (df2[make_col].astype(str).str.contains(mk, case=False, na=False)) & \
-             (df2[vehicle_col].astype(str).str.contains(vh, case=False, na=False))
-        res_mv = df2[mv]
-        if len(res_mv) > 0:
-            return res_mv
+    if make_col and vehicle_col and mk and vh:
+        mv = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
+        vv = (col_equals(vehicle_col, vh) if exact_mmt else col_contains(vehicle_col, vh))
+        if mv is not None and vv is not None:
+            res_mv = df2[mv & vv]
+            if len(res_mv) > 0:
+                return res_mv
 
     return df2.iloc[0:0]
 
@@ -479,6 +541,12 @@ CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL
 CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value="0", key="cads_sheet_input")
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv", "xlsx"], key="cads_upload")
 
+# Matching controls
+st.sidebar.subheader("Matching Controls")
+EXACT_YEAR = st.sidebar.checkbox("Exact Year match", value=True, key="exact_year_checkbox")
+EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False, key="exact_mmt_checkbox")
+CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False, key="case_sensitive_checkbox")
+
 # ---------------------------------------------------------------------
 # Mapping editor (YMMT or Make+Vehicle)
 # ---------------------------------------------------------------------
@@ -543,7 +611,13 @@ with b3:
                 else:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-            results = filter_cads(df_cads, year, make, model, trim, vehicle)
+            results            results = filter_cads(
+                df_cads, year, make, model, trim, vehicle,
+                exact_year=EXACT_YEAR,
+                exact_mmt=EXACT_MMT,
+                case_sensitive=CASE_SENSITIVE,
+            )
+
             if len(results) == 0:
                 st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., omit Trim).")
             else:
@@ -577,4 +651,3 @@ if st.session_state.mappings:
 else:
     st.info("No mappings yet. Add one above.")
 
-# --- EOF ---
