@@ -1,13 +1,13 @@
 
 # app.py
-# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search
+# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Repo: klb-text/map, Branch: main
 
 import base64
 import json
 import time
 import io
-from typing import Optional
+from typing import Optional, List
 import requests
 import pandas as pd
 import streamlit as st
@@ -33,19 +33,17 @@ GH_REPO   = gh_cfg.get("repo")
 GH_BRANCH = gh_cfg.get("branch", "main")
 
 # Paths in your repo
-MAPPINGS_PATH  = "data/mappings.json"       # JSON file to store mappings (created by app)
-AUDIT_LOG_PATH = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
-CADS_PATH      = "CADS.csv"                 # default to root-level CADS.csv (per your repo screenshot)
-CADS_IS_EXCEL  = False                      # set True if CADS is Excel
+MAPPINGS_PATH   = "data/mappings.json"       # JSON file to store mappings (created by app)
+AUDIT_LOG_PATH  = "data/mappings_log.jsonl"  # optional append-only audit log (JSONL)
+CADS_PATH       = "CADS.csv"                 # default to root-level CADS.csv
+CADS_IS_EXCEL   = False                      # set True if CADS is Excel
+CADS_CODE_PREFS = ["STYLE_ID", "AD_MFGCODE", "AD_VEH_ID"]  # default preference order for Mapped Code
 
 # ---------------------------------------------------------------------
 # GitHub helpers (Contents API + refs)
 # ---------------------------------------------------------------------
 def gh_headers(token: str):
-    return {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-    }
+    return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
 
 def gh_contents_url(owner, repo, path):
     return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
@@ -90,13 +88,11 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     base_sha = get_branch_head_sha(owner, repo, source_branch, token)
     if not base_sha:
         return False
-
     r_feat = requests.get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200:
         return True
     elif r_feat.status_code != 404:
         raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
-
     r_create = requests.post(
         f"https://api.github.com/repos/{owner}/{repo}/git/refs",
         headers=gh_headers(token),
@@ -111,24 +107,19 @@ def save_json_to_github(
 ):
     content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-
     target_branch = branch
     if use_feature_branch:
         if ensure_feature_branch(owner, repo, token, branch, feature_branch_name):
             target_branch = feature_branch_name
-
     sha = get_file_sha(owner, repo, path, token, ref=target_branch)
     data = {"message": commit_message, "content": content_b64, "branch": target_branch}
     if sha:
         data["sha"] = sha
-
     if author_name and author_email:
         data["committer"] = {"name": author_name, "email": author_email}
-
     r = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r.status_code in (200, 201):
         return r.json()
-
     if r.status_code == 409:
         latest_sha = get_file_sha(owner, repo, path, token, ref=target_branch)
         if latest_sha and not data.get("sha"):
@@ -136,7 +127,6 @@ def save_json_to_github(
             r2 = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
             if r2.status_code in (200, 201):
                 return r2.json()
-
     raise RuntimeError(f"Failed to save file ({r.status_code}): {r.text}")
 
 def append_jsonl_to_github(
@@ -147,7 +137,6 @@ def append_jsonl_to_github(
     if use_feature_branch:
         if ensure_feature_branch(owner, repo, token, branch, feature_branch_name):
             target_branch = feature_branch_name
-
     r = get_file(owner, repo, path, token, ref=target_branch)
     lines = ""
     sha = None
@@ -159,14 +148,11 @@ def append_jsonl_to_github(
             lines += "\n"
     elif r.status_code != 404:
         raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
-
     lines += json.dumps(record, ensure_ascii=False) + "\n"
     content_b64 = base64.b64encode(lines.encode("utf-8")).decode("utf-8")
-
     data = {"message": commit_message, "content": content_b64, "branch": target_branch}
     if sha:
         data["sha"] = sha
-
     r2 = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r2.status_code in (200, 201):
         return r2.json()
@@ -196,29 +182,23 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
     Robust to BOM/UTF-16 and different delimiters; falls back to download_url for large files.
     """
     import csv
-
     params = {"ref": ref} if ref else {}
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
-
         raw = None
         if "content" in j and j["content"]:
             try:
                 raw = base64.b64decode(j["content"])
             except Exception:
                 raw = None
-
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
             r2 = requests.get(j["download_url"])
             if r2.status_code == 200:
                 raw = r2.content
-
         if raw is None or raw.strip() == b"":
             raise ValueError(f"CADS file `{path}` appears to be empty or unavailable via API.")
-
         text, _enc = _decode_bytes_to_text(raw)
-
         sample = text[:4096]
         delimiter = None
         try:
@@ -229,20 +209,16 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
                 if cand in sample:
                     delimiter = cand
                     break
-
         if delimiter is None:
             df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
         else:
             df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
-
         df.columns = [str(c).strip() for c in df.columns]
         df = df.dropna(how="all")
         if df.empty or len(df.columns) == 0:
             raise ValueError("CADS CSV parsed but produced no columns or rows. Check delimiter and headers.")
         df = df.applymap(lambda x: str(x).strip() if pd.notnull(x) else "")
-
         return df
-
     elif r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
     else:
@@ -258,26 +234,21 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
-
         raw = None
         if "content" in j and j["content"]:
             try:
                 raw = base64.b64decode(j["content"])
             except Exception:
                 raw = None
-
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
             r2 = requests.get(j["download_url"])
             if r2.status_code == 200:
                 raw = r2.content
-
         if raw is None or raw.strip() == b"":
             raise ValueError(f"CADS file `{path}` appears to be empty or unavailable via API.")
-
         df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
         df = df.astype(str).applymap(lambda x: str(x).strip())
         return df
-
     elif r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
     else:
@@ -288,7 +259,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
 # ---------------------------------------------------------------------
 def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
     """Return the first matching column name (case-insensitive)."""
-    # Exact case first
+    # Exact match first
     for c in candidates:
         if c in df.columns:
             return c
@@ -327,8 +298,6 @@ def filter_cads(
     - exact_mmt=True enforces exact equality on Make/Model/Trim (case-sensitive optional).
     - case_sensitive controls whether comparisons are case sensitive.
     """
-
-    # Normalize user inputs
     y  = _normalize(year)
     mk = _normalize(make)
     md = _normalize(model)
@@ -337,7 +306,7 @@ def filter_cads(
 
     df2 = df.copy()
 
-    # Recognize CADS column names (adds AD_* variants seen in your table)
+    # Recognize CADS column names (AD_* variants common in your data)
     YEAR_CANDS    = ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"]
     MAKE_CANDS    = ["AD_MAKE", "Make", "MakeName", "Manufacturer"]
     MODEL_CANDS   = ["AD_MODEL", "Model", "Line", "Carline", "Series"]
@@ -355,7 +324,6 @@ def filter_cads(
         if col and col in df2.columns:
             df2[col] = df2[col].astype(str).str.strip()
 
-    # Helpers for matching
     def col_contains(col, val):
         if not col or val == "":
             return None
@@ -372,7 +340,7 @@ def filter_cads(
 
     masks = []
 
-    # Year: exact numeric/string match preferred
+    # Year exact handling
     if y and year_col:
         y_parsed = _to_int_or_str(y)
         try:
@@ -384,7 +352,7 @@ def filter_cads(
         except Exception:
             masks.append(col_equals(year_col, y) if exact_year else col_contains(year_col, y))
 
-    # Make/Model/Trim: exact vs contains based on toggle
+    # Make/Model/Trim handling
     if make_col and mk:
         masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
     if model_col and md:
@@ -399,15 +367,12 @@ def filter_cads(
             continue
         primary = m if primary is None else (primary & m)
 
-    # Primary results
     if primary is not None:
         res = df2[primary]
         if len(res) > 0:
             return res
 
     # Fallbacks
-
-    # Make + Model
     if make_col and model_col and mk and md:
         mm = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
         mo = (col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
@@ -416,7 +381,6 @@ def filter_cads(
             if len(res_mm) > 0:
                 return res_mm
 
-    # Make + Vehicle (when available)
     if make_col and vehicle_col and mk and vh:
         mv = (col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
         vv = (col_equals(vehicle_col, vh) if exact_mmt else col_contains(vehicle_col, vh))
@@ -433,14 +397,10 @@ def filter_cads(
 # ---------------------------------------------------------------------
 def secrets_status():
     missing = []
-    if not GH_TOKEN:
-        missing.append("github.token")
-    if not GH_OWNER:
-        missing.append("github.owner")
-    if not GH_REPO:
-        missing.append("github.repo")
-    if not GH_BRANCH:
-        missing.append("github.branch")
+    if not GH_TOKEN:  missing.append("github.token")
+    if not GH_OWNER:  missing.append("github.owner")
+    if not GH_REPO:   missing.append("github.repo")
+    if not GH_BRANCH: missing.append("github.branch")
     return missing
 
 def build_key(year: str, make: str, model: str, trim: str, vehicle: str):
@@ -457,6 +417,11 @@ def build_key(year: str, make: str, model: str, trim: str, vehicle: str):
         return f"{mk}:{md}"
     else:
         return mk or vh or "UNSPECIFIED"
+
+def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
+    """Return preferred code columns present in df, fallback to all columns."""
+    prefs = [c for c in CADS_CODE_PREFS if c in df.columns]
+    return prefs if prefs else list(df.columns)
 
 # ---------------------------------------------------------------------
 # UI
@@ -546,11 +511,9 @@ st.sidebar.download_button(
     mime="application/json",
     key="download_button",
 )
-
 uploaded = st.sidebar.file_uploader(
     "⬆️ Upload mappings.json (local restore)",
-    type=["json"],
-    key="upload_file",
+    type=["json"], key="upload_file",
 )
 if uploaded:
     try:
@@ -578,18 +541,12 @@ CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False, key
 st.subheader("Edit / Add Mapping")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
-with c1:
-    year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
-with c2:
-    make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
-with c3:
-    model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
-with c4:
-    trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Base")
-with c5:
-    vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="e.g., MDX 3.5L")
-with c6:
-    mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
+with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
+with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
+with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
+with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Base")
+with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="e.g., MDX 3.5L")
+with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="e.g., ACU-MDX-BASE")
 
 b1, b2, b3 = st.columns(3)
 with b1:
@@ -599,12 +556,9 @@ with b1:
             st.error("Provide at least Make or Vehicle, and optionally Year/Model/Trim.")
         else:
             st.session_state.mappings[k] = {
-                "year": (year or "").strip(),
-                "make": (make or "").strip(),
-                "model": (model or "").strip(),
-                "trim": (trim or "").strip(),
-                "vehicle": (vehicle or "").strip(),
-                "code": (mapped_code or "").strip(),
+                "year": (year or "").strip(), "make": (make or "").strip(),
+                "model": (model or "").strip(), "trim": (trim or "").strip(),
+                "vehicle": (vehicle or "").strip(), "code": (mapped_code or "").strip(),
             }
             st.success(f"Updated local mapping for `{k}`.")
 with b2:
@@ -618,18 +572,18 @@ with b2:
 with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
+            # Prefer locally uploaded CADS if provided
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
                 else:
                     df_cads = pd.read_csv(cads_upload)
             else:
+                # Load from GitHub based on settings
                 if CADS_IS_EXCEL:
                     sheet_arg = CADS_SHEET_NAME
-                    try:
-                        sheet_arg = int(sheet_arg)
-                    except Exception:
-                        pass
+                    try: sheet_arg = int(sheet_arg)
+                    except Exception: pass
                     df_cads = load_cads_from_github_excel(
                         GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg
                     )
@@ -638,16 +592,20 @@ with b3:
 
             results = filter_cads(
                 df_cads, year, make, model, trim, vehicle,
-                exact_year=EXACT_YEAR,
-                exact_mmt=EXACT_MMT,
-                case_sensitive=CASE_SENSITIVE,
+                exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
             )
-
             if len(results) == 0:
                 st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., omit Trim).")
             else:
-                st.success(f"Found {len(results)} CADS rows.")
-                st.dataframe(results, use_container_width=True)
+                # Initialize selectable table state
+                selectable = results.copy()
+                if "Select" not in selectable.columns:
+                    selectable.insert(0, "Select", False)
+                st.session_state["results_df"] = selectable
+                # Default mapped code column suggestion based on preferences
+                st.session_state["code_candidates"] = get_cads_code_candidates(results)
+                st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                st.success(f"Found {len(selectable)} CADS rows. Use checkboxes to select one or more.")
         except FileNotFoundError as fnf:
             st.error(str(fnf))
             st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
@@ -655,6 +613,81 @@ with b3:
             st.error(f"CADS search failed: {e}")
 
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
+
+# ---------------------------------------------------------------------
+# Select vehicles from CADS results and add to mappings
+# ---------------------------------------------------------------------
+if "results_df" in st.session_state:
+    st.subheader("Select vehicles from CADS results")
+
+    # Code column selection
+    code_candidates = st.session_state.get("code_candidates", [])
+    st.session_state["code_column"] = st.selectbox(
+        "Mapped Code column (from CADS results)",
+        options=code_candidates if code_candidates else list(st.session_state["results_df"].columns),
+        index=0 if code_candidates else 0,
+        key="code_column_select",
+    )
+
+    # Select all / Clear selection
+    csel1, csel2 = st.columns(2)
+    with csel1:
+        if st.button("✅ Select All", key="select_all_btn"):
+            df_tmp = st.session_state["results_df"].copy()
+            df_tmp["Select"] = True
+            st.session_state["results_df"] = df_tmp
+    with csel2:
+        if st.button("🧹 Clear Selection", key="clear_selection_btn"):
+            df_tmp = st.session_state["results_df"].copy()
+            df_tmp["Select"] = False
+            st.session_state["results_df"] = df_tmp
+
+    # Editable table with a Select checkbox per row
+    edited = st.data_editor(
+        st.session_state["results_df"],
+        key="results_editor",
+        use_container_width=True,
+        num_rows="dynamic",
+    )
+    # Persist edits back
+    st.session_state["results_df"] = edited
+
+    # Show selected count
+    selected_rows = edited[edited["Select"] == True]
+    st.caption(f"Selected {len(selected_rows)} vehicle(s).")
+
+    # Bulk add selected rows to mappings
+    if st.button("➕ Add selected vehicle(s) to mappings", key="add_selected_to_mappings"):
+        if selected_rows.empty:
+            st.warning("No rows selected. Tick the 'Select' checkbox for one or more rows.")
+        else:
+            # Resolve CADS column names for Y/M/M/T/Vehicle again
+            df2 = selected_rows.copy()
+            year_col    = _find_col(df2, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
+            make_col    = _find_col(df2, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
+            model_col   = _find_col(df2, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
+            trim_col    = _find_col(df2, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
+            vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"])
+
+            code_col = st.session_state.get("code_column")
+
+            added = 0
+            for _, row in df2.iterrows():
+                yv  = str(row.get(year_col, "")).strip() if year_col else ""
+                mkv = str(row.get(make_col, "")).strip() if make_col else ""
+                mdv = str(row.get(model_col, "")).strip() if model_col else ""
+                trv = str(row.get(trim_col, "")).strip() if trim_col else ""
+                vhv = str(row.get(vehicle_col, "")).strip() if vehicle_col else ""
+                key = build_key(yv, mkv, mdv, trv, vhv)
+
+                code_val = str(row.get(code_col, "")).strip() if code_col else ""
+                st.session_state.mappings[key] = {
+                    "year": yv, "make": mkv, "model": mdv, "trim": trv,
+                    "vehicle": vhv, "code": code_val,
+                }
+                added += 1
+
+            st.success(f"Added/updated {added} mapping(s). You can commit them in the sidebar.")
 
 # ---------------------------------------------------------------------
 # Current Mappings table
@@ -674,5 +707,4 @@ if st.session_state.mappings:
         })
     st.dataframe(rows, use_container_width=True)
 else:
-    st.info("No mappings yet. Add one above.")
-
+    st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
