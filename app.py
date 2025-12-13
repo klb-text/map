@@ -654,6 +654,6 @@ if st.session_state.mappings:
             "Code": v.get("code", ""),
         })
     st.dataframe(rows, use_container_width=True)
-elseelse:
+else:
     st.info("No mappings yet. Add one above.")
 
