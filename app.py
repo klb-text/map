@@ -490,5 +490,5 @@ if st.button("💾 Save Mapping", type="primary"):
     new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
 
     saved = write_maps(new_maps)
-    if saved    if saved:
+    if saved:
         st.success("✅ Mapping saved")
