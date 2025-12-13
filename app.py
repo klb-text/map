@@ -725,7 +725,7 @@ if st.session_state.mappings:
             "Model": v.get("model", ""),
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
-            "Code": v.get("code",            "Code": v.get("code", ""),
+            "Code": v.get("code", ""),
         })
     st.dataframe(rows, use_container_width=True)
 else:
