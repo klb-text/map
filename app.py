@@ -1,7 +1,9 @@
+
 import os
 import unicodedata
 import base64
 import requests
+import io
 from datetime import datetime, timezone
 
 import streamlit as st
@@ -68,7 +70,7 @@ def read_maps() -> pd.DataFrame:
     r = requests.get(url, headers=headers)
     if r.status_code == 200:
         content = base64.b64decode(r.json()["content"]).decode("utf-8")
-        return pd.read_csv(pd.compat.StringIO(content), dtype=str)
+        return pd.read_csv(io.StringIO(content), dtype=str)
     return pd.DataFrame(columns=["src_year","src_make","src_model","src_trim","cad_year","cad_make","cad_model","cad_trim","ad_mfgcode","saved_by","created_utc"])
 
 def write_maps(df: pd.DataFrame):
@@ -229,7 +231,7 @@ selected_pos = st.radio("Choose a candidate", options=list(range(len(labels))), 
 
 if st.button("💾 Save Mapping", type="primary"):
     cad_row = cands.iloc[selected_pos]
-    new_maps = save_mapping(maps_df, src_year, src_make, src_model,    new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
+    new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
     write_maps(new_maps)
     st.success("✅ Mapping saved to GitHub")
     st.toast("Vehicle mapped.", icon="✅")
