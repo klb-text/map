@@ -1,15 +1,15 @@
 
+# app.py
 import os
+import io
 import unicodedata
 import base64
 import requests
-import io
 from datetime import datetime, timezone
 
 import streamlit as st
 import pandas as pd
 from rapidfuzz import fuzz
-
 
 # ======================================
 # Config
@@ -18,18 +18,19 @@ st.set_page_config(page_title="Simple Vehicle Mapper (POC)", layout="wide")
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CADS_FILE_DEFAULT = "CADS.csv"
+LOCAL_MAPS_PATH = os.path.join(SCRIPT_DIR, "Mappings.csv")
 REQUIRED_CADS_COLS = {"ad_year", "ad_make", "ad_model", "ad_trim", "ad_mfgcode"}
 
 # --- Secrets/env with graceful fallback ---
-# Do NOT index st.secrets[...] directly; use .get() and env fallbacks.
+# (Do NOT index st.secrets[...] directly; use .get() and env fallbacks.)
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")
 REPO = st.secrets.get("REPO") or os.environ.get("REPO")            # e.g., "klb-text/map"
 BRANCH = st.secrets.get("BRANCH") or os.environ.get("BRANCH", "main")
 FILE_PATH = st.secrets.get("FILE_PATH") or os.environ.get("FILE_PATH")  # e.g., "Mappings.csv"
 
-# If any# If any of the GitHub settings are missing, we’ll still run the app,
-# but read/write to GitHub will be disabled with clear messages.
-
+# If any of the GitHub settings are missing, we’ll still run the app,
+# but read/write to GitHub will be disabled with clear messages and a local fallback.
+GITHUB_ENABLED = bool(GITHUB_TOKEN and REPO and FILE_PATH)
 
 # ======================================
 # Helpers
@@ -49,6 +50,7 @@ def srckey_strict(year, make, model, trim) -> str:
 
 @st.cache_data
 def load_cads(source):
+    """Load CADS CSV/XLSX and normalize columns."""
     if hasattr(source, "name"):
         ext = os.path.splitext(source.name)[1].lower()
     elif isinstance(source, str):
@@ -68,38 +70,93 @@ def load_cads(source):
     return df
 
 # ======================================
-# GitHub Persistence
+# GitHub / Local Persistence
 # ======================================
 def read_maps() -> pd.DataFrame:
-    url = f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    r = requests.get(url, headers=headers)
-    if r.status_code == 200:
-        content = base64.b64decode(r.json()["content"]).decode("utf-8")
-        return pd.read_csv(io.StringIO(content), dtype=str)
-    return pd.DataFrame(columns=["src_year","src_make","src_model","src_trim","cad_year","cad_make","cad_model","cad_trim","ad_mfgcode","saved_by","created_utc"])
+    """Read mappings from GitHub if enabled; otherwise from local CSV; otherwise return empty DataFrame."""
+    columns = [
+        "src_year","src_make","src_model","src_trim",
+        "cad_year","cad_make","cad_model","cad_trim",
+        "ad_mfgcode","saved_by","created_utc"
+    ]
 
-def write_maps(df: pd.DataFrame):
-    csv_data = df.to_csv(index=False)
-    url = f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    # Get current file SHA
-    r = requests.get(url, headers=headers)
-    sha = r.json().get("sha")
-    payload = {
-        "message": "Update mappings",
-        "content": base64.b64encode(csv_data.encode("utf-8")).decode("utf-8"),
-        "branch": BRANCH,
-        "sha": sha
-    }
-    resp = requests.put(url, headers=headers, json=payload)
-    if resp.status_code not in [200, 201]:
-        st.error(f"GitHub save failed: {resp.status_code} {resp.text}")
+    # Try GitHub first
+    if GITHUB_ENABLED:
+        url = f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}"
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json",
+        }
+        r = requests.get(url, headers=headers, params={"ref": BRANCH})
+        if r.status_code == 200:
+            content_b64 = r.json()["content"]
+            content = base64.b64decode(content_b64).decode("utf-8")
+            return pd.read_csv(io.StringIO(content), dtype=str)
+        # If file doesn't exist yet, start empty
+        return pd.DataFrame(columns=columns)
+
+    # Fallback: local file
+    if os.path.exists(LOCAL_MAPS_PATH):
+        try:
+            return pd.read_csv(LOCAL_MAPS_PATH, dtype=str, keep_default_na=False, encoding="utf-8")
+        except Exception as e:
+            st.warning(f"Could not read local mappings: {e}. Starting empty.")
+    return pd.DataFrame(columns=columns)
+
+def write_maps(df: pd.DataFrame) -> bool:
+    """
+    Write mappings to GitHub if enabled; otherwise save to local CSV.
+    Returns True on success, False on failure.
+    """
+    # GitHub path
+    if GITHUB_ENABLED:
+        csv_data = df.to_csv(index=False)
+        url = f"https://api.github.com/repos/{REPO}/contents/{FILE_PATH}"
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json",
+        }
+
+        # Get current file SHA (if exists) on the correct branch
+        r = requests.get(url, headers=headers, params={"ref": BRANCH})
+        sha = r.json().get("sha") if r.status_code == 200 else None
+
+        payload = {
+            "message": "Update mappings",
+            "content": base64.b64encode(csv_data.encode("utf-8")).decode("utf-8"),
+            "branch": BRANCH,
+            # Optional: add committer metadata (will show in history)
+            "committer": {
+                "name": os.getenv("APP_USER", "Vehicle Mapper"),
+                "email": os.getenv("APP_USER_EMAIL", "noreply@example.com"),
+            },
+        }
+        if sha:
+            payload["sha"] = sha
+
+        resp = requests.put(url, headers=headers, json=payload)
+        if resp.status_code in (200, 201):
+            return True
+        else:
+            st.error(f"GitHub save failed: {resp.status_code} {resp.text}")
+            return False
+
+    # Local fallback path
+    try:
+        df.to_csv(LOCAL_MAPS_PATH, index=False, encoding="utf-8")
+        st.success(f"✅ Mapping saved locally to {LOCAL_MAPS_PATH}")
+        st.subheader("Updated mappings (preview)")
+        st.dataframe(df, use_container_width=True)
+        return True
+    except Exception as e:
+        st.error(f"Local save failed: {e}")
+        return False
 
 # ======================================
 # Mapping logic
 # ======================================
 def parse_vehicle_text(vehicle_text: str, cads_df: pd.DataFrame):
+    """Parse a vehicle free-text into year/make/model/trim using CADS vocab."""
     vt = (vehicle_text or "").strip()
     if not vt:
         return "", "", "", ""
@@ -143,6 +200,7 @@ def parse_vehicle_text(vehicle_text: str, cads_df: pd.DataFrame):
     return year, make_human, model_human, trim_l
 
 def find_existing_mapping(maps_df: pd.DataFrame, year, make, model, trim) -> pd.Series | None:
+    """Return existing mapping row for the given src YMMT or None."""
     if maps_df.empty:
         return None
     maps_df["_srckey"] = maps_df.apply(
@@ -153,6 +211,7 @@ def find_existing_mapping(maps_df: pd.DataFrame, year, make, model, trim) -> pd.
     return None if hit.empty else hit.iloc[0]
 
 def candidates_by_ymmt(cads_df: pd.DataFrame, year, make, model, trim=""):
+    """Return CADS candidates filtered by Y/M/M, sorted by trim similarity if trim provided."""
     if not (year and make and model):
         return pd.DataFrame(columns=cads_df.columns)
     base = cads_df[
@@ -166,10 +225,15 @@ def candidates_by_ymmt(cads_df: pd.DataFrame, year, make, model, trim=""):
     return base
 
 def save_mapping(maps_df: pd.DataFrame, src_year, src_make, src_model, src_trim, cad_row: pd.Series):
+    """Append/update mapping for the src YMMT to the selected CADS row."""
     if not maps_df.empty:
-        maps_df["_srckey"] = maps_df.apply(lambda r: srckey_strict(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]), axis=1)
+        maps_df["_srckey"] = maps_df.apply(
+            lambda r: srckey_strict(r["src_year"], r["src_make"], r["src_model"], r["src_trim"]),
+            axis=1
+        )
         current_key = srckey_strict(src_year, src_make, src_model, src_trim)
         maps_df = maps_df[maps_df["_srckey"] != current_key].drop(columns=["_srckey"], errors="ignore")
+
     new_row = {
         "src_year": src_year, "src_make": src_make, "src_model": src_model, "src_trim": src_trim,
         "cad_year": cad_row.get("ad_year", ""), "cad_make": cad_row.get("ad_make", ""),
@@ -198,7 +262,7 @@ else:
 
 st.caption(f"Loaded CADS with {len(cads_df)} rows.")
 
-# Load mappings from GitHub
+# Load mappings
 maps_df = read_maps()
 
 # Search input
@@ -209,20 +273,27 @@ if mode == "Vehicle string":
     src_year, src_make, src_model, src_trim = parse_vehicle_text(vehicle_text, cads_df)
 else:
     c1, c2, c3, c4 = st.columns(4)
-    with c1: src_year = st.text_input("Year")
-    with c2: src_make = st.text_input("Make")
-    with c3: src_model = st.text_input("Model")
-    with c4: src_trim = st.text_input("Trim (optional)")
+    with c1:
+        src_year = st.text_input("Year")
+    with c2:
+        src_make = st.text_input("Make")
+    with c3:
+        src_model = st.text_input("Model")
+    with c4:
+        src_trim = st.text_input("Trim (optional)")
 
+# Stop if nothing entered
 if not (src_year or src_make or src_model or src_trim):
     st.stop()
 
+# Existing mapping?
 hit = find_existing_mapping(maps_df, src_year, src_make, src_model, src_trim)
 if hit is not None:
     st.success("✅ Vehicle mapped already")
     st.write(hit)
     st.stop()
 
+# New mapping flow
 st.warning("⚠️ Needs mapping")
 cands = candidates_by_ymmt(cads_df, src_year, src_make, src_model, src_trim)
 if cands.empty:
@@ -232,12 +303,16 @@ if cands.empty:
 view_cols = ["ad_year","ad_make","ad_model","ad_trim","ad_mfgcode"]
 st.dataframe(cands[view_cols], use_container_width=True, height=260)
 
-labels = [f"{r['ad_year']} {r['ad_make']} {r['ad_model']} {r['ad_trim']} | code={r['ad_mfgcode']}" for _, r in cands[view_cols].reset_index(drop=True).iterrows()]
+labels = [
+    f"{r['ad_year']} {r['ad_make']} {r['ad_model']} {r['ad_trim']} | code={r['ad_mfgcode']}"
+    for _, r in cands[view_cols].reset_index(drop=True).iterrows()
+]
 selected_pos = st.radio("Choose a candidate", options=list(range(len(labels))), format_func=lambda i: labels[i], index=0)
 
 if st.button("💾 Save Mapping", type="primary"):
     cad_row = cands.iloc[selected_pos]
     new_maps = save_mapping(maps_df, src_year, src_make, src_model, src_trim, cad_row)
-    write_maps(new_maps)
-    st.success("✅ Mapping saved to GitHub")
-    st.toast("Vehicle mapped.", icon="✅")
+
+    saved = write_maps(new_maps)
+    if saved:
+        st.success("✅ Mapping saved")
