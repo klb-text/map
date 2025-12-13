@@ -14,5 +14,13 @@
     "trim": "P400 SE",
     "vehicle": "4dr All-Wheel Drive",
     "code": "458981"
+  },
+  "2025-Land Rover-Discovery-P300 S": {
+    "year": "2025",
+    "make": "Land Rover",
+    "model": "Discovery",
+    "trim": "P300 S",
+    "vehicle": "4dr All-Wheel Drive",
+    "code": "459995"
   }
 }
