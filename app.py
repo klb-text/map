@@ -3,6 +3,7 @@
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
+# + FLEXIBLE TRIM MATCHING (token AND + AWD synonyms)
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -237,7 +238,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
-# Filtering helpers (column-aware + exact/contains)
+# Filtering helpers (column-aware + exact/contains + flexible TRIM)
 # ---------------------------------------------------------------------
 def _find_col(df: pd.DataFrame, candidates) -> Optional[str]:
     for c in candidates:
@@ -274,21 +275,50 @@ def _split_year_tokens(s: str) -> List[str]:
         return []
     return re.split(r"[\/\-\|\s,;]+", s)
 
+# ---- Flexible TRIM helpers ----
+def _normalize_trim_text(s: str, use_synonyms: bool = True) -> str:
+    """
+    Lowercases and normalizes AWD synonyms:
+    'all wheel drive', 'all-wheel drive', '4wd', '4x4' -> 'awd'
+    """
+    s = (s or "").lower()
+    s = re.sub(r"[‐‑–—]", "-", s)           # normalize various dash chars
+    s = re.sub(r"\s+", " ", s).strip()
+    if use_synonyms:
+        s = s.replace("all wheel drive", "awd")
+        s = s.replace("all-wheel drive", "awd")
+        s = s.replace("4wd", "awd")
+        s = s.replace("4x4", "awd")
+    return s
+
+def _trim_tokens(s: str, use_synonyms: bool = True) -> List[str]:
+    s = _normalize_trim_text(s, use_synonyms=use_synonyms)
+    tokens = re.split(r"[^\w]+", s)
+    return [t for t in tokens if t]
+
+def _trim_token_and_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True) -> pd.Series:
+    """
+    True when ALL tokens in user_trim appear in the row's trim tokens (order-insensitive).
+    """
+    user_tokens = _trim_tokens(user_trim, use_synonyms=use_synonyms)
+    if not user_tokens:
+        return pd.Series([True] * len(series), index=series.index)
+    row_tokens_list = series.astype(str).apply(lambda s: set(_trim_tokens(s, use_synonyms=use_synonyms)))
+    return row_tokens_list.apply(lambda toks: all(tok in toks for tok in user_tokens))
+
 def filter_cads(
     df: pd.DataFrame,
     year: str, make: str, model: str, trim: str, vehicle: str, model_code: str = "",
     exact_year: bool = True, exact_mmt: bool = False, case_sensitive: bool = False,
     strict_and: bool = True, lock_modelcode_make_model: bool = True, tokenize_year: bool = True,
+    trim_token_and: bool = True, trim_awd_synonyms: bool = True
 ) -> pd.DataFrame:
     """
-    Filter CADS with optional Model Code, strict AND, and tokenized Year.
-    Order:
-      1) Build Model Code mask (exact over candidate columns); optionally AND with Make+Model exact.
-      2) Build Y/M/M/T masks (contains or equals depending on flags).
-      3) Build Year mask:
-         - numeric exact, or tokenized exact if year strings are composite.
-      4) Combine masks:
-         - strict AND (default) OR union (if disabled).
+    Filter CADS with optional Model Code, strict AND, tokenized Year, and flexible Trim:
+      - Model Code union exact across columns; optionally AND with exact Make+Model.
+      - Trim token-AND (order-insensitive) with AWD synonyms normalization.
+      - Year numeric exact or tokenized exact if composite.
+      - Combine masks with strict AND (default).
     """
     y, mk, md, tr, vh, mc = map(_normalize, (year, make, model, trim, vehicle, model_code))
     df2 = df.copy()
@@ -323,7 +353,7 @@ def filter_cads(
 
     masks = []
 
-    # 1) Model Code exact mask (union across candidate columns)
+    # 1) Model Code exact mask (union)
     if mc:
         mc_union = None
         for mc_col in get_model_code_candidates(df2):
@@ -333,7 +363,6 @@ def filter_cads(
                     mc_union = m if mc_union is None else (mc_union | m)
         if mc_union is not None:
             masks.append(mc_union)
-            # Optionally lock Make+Model exact when model code is present
             if lock_modelcode_make_model:
                 if make_col and mk:
                     mm = col_equals(make_col, mk)
@@ -344,15 +373,21 @@ def filter_cads(
                     if mo is not None:
                         masks.append(mo)
 
-    # 2) Make/Model/Trim masks (contains vs equals)
+    # 2) Make/Model masks
     if make_col and mk:
         masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
     if model_col and md:
         masks.append(col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
-    if trim_col and tr:
-        masks.append(col_equals(trim_col, tr) if exact_mmt else col_contains(trim_col, tr))
 
-    # 3) Year mask (numeric exact OR tokenized exact)
+    # Trim mask – token AND (flexible) or fallback
+    if trim_col and tr:
+        if trim_token_and:
+            trim_series = df2[trim_col].astype(str)
+            masks.append(_trim_token_and_mask(trim_series, tr, use_synonyms=trim_awd_synonyms))
+        else:
+            masks.append(col_equals(trim_col, tr) if exact_mmt else col_contains(trim_col, tr))
+
+    # 3) Year mask
     if y and year_col:
         y_parsed = _to_int_or_str(y)
         try:
@@ -511,7 +546,8 @@ def match_cads_rows_for_mapping(
     out = filter_cads(
         df, y, mk, md, tr, vh, "",
         exact_year=exact_year, exact_mmt=True, case_sensitive=case_sensitive,
-        strict_and=True, lock_modelcode_make_model=False, tokenize_year=True
+        strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
+        trim_token_and=True, trim_awd_synonyms=True
     )
     return out.reset_index(drop=True)
 
@@ -636,6 +672,10 @@ STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", v
 LOCK_MODEL_CODE_MAKE_MODEL = st.sidebar.checkbox("Lock Model Code to Make+Model (exact)", value=True, key="lock_modelcode_mm_checkbox")
 TOKENIZE_YEAR = st.sidebar.checkbox("Tokenize Year (handle '2024/2025' style values)", value=True, key="tokenize_year_checkbox")
 
+# NEW Trim flexibility toggles
+TRIM_TOKEN_AND = st.sidebar.checkbox("Trim: token AND match (order-insensitive)", value=True, key="trim_token_and_checkbox")
+TRIM_AWD_SYNONYMS = st.sidebar.checkbox("Trim: normalize AWD synonyms (AWD/All‑Wheel Drive/4WD/4x4)", value=True, key="trim_awd_synonyms_checkbox")
+
 # ---------------------------------------------------------------------
 # Mapping editor inputs
 # ---------------------------------------------------------------------
@@ -647,8 +687,6 @@ with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MD
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
-
-# Optional Model Code search input
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
 # Clear stale CADS results when inputs change
@@ -791,7 +829,8 @@ with b3:
                 results = filter_cads(
                     df_cads, year, make, model, trim, vehicle, model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
-                    strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR
+                    strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
+                    trim_token_and=TRIM_TOKEN_AND, trim_awd_synonyms=TRIM_AWD_SYNONYMS
                 )
                 if len(results) == 0:
                     st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., omit Trim).")
@@ -920,7 +959,7 @@ if st.session_state.mappings:
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
-            "Model Code": v.get("model_code", ""),
+            "Model Code": v.get("model_code            "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
