@@ -3,7 +3,7 @@
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
-# + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy)
+# + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -327,6 +327,67 @@ def _trim_fuzzy_mask(series: pd.Series, user_trim: str, use_synonyms: bool = Tru
     norms = series.astype(str).apply(lambda s: _normalize_trim_text(s, use_synonyms=use_synonyms))
     return norms.apply(lambda s: difflib.SequenceMatcher(None, norm_user, s).ratio() >= threshold)
 
+# ---- Top-N Trim Suggestions ----
+def _tokenized_year_match(series: pd.Series, year: str) -> pd.Series:
+    """Return a mask that matches 'year' as a distinct token in series values like '2024/2025'."""
+    yr = _normalize(year)
+    if not yr:
+        return pd.Series([True] * len(series), index=series.index)
+    return series.astype(str).apply(lambda s: yr in _split_year_tokens(s))
+
+def suggest_top_trims(
+    df: pd.DataFrame,
+    year: str,
+    make: str,
+    model: str,
+    user_trim: str,
+    top_n: int = 50,
+    trim_synonyms: bool = True,
+    restrict_to_make_model: bool = True,
+    case_sensitive: bool = False,
+) -> Tuple[pd.DataFrame, Optional[str]]:
+    """
+    Compute Top-N closest trims by fuzzy similarity (difflib) within the current Make/Model (+ Year tokens) context.
+    Returns (suggestions_df, trim_col_used).
+    """
+    year_col    = _find_col(df, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
+    make_col    = _find_col(df, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
+    model_col   = _find_col(df, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
+    trim_col    = _find_col(df, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
+
+    df2 = df.copy()
+    df2 = df2.astype(str).applymap(lambda x: str(x).strip())
+
+    ctx_mask = pd.Series([True] * len(df2), index=df2.index)
+    if restrict_to_make_model:
+        if make_col and make:
+            mk = _normalize(make)
+            ctx_mask = ctx_mask & (
+                (df2[make_col] == mk) if case_sensitive else (df2[make_col].str.lower() == mk.lower())
+            )
+        if model_col and model:
+            md = _normalize(model)
+            ctx_mask = ctx_mask & df2[model_col].str.contains(md, case=case_sensitive, na=False)
+    if year_col and year:
+        ctx_mask = ctx_mask & _tokenized_year_match(df2[year_col], year)
+
+    cand = df2[ctx_mask] if ctx_mask.any() else df2
+    if trim_col is None or cand.empty:
+        return (pd.DataFrame(), trim_col)
+
+    norm_user = _normalize_trim_text(user_trim, use_synonyms=trim_synonyms)
+    def _score(s: str) -> float:
+        return difflib.SequenceMatcher(None, norm_user, _normalize_trim_text(s, use_synonyms=trim_synonyms)).ratio()
+
+    cand["__score__"] = cand[trim_col].astype(str).apply(_score)
+    disp_cols = ["__score__", year_col, make_col, model_col, trim_col]
+    disp_cols = [c for c in disp_cols if c]
+    top = cand.sort_values("__score__", ascending=False).head(int(top_n))
+    out = top[disp_cols].rename(columns={"__score__": "Similarity"})
+    if "Similarity" in out.columns:
+        out["Similarity"] = out["Similarity"].apply(lambda v: round(float(v), 3))
+    return (out, trim_col)
+
 def filter_cads(
     df: pd.DataFrame,
     year: str, make: str, model: str, trim: str, vehicle: str, model_code: str = "",
@@ -405,7 +466,6 @@ def filter_cads(
         trim_series = df2[trim_col].astype(str)
         mode = (trim_match_mode or "Token AND").strip().lower()
         if mode == "exact":
-            # exact equality (case-insensitive unless case_sensitive True)
             masks.append(col_equals(trim_col, tr))
         elif mode == "contains":
             masks.append(col_contains(trim_col, tr))
@@ -414,7 +474,6 @@ def filter_cads(
         elif mode == "fuzzy":
             masks.append(_trim_fuzzy_mask(trim_series, tr, use_synonyms=trim_synonyms, threshold=float(trim_fuzzy_threshold or 0.65)))
         else:
-            # default: token AND
             masks.append(_trim_token_and_mask(trim_series, tr, use_synonyms=trim_synonyms))
 
     # 4) Year mask
@@ -720,6 +779,12 @@ TRIM_FUZZY_THRESHOLD = st.sidebar.slider(
     key="trim_fuzzy_threshold_slider",
 )
 
+# Suggestions count for "no results"
+SUGGESTION_COUNT = st.sidebar.number_input(
+    "Top N trim suggestions when no results",
+    min_value=1, max_value=200, value=50, step=5, key="suggestion_count_input"
+)
+
 # ---------------------------------------------------------------------
 # Mapping editor inputs
 # ---------------------------------------------------------------------
@@ -856,6 +921,7 @@ with b3:
             if BLOCK_SEARCH_IF_MAPPED and matches:
                 st.info("Search blocked: a mapping already exists. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
             else:
+                # Load CADS
                 if cads_upload is not None:
                     if cads_upload.name.lower().endswith(".xlsx"):
                         df_cads = pd.read_excel(cads_upload, engine="openpyxl")
@@ -870,15 +936,39 @@ with b3:
                     else:
                         df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
+                # Run filter
                 results = filter_cads(
                     df_cads, year, make, model, trim, vehicle, model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
                     strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
                     trim_match_mode=TRIM_MATCH_MODE, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
+
+                # Show results or suggestions
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., change Trim mode, lower fuzzy threshold, or omit Trim).")
+                    st.warning("No CADS rows matched your input. Showing top trim suggestions for your context (Make/Model/Year).")
+                    try:
+                        sugg_df, used_trim_col = suggest_top_trims(
+                            df_cads,
+                            year=year,
+                            make=make,
+                            model=model,
+                            user_trim=trim,
+                            top_n=SUGGESTION_COUNT,
+                            trim_synonyms=TRIM_SYNONYMS,
+                            restrict_to_make_model=True,
+                            case_sensitive=CASE_SENSITIVE,
+                        )
+                        if sugg_df.empty:
+                            st.info("No suggestions found (try relaxing filters, switching Trim match mode, or omitting Trim).")
+                        else:
+                            st.success(f"Top {len(sugg_df)} closest trims by similarity in your context.")
+                            st.dataframe(sugg_df, use_container_width=True)
+                            st.caption("Tip: Try copying one of the suggested trims back into the Trim input and search again.")
+                    except Exception as e:
+                        st.error(f"Suggestion build failed: {e}")
                 else:
+                    st.success(f"Found {len(results)} CADS rows.")
                     selectable = results.copy()
                     if "Select" not in selectable.columns:
                         selectable.insert(0, "Select", False)
@@ -887,7 +977,6 @@ with b3:
                     st.session_state["model_code_candidates"] = get_model_code_candidates(results)
                     st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
                     st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
-                    st.success(f"Found {len(selectable)} CADS rows. Use checkboxes to select one or more.")
         except FileNotFoundError as fnf:
             st.error(str(fnf))
             st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
@@ -1003,7 +1092,7 @@ if st.session_state.mappings:
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
-            "Model Code": v.get("model_code", ""),
+                       "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
