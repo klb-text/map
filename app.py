@@ -3,7 +3,7 @@
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
-# + FLEXIBLE TRIM MATCHING (token AND + AWD synonyms)
+# + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy)
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -11,6 +11,7 @@ import json
 import time
 import io
 import re
+import difflib
 from typing import Optional, List, Dict, Tuple
 import requests
 import pandas as pd
@@ -306,17 +307,37 @@ def _trim_token_and_mask(series: pd.Series, user_trim: str, use_synonyms: bool =
     row_tokens_list = series.astype(str).apply(lambda s: set(_trim_tokens(s, use_synonyms=use_synonyms)))
     return row_tokens_list.apply(lambda toks: all(tok in toks for tok in user_tokens))
 
+def _trim_token_or_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True) -> pd.Series:
+    """
+    True when ANY token in user_trim appears in the row's trim tokens.
+    """
+    user_tokens = _trim_tokens(user_trim, use_synonyms=use_synonyms)
+    if not user_tokens:
+        return pd.Series([True] * len(series), index=series.index)
+    row_tokens_list = series.astype(str).apply(lambda s: set(_trim_tokens(s, use_synonyms=use_synonyms)))
+    return row_tokens_list.apply(lambda toks: any(tok in toks for tok in user_tokens))
+
+def _trim_fuzzy_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True, threshold: float = 0.65) -> pd.Series:
+    """
+    True when normalized row trim is similar to normalized user trim, per difflib ratio >= threshold.
+    """
+    norm_user = _normalize_trim_text(user_trim, use_synonyms=use_synonyms)
+    if not norm_user:
+        return pd.Series([True] * len(series), index=series.index)
+    norms = series.astype(str).apply(lambda s: _normalize_trim_text(s, use_synonyms=use_synonyms))
+    return norms.apply(lambda s: difflib.SequenceMatcher(None, norm_user, s).ratio() >= threshold)
+
 def filter_cads(
     df: pd.DataFrame,
     year: str, make: str, model: str, trim: str, vehicle: str, model_code: str = "",
     exact_year: bool = True, exact_mmt: bool = False, case_sensitive: bool = False,
     strict_and: bool = True, lock_modelcode_make_model: bool = True, tokenize_year: bool = True,
-    trim_token_and: bool = True, trim_awd_synonyms: bool = True
+    trim_match_mode: str = "Token AND", trim_synonyms: bool = True, trim_fuzzy_threshold: float = 0.65,
 ) -> pd.DataFrame:
     """
     Filter CADS with optional Model Code, strict AND, tokenized Year, and flexible Trim:
       - Model Code union exact across columns; optionally AND with exact Make+Model.
-      - Trim token-AND (order-insensitive) with AWD synonyms normalization.
+      - Trim match modes: Exact | Contains | Token AND | Token OR | Fuzzy (threshold).
       - Year numeric exact or tokenized exact if composite.
       - Combine masks with strict AND (default).
     """
@@ -373,21 +394,30 @@ def filter_cads(
                     if mo is not None:
                         masks.append(mo)
 
-    # 2) Make/Model masks
+    # 2) Make / Model masks
     if make_col and mk:
         masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
     if model_col and md:
         masks.append(col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
 
-    # Trim mask – token AND (flexible) or fallback
+    # 3) Trim mask – per selected mode
     if trim_col and tr:
-        if trim_token_and:
-            trim_series = df2[trim_col].astype(str)
-            masks.append(_trim_token_and_mask(trim_series, tr, use_synonyms=trim_awd_synonyms))
+        trim_series = df2[trim_col].astype(str)
+        mode = (trim_match_mode or "Token AND").strip().lower()
+        if mode == "exact":
+            # exact equality (case-insensitive unless case_sensitive True)
+            masks.append(col_equals(trim_col, tr))
+        elif mode == "contains":
+            masks.append(col_contains(trim_col, tr))
+        elif mode == "token or":
+            masks.append(_trim_token_or_mask(trim_series, tr, use_synonyms=trim_synonyms))
+        elif mode == "fuzzy":
+            masks.append(_trim_fuzzy_mask(trim_series, tr, use_synonyms=trim_synonyms, threshold=float(trim_fuzzy_threshold or 0.65)))
         else:
-            masks.append(col_equals(trim_col, tr) if exact_mmt else col_contains(trim_col, tr))
+            # default: token AND
+            masks.append(_trim_token_and_mask(trim_series, tr, use_synonyms=trim_synonyms))
 
-    # 3) Year mask
+    # 4) Year mask
     if y and year_col:
         y_parsed = _to_int_or_str(y)
         try:
@@ -404,7 +434,7 @@ def filter_cads(
             else:
                 masks.append(col_contains(year_col, y))
 
-    # 4) Combine masks
+    # Combine masks
     if not masks:
         return df2.iloc[0:0]
 
@@ -547,7 +577,7 @@ def match_cads_rows_for_mapping(
         df, y, mk, md, tr, vh, "",
         exact_year=exact_year, exact_mmt=True, case_sensitive=case_sensitive,
         strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
-        trim_token_and=True, trim_awd_synonyms=True
+        trim_match_mode="Token AND", trim_synonyms=True, trim_fuzzy_threshold=0.65
     )
     return out.reset_index(drop=True)
 
@@ -667,14 +697,28 @@ IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping",
 LOAD_CADS_DETAILS_ON_MATCH = st.sidebar.checkbox("Load CADS details when mapping exists", value=True, key="load_cads_details_checkbox")
 MAX_CADS_ROWS_PER_MATCH = st.sidebar.number_input("Max CADS rows to show per match", min_value=1, max_value=10000, value=1000, step=50, key="max_cads_rows_input")
 
-# NEW Strictness toggles
+# Strictness toggles
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True, key="strict_and_checkbox")
 LOCK_MODEL_CODE_MAKE_MODEL = st.sidebar.checkbox("Lock Model Code to Make+Model (exact)", value=True, key="lock_modelcode_mm_checkbox")
 TOKENIZE_YEAR = st.sidebar.checkbox("Tokenize Year (handle '2024/2025' style values)", value=True, key="tokenize_year_checkbox")
 
-# NEW Trim flexibility toggles
-TRIM_TOKEN_AND = st.sidebar.checkbox("Trim: token AND match (order-insensitive)", value=True, key="trim_token_and_checkbox")
-TRIM_AWD_SYNONYMS = st.sidebar.checkbox("Trim: normalize AWD synonyms (AWD/All‑Wheel Drive/4WD/4x4)", value=True, key="trim_awd_synonyms_checkbox")
+# Trim flexibility
+TRIM_MATCH_MODE = st.sidebar.selectbox(
+    "Trim match mode",
+    options=["Exact", "Contains", "Token AND", "Token OR", "Fuzzy"],
+    index=2,
+    key="trim_match_mode_select",
+)
+TRIM_SYNONYMS = st.sidebar.checkbox(
+    "Trim: normalize AWD synonyms (AWD/All‑Wheel Drive/4WD/4x4)",
+    value=True,
+    key="trim_synonyms_checkbox",
+)
+TRIM_FUZZY_THRESHOLD = st.sidebar.slider(
+    "Trim: fuzzy similarity threshold",
+    min_value=0.0, max_value=1.0, value=0.65, step=0.01,
+    key="trim_fuzzy_threshold_slider",
+)
 
 # ---------------------------------------------------------------------
 # Mapping editor inputs
@@ -684,7 +728,7 @@ c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
-with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package")
+with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package / Active AWD")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
@@ -830,10 +874,10 @@ with b3:
                     df_cads, year, make, model, trim, vehicle, model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
                     strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
-                    trim_token_and=TRIM_TOKEN_AND, trim_awd_synonyms=TRIM_AWD_SYNONYMS
+                    trim_match_mode=TRIM_MATCH_MODE, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., omit Trim).")
+                    st.warning("No CADS rows matched your input. Try relaxing the filters (e.g., change Trim mode, lower fuzzy threshold, or omit Trim).")
                 else:
                     selectable = results.copy()
                     if "Select" not in selectable.columns:
@@ -959,7 +1003,7 @@ if st.session_state.mappings:
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
-            "Model Code": v.get("model_code", ""),
+            "Model Code": v            "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
