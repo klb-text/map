@@ -22,5 +22,21 @@
     "trim": "P300 S",
     "vehicle": "4dr All-Wheel Drive",
     "code": "459995"
+  },
+  "2025-Acura-TLX-Technology Package": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "TLX",
+    "trim": "Technology Package",
+    "vehicle": "4dr Front-Wheel Drive Sedan",
+    "code": "461904"
+  },
+  "2025-Acura-ADX-Base": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "Base",
+    "vehicle": "4dr Front-Wheel Drive",
+    "code": "471475"
   }
 }
