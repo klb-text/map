@@ -4,7 +4,7 @@
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
-# + Selectable suggestion table with ALL CADS columns
+# + Suggestions now MIRROR the normal results table (ALL columns, same selection UX)
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -785,10 +785,14 @@ TRIM_FUZZY_THRESHOLD = st.sidebar.slider(
     key="trim_fuzzy_threshold_slider",
 )
 
-# Suggestions count for "no results"
+# Suggestions count & Table height
 SUGGESTION_COUNT = st.sidebar.number_input(
     "Top N trim suggestions when no results",
     min_value=1, max_value=200, value=50, step=5, key="suggestion_count_input"
+)
+TABLE_HEIGHT = st.sidebar.slider(
+    "Results table height (px)",
+    min_value=400, max_value=1200, value=700, step=50, key="table_height_slider"
 )
 
 # ---------------------------------------------------------------------
@@ -815,11 +819,6 @@ if prev_inputs != current_inputs:
     st.session_state.pop("code_column", None)
     st.session_state.pop("model_code_column", None)
 
-    st.session_state.pop("sugg_df", None)
-    st.session_state.pop("sugg_code_candidates", None)
-    st.session_state.pop("sugg_model_code_candidates", None)
-    st.session_state.pop("sugg_code_column", None)
-    st.session_state.pop("sugg_model_code_column", None)
     st.session_state["prev_inputs"] = current_inputs
 
 # Existing mapping detection
@@ -957,11 +956,11 @@ with b3:
                     trim_match_mode=TRIM_MATCH_MODE, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
 
-                # Show results or suggestions
+                # Show results OR mirror suggestions into results table
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Showing top trim suggestions for your context (Make/Model/Year).")
+                    st.warning("No CADS rows matched your input. Building top trim suggestions for your context (Make/Model/Year).")
                     try:
-                        sugg_df, used_trim_col = suggest_top_trims(
+                        sugg_df, _used_trim_col = suggest_top_trims(
                             df_cads,
                             year=year,
                             make=make,
@@ -975,97 +974,18 @@ with b3:
                         if sugg_df.empty:
                             st.info("No suggestions found (try relaxing filters, switching Trim match mode, or omitting Trim).")
                         else:
-                            # Prepare selectable suggestions with ALL columns + Similarity
-                            selectable_sugg = sugg_df.copy()
-                            if "Select" not in selectable_sugg.columns:
-                                selectable_sugg.insert(0, "Select", False)
+                            # MIRROR: push suggestions into normal results table state
+                            selectable = sugg_df.copy()
+                            if "Select" not in selectable.columns:
+                                selectable.insert(0, "Select", False)
 
-                            st.session_state["sugg_df"] = selectable_sugg
-                            st.session_state["sugg_code_candidates"] = get_cads_code_candidates(selectable_sugg)
-                            st.session_state["sugg_model_code_candidates"] = get_model_code_candidates(selectable_sugg)
-                            st.session_state["sugg_code_column"] = (
-                                st.session_state["sugg_code_candidates"][0] if st.session_state["sugg_code_candidates"] else None
-                            )
-                            st.session_state["sugg_model_code_column"] = (
-                                st.session_state["sugg_model_code_candidates"][0] if st.session_state["sugg_model_code_candidates"] else None
-                            )
+                            st.session_state["results_df"] = selectable
+                            st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
+                            st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
+                            st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                            st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
 
-                            st.success(f"Top {len(selectable_sugg)} closest trims by similarity in your context.")
-                            # Column pickers for code/model_code from suggestions
-                            sc1, sc2 = st.columns(2)
-                            with sc1:
-                                st.session_state["sugg_code_column"] = st.selectbox(
-                                    "Mapped Code column (from suggestions)",
-                                    options=st.session_state["sugg_code_candidates"] if st.session_state["sugg_code_candidates"] else list(selectable_sugg.columns),
-                                    index=0 if st.session_state["sugg_code_candidates"] else 0,
-                                    key="sugg_code_column_select",
-                                )
-                            with sc2:
-                                st.session_state["sugg_model_code_column"] = st.selectbox(
-                                    "Model Code column (from suggestions)",
-                                    options=st.session_state["sugg_model_code_candidates"] if st.session_state["sugg_model_code_candidates"] else list(selectable_sugg.columns),
-                                    index=0 if st.session_state["sugg_model_code_candidates"] else 0,
-                                    key="sugg_model_code_column_select",
-                                )
-
-                            # Select All / Clear for suggestions
-                            ssel1, ssel2 = st.columns(2)
-                            with ssel1:
-                                if st.button("✅ Select All suggestions", key="sugg_select_all_btn"):
-                                    df_tmp = st.session_state["sugg_df"].copy()
-                                    df_tmp["Select"] = True
-                                    st.session_state["sugg_df"] = df_tmp
-                            with ssel2:
-                                if st.button("🧹 Clear suggestions selection", key="sugg_clear_selection_btn"):
-                                    df_tmp = st.session_state["sugg_df"].copy()
-                                    df_tmp["Select"] = False
-                                    st.session_state["sugg_df"] = df_tmp
-
-                            # Editable suggestion table
-                            edited_sugg = st.data_editor(
-                                st.session_state["sugg_df"],
-                                key="sugg_results_editor",
-                                use_container_width=True,
-                                num_rows="dynamic",
-                            )
-                            st.session_state["sugg_df"] = edited_sugg
-
-                            selected_sugg_rows = edited_sugg[edited_sugg["Select"] == True]
-                            st.caption(f"Selected {len(selected_sugg_rows)} suggested vehicle(s).")
-
-                            # Add selected suggestions to mappings
-                            if st.button("➕ Add selected suggested vehicle(s) to mappings", key="add_selected_suggestions_to_mappings"):
-                                if selected_sugg_rows.empty:
-                                    st.warning("No suggested rows selected. Tick the 'Select' checkbox for one or more suggested rows.")
-                                else:
-                                    df2 = selected_sugg_rows.copy()
-                                    year_col    = _find_col(df2, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
-                                    make_col    = _find_col(df2, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
-                                    model_col   = _find_col(df2, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
-                                    trim_col    = _find_col(df2, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
-                                    vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"])
-
-                                    sugg_code_col       = st.session_state.get("sugg_code_column")
-                                    sugg_model_code_col = st.session_state.get("sugg_model_code_column")
-
-                                    added = 0
-                                    for _, row in df2.iterrows():
-                                        yv  = _normalize(row.get(year_col, ""))    if year_col else ""
-                                        mkv = _normalize(row.get(make_col, ""))    if make_col else ""
-                                        mdv = _normalize(row.get(model_col, ""))   if model_col else ""
-                                        trv = _normalize(row.get(trim_col, ""))    if trim_col else ""
-                                        vhv = _normalize(row.get(vehicle_col, "")) if vehicle_col else ""
-                                        key = build_key(yv, mkv, mdv, trv, vhv)
-
-                                        code_val       = _normalize(str(row.get(sugg_code_col, ""))) if sugg_code_col else ""
-                                        model_code_val = _normalize(str(row.get(sugg_model_code_col, ""))) if sugg_model_code_col else ""
-
-                                        st.session_state.mappings[key] = {
-                                            "year": yv, "make": mkv, "model": mdv, "trim": trv,
-                                            "vehicle": vhv, "code": code_val, "model_code": model_code_val,
-                                        }
-                                        added += 1
-                                    st.success(f"Added/updated {added} mapping(s) from suggestions. You can commit them in the sidebar.")
+                            st.success(f"Loaded {len(selectable)} trim suggestions into the results table below (ALL CADS columns mirrored).")
                     except Exception as e:
                         st.error(f"Suggestion build failed: {e}")
                 else:
@@ -1101,7 +1021,7 @@ with b4:
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
 
 # ---------------------------------------------------------------------
-# Select vehicles from CADS results and add to mappings (normal results flow)
+# Select vehicles from CADS results (mirrored for suggestions too)
 # ---------------------------------------------------------------------
 if "results_df" in st.session_state:
     st.subheader("Select vehicles from CADS results")
@@ -1122,23 +1042,32 @@ if "results_df" in st.session_state:
         key="model_code_column_select",
     )
 
+    # Column order: keep 'Select' and 'Similarity' up front if present
+    df_show = st.session_state["results_df"]
+    front_cols = [c for c in ["Select", "Similarity"] if c in df_show.columns]
+    col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
+
     csel1, csel2 = st.columns(2)
     with csel1:
         if st.button("✅ Select All", key="select_all_btn"):
-            df_tmp = st.session_state["results_df"].copy()
+            df_tmp = df_show.copy()
             df_tmp["Select"] = True
             st.session_state["results_df"] = df_tmp
+            df_show = df_tmp
     with csel2:
         if st.button("🧹 Clear Selection", key="clear_selection_btn"):
-            df_tmp = st.session_state["results_df"].copy()
+            df_tmp = df_show.copy()
             df_tmp["Select"] = False
             st.session_state["results_df"] = df_tmp
+            df_show = df_tmp
 
     edited = st.data_editor(
-        st.session_state["results_df"],
+        df_show,
         key="results_editor",
         use_container_width=True,
         num_rows="dynamic",
+        column_order=col_order,
+        height=TABLE_HEIGHT,  # <— resizeable table height to reduce truncation
     )
     st.session_state["results_df"] = edited
 
