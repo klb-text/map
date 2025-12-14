@@ -959,7 +959,7 @@ if st.session_state.mappings:
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
-            "Model Code": v.get("model_code            "Model Code": v.get("model_code", ""),
+            "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
