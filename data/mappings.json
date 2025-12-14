@@ -38,5 +38,14 @@
     "trim": "Base",
     "vehicle": "4dr Front-Wheel Drive",
     "code": "471475"
+  },
+  "2025-Acura-RDX-Base": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "Base",
+    "vehicle": "4dr SH-AWD",
+    "code": "463062",
+    "model_code": "TC2H4SJNW"
   }
 }
