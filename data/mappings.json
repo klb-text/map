@@ -56,5 +56,23 @@
     "vehicle": "4dr All-Wheel Drive quattro Sport Utility",
     "code": "459277",
     "model_code": "F3BCEA"
+  },
+  "2025-Ford-Mustang-EcoBoost": {
+    "year": "2025",
+    "make": "Ford",
+    "model": "Mustang",
+    "trim": "EcoBoost",
+    "vehicle": "2dr Convertible",
+    "code": "462224",
+    "model_code": "P8U/101A"
+  },
+  "2025-Toyota-RAV4-LE": {
+    "year": "2025",
+    "make": "Toyota",
+    "model": "RAV4",
+    "trim": "LE",
+    "vehicle": "4dr All-Wheel Drive",
+    "code": "462255",
+    "model_code": "4432"
   }
 }
