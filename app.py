@@ -924,5 +924,5 @@ if st.session_state.mappings:
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
-    st.info("No mappings yet. Add one above or select CADS rows to add mappings    st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
+    st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
