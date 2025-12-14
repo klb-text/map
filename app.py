@@ -4,6 +4,7 @@
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
+# + Selectable suggestion table with ALL CADS columns
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -327,7 +328,7 @@ def _trim_fuzzy_mask(series: pd.Series, user_trim: str, use_synonyms: bool = Tru
     norms = series.astype(str).apply(lambda s: _normalize_trim_text(s, use_synonyms=use_synonyms))
     return norms.apply(lambda s: difflib.SequenceMatcher(None, norm_user, s).ratio() >= threshold)
 
-# ---- Top-N Trim Suggestions ----
+# ---- Top-N Trim Suggestions (returns ALL columns) ----
 def _tokenized_year_match(series: pd.Series, year: str) -> pd.Series:
     """Return a mask that matches 'year' as a distinct token in series values like '2024/2025'."""
     yr = _normalize(year)
@@ -348,16 +349,19 @@ def suggest_top_trims(
 ) -> Tuple[pd.DataFrame, Optional[str]]:
     """
     Compute Top-N closest trims by fuzzy similarity (difflib) within the current Make/Model (+ Year tokens) context.
-    Returns (suggestions_df, trim_col_used).
+    Returns (suggestions_df_with_ALL_columns, trim_col_used).
     """
+    # Resolve columns
     year_col    = _find_col(df, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
     make_col    = _find_col(df, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
     model_col   = _find_col(df, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
     trim_col    = _find_col(df, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
 
+    # Normalize frame
     df2 = df.copy()
     df2 = df2.astype(str).applymap(lambda x: str(x).strip())
 
+    # Context mask: Make + Model (exact for Make; contains for Model), and Year token match
     ctx_mask = pd.Series([True] * len(df2), index=df2.index)
     if restrict_to_make_model:
         if make_col and make:
@@ -375,18 +379,20 @@ def suggest_top_trims(
     if trim_col is None or cand.empty:
         return (pd.DataFrame(), trim_col)
 
+    # Fuzzy score between normalized user trim and candidate trims (with AWD synonyms)
     norm_user = _normalize_trim_text(user_trim, use_synonyms=trim_synonyms)
     def _score(s: str) -> float:
         return difflib.SequenceMatcher(None, norm_user, _normalize_trim_text(s, use_synonyms=trim_synonyms)).ratio()
 
-    cand["__score__"] = cand[trim_col].astype(str).apply(_score)
-    disp_cols = ["__score__", year_col, make_col, model_col, trim_col]
-    disp_cols = [c for c in disp_cols if c]
-    top = cand.sort_values("__score__", ascending=False).head(int(top_n))
-    out = top[disp_cols].rename(columns={"__score__": "Similarity"})
-    if "Similarity" in out.columns:
-        out["Similarity"] = out["Similarity"].apply(lambda v: round(float(v), 3))
-    return (out, trim_col)
+    cand["Similarity"] = cand[trim_col].astype(str).apply(_score)
+    # Sort by score desc; take Top-N; include ALL columns
+    top = cand.sort_values("Similarity", ascending=False).head(int(top_n)).copy()
+    # Round similarity for display
+    top["Similarity"] = top["Similarity"].apply(lambda v: round(float(v), 3))
+    # Move Similarity to the first column for visibility
+    cols = ["Similarity"] + [c for c in top.columns if c != "Similarity"]
+    top = top[cols].reset_index(drop=True)
+    return (top, trim_col)
 
 def filter_cads(
     df: pd.DataFrame,
@@ -793,7 +799,7 @@ c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
-with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package / Active AWD")
+with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package / Active AWD / e-tron 45 RWD")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
@@ -802,11 +808,18 @@ model_code_input = st.text_input("Model Code (optional)", key="model_code_input"
 current_inputs = (_normalize(year), _normalize(make), _normalize(model), _normalize(trim), _normalize(vehicle), _normalize(model_code_input))
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
+    # Clear results and suggestions state
     st.session_state.pop("results_df", None)
     st.session_state.pop("code_candidates", None)
     st.session_state.pop("model_code_candidates", None)
     st.session_state.pop("code_column", None)
     st.session_state.pop("model_code_column", None)
+
+    st.session_state.pop("sugg_df", None)
+    st.session_state.pop("sugg_code_candidates", None)
+    st.session_state.pop("sugg_model_code_candidates", None)
+    st.session_state.pop("sugg_code_column", None)
+    st.session_state.pop("sugg_model_code_column", None)
     st.session_state["prev_inputs"] = current_inputs
 
 # Existing mapping detection
@@ -962,9 +975,97 @@ with b3:
                         if sugg_df.empty:
                             st.info("No suggestions found (try relaxing filters, switching Trim match mode, or omitting Trim).")
                         else:
-                            st.success(f"Top {len(sugg_df)} closest trims by similarity in your context.")
-                            st.dataframe(sugg_df, use_container_width=True)
-                            st.caption("Tip: Try copying one of the suggested trims back into the Trim input and search again.")
+                            # Prepare selectable suggestions with ALL columns + Similarity
+                            selectable_sugg = sugg_df.copy()
+                            if "Select" not in selectable_sugg.columns:
+                                selectable_sugg.insert(0, "Select", False)
+
+                            st.session_state["sugg_df"] = selectable_sugg
+                            st.session_state["sugg_code_candidates"] = get_cads_code_candidates(selectable_sugg)
+                            st.session_state["sugg_model_code_candidates"] = get_model_code_candidates(selectable_sugg)
+                            st.session_state["sugg_code_column"] = (
+                                st.session_state["sugg_code_candidates"][0] if st.session_state["sugg_code_candidates"] else None
+                            )
+                            st.session_state["sugg_model_code_column"] = (
+                                st.session_state["sugg_model_code_candidates"][0] if st.session_state["sugg_model_code_candidates"] else None
+                            )
+
+                            st.success(f"Top {len(selectable_sugg)} closest trims by similarity in your context.")
+                            # Column pickers for code/model_code from suggestions
+                            sc1, sc2 = st.columns(2)
+                            with sc1:
+                                st.session_state["sugg_code_column"] = st.selectbox(
+                                    "Mapped Code column (from suggestions)",
+                                    options=st.session_state["sugg_code_candidates"] if st.session_state["sugg_code_candidates"] else list(selectable_sugg.columns),
+                                    index=0 if st.session_state["sugg_code_candidates"] else 0,
+                                    key="sugg_code_column_select",
+                                )
+                            with sc2:
+                                st.session_state["sugg_model_code_column"] = st.selectbox(
+                                    "Model Code column (from suggestions)",
+                                    options=st.session_state["sugg_model_code_candidates"] if st.session_state["sugg_model_code_candidates"] else list(selectable_sugg.columns),
+                                    index=0 if st.session_state["sugg_model_code_candidates"] else 0,
+                                    key="sugg_model_code_column_select",
+                                )
+
+                            # Select All / Clear for suggestions
+                            ssel1, ssel2 = st.columns(2)
+                            with ssel1:
+                                if st.button("✅ Select All suggestions", key="sugg_select_all_btn"):
+                                    df_tmp = st.session_state["sugg_df"].copy()
+                                    df_tmp["Select"] = True
+                                    st.session_state["sugg_df"] = df_tmp
+                            with ssel2:
+                                if st.button("🧹 Clear suggestions selection", key="sugg_clear_selection_btn"):
+                                    df_tmp = st.session_state["sugg_df"].copy()
+                                    df_tmp["Select"] = False
+                                    st.session_state["sugg_df"] = df_tmp
+
+                            # Editable suggestion table
+                            edited_sugg = st.data_editor(
+                                st.session_state["sugg_df"],
+                                key="sugg_results_editor",
+                                use_container_width=True,
+                                num_rows="dynamic",
+                            )
+                            st.session_state["sugg_df"] = edited_sugg
+
+                            selected_sugg_rows = edited_sugg[edited_sugg["Select"] == True]
+                            st.caption(f"Selected {len(selected_sugg_rows)} suggested vehicle(s).")
+
+                            # Add selected suggestions to mappings
+                            if st.button("➕ Add selected suggested vehicle(s) to mappings", key="add_selected_suggestions_to_mappings"):
+                                if selected_sugg_rows.empty:
+                                    st.warning("No suggested rows selected. Tick the 'Select' checkbox for one or more suggested rows.")
+                                else:
+                                    df2 = selected_sugg_rows.copy()
+                                    year_col    = _find_col(df2, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
+                                    make_col    = _find_col(df2, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
+                                    model_col   = _find_col(df2, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
+                                    trim_col    = _find_col(df2, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
+                                    vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"])
+
+                                    sugg_code_col       = st.session_state.get("sugg_code_column")
+                                    sugg_model_code_col = st.session_state.get("sugg_model_code_column")
+
+                                    added = 0
+                                    for _, row in df2.iterrows():
+                                        yv  = _normalize(row.get(year_col, ""))    if year_col else ""
+                                        mkv = _normalize(row.get(make_col, ""))    if make_col else ""
+                                        mdv = _normalize(row.get(model_col, ""))   if model_col else ""
+                                        trv = _normalize(row.get(trim_col, ""))    if trim_col else ""
+                                        vhv = _normalize(row.get(vehicle_col, "")) if vehicle_col else ""
+                                        key = build_key(yv, mkv, mdv, trv, vhv)
+
+                                        code_val       = _normalize(str(row.get(sugg_code_col, ""))) if sugg_code_col else ""
+                                        model_code_val = _normalize(str(row.get(sugg_model_code_col, ""))) if sugg_model_code_col else ""
+
+                                        st.session_state.mappings[key] = {
+                                            "year": yv, "make": mkv, "model": mdv, "trim": trv,
+                                            "vehicle": vhv, "code": code_val, "model_code": model_code_val,
+                                        }
+                                        added += 1
+                                    st.success(f"Added/updated {added} mapping(s) from suggestions. You can commit them in the sidebar.")
                     except Exception as e:
                         st.error(f"Suggestion build failed: {e}")
                 else:
@@ -1000,7 +1101,7 @@ with b4:
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
 
 # ---------------------------------------------------------------------
-# Select vehicles from CADS results and add to mappings
+# Select vehicles from CADS results and add to mappings (normal results flow)
 # ---------------------------------------------------------------------
 if "results_df" in st.session_state:
     st.subheader("Select vehicles from CADS results")
@@ -1092,7 +1193,7 @@ if st.session_state.mappings:
             "Trim": v.get("trim", ""),
             "Vehicle": v.get("vehicle", ""),
             "Code": v.get("code", ""),
-                       "Model Code": v.get("model_code", ""),
+            "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
