@@ -74,5 +74,14 @@
     "vehicle": "4dr All-Wheel Drive",
     "code": "462255",
     "model_code": "4432"
+  },
+  "2025-Mercedes-Benz-CLA 250-Base": {
+    "year": "2025",
+    "make": "Mercedes-Benz",
+    "model": "CLA 250",
+    "trim": "Base",
+    "vehicle": "CLA 250 Coupe 4dr All-Wheel Drive 4MATIC",
+    "code": "454250",
+    "model_code": "CLA250C4"
   }
 }
