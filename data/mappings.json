@@ -83,5 +83,14 @@
     "vehicle": "CLA 250 Coupe 4dr All-Wheel Drive 4MATIC",
     "code": "454250",
     "model_code": "CLA250C4"
+  },
+  "2025-Ford-Expedition-Active": {
+    "year": "2025",
+    "make": "Ford",
+    "model": "Expedition",
+    "trim": "Active",
+    "vehicle": "4dr 4x2",
+    "code": "467462",
+    "model_code": "U1H/200A"
   }
 }
