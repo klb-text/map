@@ -7,6 +7,7 @@
 # + Suggestions mirror the normal results table (ALL columns, same selection UX)
 # + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
 # + Hardened existing-mapping detection: require exact Trim when provided (unless explicitly ignored)
+# + Persist "Already mapped" banner across reruns and add per-run lenient trim override
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -784,6 +785,9 @@ if AGENT_MODE:
     else:
         q_ignore_trim = (q_ignore_trim_param.lower() == "true")
 
+    # Optional per-run lenient toggle for agent mode
+    q_lenient_trim = (get_query_param("lenient_trim", "false").lower() == "true")
+
     q_exact_year  = (get_query_param("exact_year", "true").lower() == "true")
     q_case_sens   = (get_query_param("case_sensitive", "false").lower() == "true")
 
@@ -791,8 +795,9 @@ if AGENT_MODE:
         st.session_state.mappings,
         q_year, q_make, q_model, q_trim, q_vehicle, q_code,
         exact_year=q_exact_year, case_sensitive=q_case_sens,
-        ignore_year=q_ignore_year, ignore_trim=q_ignore_trim,
-        require_trim_exact_if_provided=True
+        ignore_year=q_ignore_year,
+        ignore_trim=(q_ignore_trim or q_lenient_trim),
+        require_trim_exact_if_provided=(not q_lenient_trim)
     )
 
     st.subheader("Mozenda Agent Mode")
@@ -803,7 +808,8 @@ if AGENT_MODE:
         # Reset common keys to let agent proceed to next vehicle cleanly
         for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
                   "code_input","model_code_input","prev_inputs","results_df",
-                  "code_candidates","model_code_candidates","code_column","model_code_column"]:
+                  "code_candidates","model_code_candidates","code_column","model_code_column",
+                  "last_matches"]:
             st.session_state.pop(k, None)
         st.success("Agent state cleared. Ready for next vehicle.")
         st.text("STATUS=CLEARED")
@@ -959,6 +965,13 @@ IGNORE_YEAR = st.sidebar.checkbox("Ignore Year when detecting existing mapping",
 # IMPORTANT: default False to prevent S vs SE false positives
 IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=False, key="ignore_trim_checkbox")
 
+# NEW: per-run lenient override (applies only to this run)
+LENIENT_TRIM_THIS_RUN = st.sidebar.checkbox(
+    "Temporarily ignore Trim (this run only)",
+    value=False,
+    help="Use lenient matching for this run even if Trim is provided. Helpful when SE should match an existing S mapping."
+)
+
 LOAD_CADS_DETAILS_ON_MATCH = st.sidebar.checkbox("Load CADS details when mapping exists", value=True, key="load_cads_details_checkbox")
 MAX_CADS_ROWS_PER_MATCH = st.sidebar.number_input("Max CADS rows to show per match", min_value=1, max_value=10000, value=1000, step=50, key="max_cads_rows_input")
 
@@ -999,7 +1012,8 @@ TABLE_HEIGHT = st.sidebar.slider(
 if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
     for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
               "code_input","model_code_input","prev_inputs","results_df",
-              "code_candidates","model_code_candidates","code_column","model_code_column"]:
+              "code_candidates","model_code_candidates","code_column","model_code_column",
+              "last_matches"]:
         st.session_state.pop(k, None)
     st.sidebar.success("Interactive inputs/state cleared.")
 
@@ -1009,9 +1023,9 @@ if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
-with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Acura")
-with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., MDX")
-with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., Technology Package / Active AWD / e-tron 45 RWD")
+with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Land Rover")
+with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Discovery Sport")
+with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., S / SE / Technology Package / Active AWD / e-tron 45 RWD")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
@@ -1020,7 +1034,7 @@ model_code_input = st.text_input("Model Code (optional)", key="model_code_input"
 current_inputs = (_normalize(year), _normalize(make), _normalize(model), _normalize(trim), _normalize(vehicle), _normalize(model_code_input))
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
-    # Clear results and suggestions state
+    # Clear results and suggestions state (but DO NOT clear last_matches)
     st.session_state.pop("results_df", None)
     st.session_state.pop("code_candidates", None)
     st.session_state.pop("model_code_candidates", None)
@@ -1031,15 +1045,23 @@ if prev_inputs != current_inputs:
 # Existing mapping detection (interactive)
 matches = find_existing_mappings(
     st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
-    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR, ignore_trim=IGNORE_TRIM,
-    require_trim_exact_if_provided=True
+    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR,
+    ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
+    require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN)
 )
 
-st.subheader("Existing Mapping (for current inputs)")
+# Persist a snapshot of last matches so reruns (e.g., Search CADS) don't lose the banner
 if matches:
-    st.success(f"Already mapped: {len(matches)} match(es) found.")
+    st.session_state["last_matches"] = matches
+elif "last_matches" not in st.session_state:
+    st.session_state["last_matches"] = []
+
+st.subheader("Existing Mapping (for current inputs)")
+render_matches = matches if matches else st.session_state.get("last_matches", [])
+if render_matches:
+    st.success(f"Already mapped: {len(render_matches)} match(es) found.")
     rows = []
-    for k, v, reason in matches:
+    for k, v, reason in render_matches:
         rows.append({
             "Match Level": reason,
             "Key": k,
@@ -1052,62 +1074,74 @@ if matches:
             "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
-
-    ccol1, ccol2, ccol3 = st.columns(3)
-    with ccol1:
-        if st.button("📋 Copy first match's Code to input", key="copy_code_btn"):
-            first_code = rows[0]["Code"]
-            st.session_state["code_input"] = first_code
-            st.success(f"Copied code '{first_code}' to the Mapped Code input.")
-
-    # Load CADS details and enrich Model Code if missing
-    if LOAD_CADS_DETAILS_ON_MATCH:
-        try:
-            if cads_upload is not None:
-                if cads_upload.name.lower().endswith(".xlsx"):
-                    df_cads_all = pd.read_excel(cads_upload, engine="openpyxl")
-                else:
-                    df_cads_all = pd.read_csv(cads_upload)
-            else:
-                if CADS_IS_EXCEL:
-                    sheet_arg = CADS_SHEET_NAME
-                    try: sheet_arg = int(sheet_arg)
-                    except Exception: pass
-                    df_cads_all = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
-                else:
-                    df_cads_all = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
-
-            df_cads_all = _strip_object_columns(df_cads_all)
-
-            for k, v, reason in matches:
-                df_match = match_cads_rows_for_mapping(df_cads_all, v, case_sensitive=CASE_SENSITIVE, exact_year=EXACT_YEAR)
-                count = len(df_match)
-                display_df = df_match.head(MAX_CADS_ROWS_PER_MATCH) if count > MAX_CADS_ROWS_PER_MATCH else df_match
-
-                # Try to surface Model Code from CADS
-                mc_cols = get_model_code_candidates(df_match)
-                mc_values = []
-                for col in mc_cols:
-                    if col in df_match.columns:
-                        mc_values.extend(df_match[col].dropna().unique().tolist())
-                mc_values = [val for val in mc_values if val]
-                mc_values = list(dict.fromkeys(mc_values))
-
-                with st.expander(f"🔎 CADS rows for match [{reason}] key '{k}' — {count} row(s)"):
-                    if count == 0:
-                        st.info("No CADS rows matched this mapping by code or YMMT.")
-                    else:
-                        if mc_values:
-                            st.caption(f"Model Code(s) detected: {', '.join(mc_values[:10])}{' …' if len(mc_values) > 10 else ''}")
-                        st.dataframe(display_df, use_container_width=True)
-                        if count > MAX_CADS_ROWS_PER_MATCH:
-                            st.caption(f"Showing first {MAX_CADS_ROWS_PER_MATCH} of {count} rows.")
-
-        except Exception as cad_err:
-            st.warning(f"Could not load CADS details: {cad_err}")
-
+    st.caption(
+        "Match Level values: "
+        "by_code = exact code match; "
+        "strict_ymmt = exact Year/Make/Model/Trim (+ year rules); "
+        "lenient_no_year = Make+Model(+Trim exact), Year ignored; "
+        "lenient_no_trim = Make+Model+Year exact, Trim ignored; "
+        "make_model_only = Make+Model exact (Trim/Year ignored)."
+    )
+    if any(reason in ("lenient_no_trim", "make_model_only") for _, _, reason in render_matches):
+        st.warning("A mapping exists for this Make/Model (and possibly Year), but Trim differs. "
+                   "Use 'Temporarily ignore Trim (this run only)' if you want lenient detection.")
 else:
     st.info("No existing mapping detected for current inputs (try toggling Ignore Year/Trim or case sensitivity).")
+
+ccol1, ccol2, ccol3 = st.columns(3)
+with ccol1:
+    if st.button("📋 Copy first match's Code to input", key="copy_code_btn"):
+        if render_matches:
+            first_code = st.session_state.mappings[render_matches[0][0]].get("code", "")
+            st.session_state["code_input"] = first_code
+            st.success(f"Copied code '{first_code}' to the Mapped Code input.")
+        else:
+            st.info("No matches available to copy from.")
+
+# Load CADS details and enrich Model Code if missing
+if render_matches and LOAD_CADS_DETAILS_ON_MATCH:
+    try:
+        if cads_upload is not None:
+            if cads_upload.name.lower().endswith(".xlsx"):
+                df_cads_all = pd.read_excel(cads_upload, engine="openpyxl")
+            else:
+                df_cads_all = pd.read_csv(cads_upload)
+        else:
+            if CADS_IS_EXCEL:
+                sheet_arg = CADS_SHEET_NAME
+                try: sheet_arg = int(sheet_arg)
+                except Exception: pass
+                df_cads_all = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+            else:
+                df_cads_all = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
+
+        df_cads_all = _strip_object_columns(df_cads_all)
+
+        for k, v, reason in render_matches:
+            df_match = match_cads_rows_for_mapping(df_cads_all, v, case_sensitive=CASE_SENSITIVE, exact_year=EXACT_YEAR)
+            count = len(df_match)
+            display_df = df_match.head(MAX_CADS_ROWS_PER_MATCH) if count > MAX_CADS_ROWS_PER_MATCH else df_match
+
+            # Try to surface Model Code from CADS
+            mc_cols = get_model_code_candidates(df_match)
+            mc_values = []
+            for col in mc_cols:
+                if col in df_match.columns:
+                    mc_values.extend(df_match[col].dropna().unique().tolist())
+            mc_values = [val for val in mc_values if val]
+            mc_values = list(dict.fromkeys(mc_values))
+
+            with st.expander(f"🔎 CADS rows for match [{reason}] key '{k}' — {count} row(s)"):
+                if count == 0:
+                    st.info("No CADS rows matched this mapping by code or YMMT.")
+                else:
+                    if mc_values:
+                        st.caption(f"Model Code(s) detected: {', '.join(mc_values[:10])}{' …' if len(mc_values) > 10 else ''}")
+                    st.dataframe(display_df, use_container_width=True)
+                    if count > MAX_CADS_ROWS_PER_MATCH:
+                        st.caption(f"Showing first {MAX_CADS_ROWS_PER_MATCH} of {count} rows.")
+    except Exception as cad_err:
+        st.warning(f"Could not load CADS details: {cad_err}")
 
 # Add/Update/Delete local mapping
 b1, b2, b3, b4 = st.columns(4)
@@ -1138,7 +1172,8 @@ with b2:
 with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
-            if BLOCK_SEARCH_IF_MAPPED and matches:
+            # Use current render_matches to decide block behavior; banner persists via snapshot
+            if BLOCK_SEARCH_IF_MAPPED and (render_matches and len(render_matches) > 0):
                 st.info("Search blocked: a mapping already exists. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
             else:
                 # Load CADS
@@ -1230,7 +1265,8 @@ with b4:
 if st.button("🧹 Clear Inputs (Interactive)", key="clear_inputs_btn"):
     for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
               "code_input","model_code_input","prev_inputs","results_df",
-              "code_candidates","model_code_candidates","code_column","model_code_column"]:
+              "code_candidates","model_code_candidates","code_column","model_code_column",
+              "last_matches"]:
         st.session_state.pop(k, None)
     st.success("Inputs cleared.")
 
