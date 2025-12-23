@@ -8,6 +8,7 @@
 # + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
 # + Hardened existing-mapping detection: require exact Trim when provided (unless explicitly ignored)
 # + Persist "Already mapped" banner across reruns and add per-run lenient trim override
+# + STRICT FILTER on current inputs: when user types a Trim, only that Trim's mapping is shown
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -1030,16 +1031,18 @@ with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placehold
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
-# Clear stale CADS results when inputs change
+# Clear stale CADS results (AND stale match snapshots) when inputs change
 current_inputs = (_normalize(year), _normalize(make), _normalize(model), _normalize(trim), _normalize(vehicle), _normalize(model_code_input))
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
-    # Clear results and suggestions state (but DO NOT clear last_matches)
+    # Clear results and suggestions state
     st.session_state.pop("results_df", None)
     st.session_state.pop("code_candidates", None)
     st.session_state.pop("model_code_candidates", None)
     st.session_state.pop("code_column", None)
     st.session_state.pop("model_code_column", None)
+    # NEW: clear last successful matches snapshot so it doesn't carry over to new Trim
+    st.session_state.pop("last_matches", None)
     st.session_state["prev_inputs"] = current_inputs
 
 # Existing mapping detection (interactive)
@@ -1049,6 +1052,18 @@ matches = find_existing_mappings(
     ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
     require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN)
 )
+
+# NEW: Filter matches to STRICT trim-only when Trim is provided and not lenient
+def _eq_case(a: str, b: str, case_sensitive: bool) -> bool:
+    a = (a or "").strip(); b = (b or "").strip()
+    return (a == b) if case_sensitive else (a.lower() == b.lower())
+
+if (trim or "").strip() and not (IGNORE_TRIM or LENIENT_TRIM_THIS_RUN):
+    matches = [
+        (k, v, reason)
+        for (k, v, reason) in matches
+        if reason in ("by_code", "strict_ymmt") and _eq_case(v.get("trim", ""), trim, CASE_SENSITIVE)
+    ]
 
 # Persist a snapshot of last matches so reruns (e.g., Search CADS) don't lose the banner
 if matches:
@@ -1092,7 +1107,7 @@ ccol1, ccol2, ccol3 = st.columns(3)
 with ccol1:
     if st.button("📋 Copy first match's Code to input", key="copy_code_btn"):
         if render_matches:
-            first_code = st.session_state.mappings[render_matches[0][0]].get("code", "")
+            first_code = render_matches[0][1].get("code", "")
             st.session_state["code_input"] = first_code
             st.success(f"Copied code '{first_code}' to the Mapped Code input.")
         else:
