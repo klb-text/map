@@ -1,9 +1,11 @@
 
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
-# + Exact YMMT lookup first (canonicalized), strict Trim gate, Code-first CADS search
-# + Canonicalization: lower, trim, remove trailing punctuation for robust equality
-# + Snapshot cleared on input changes; minimal debug banner for inputs/flags
+# + Exact YMMT lookup (strict on Trim/Year/Make, tolerant on Model naming)
+# + Always return ONE mapped vehicle (best match); suppress lenient spillover
+# + CADS search: Code first, Model Code second, then strict YMMT (Trim exact; Model tolerant)
+# + Canonicalization: lower, trim, remove trailing punctuation; preserves hyphens/slashes
+# + Snapshot cleared on input changes; minimal debug banner
 # Repo: klb-text/map, Branch: main
 
 import base64, json, time, io, re, difflib
@@ -30,7 +32,8 @@ CADS_PATH       = "CADS.csv"
 CADS_IS_EXCEL   = False
 CADS_SHEET_NAME_DEFAULT = "0"
 
-CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]   # expanded union; AD_VEH_ID is common
+# Union of likely code columns (we’ll scan these first)
+CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
 
 # ---------------------------------------------------------------------
@@ -42,17 +45,13 @@ _session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor
                                  status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])))
 _session.mount("http://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=0.5,
                                  status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])))
-
 def _get(url, headers=None, params=None, timeout=15):  return _session.get(url, headers=headers, params=params, timeout=timeout)
 def _put(url, headers=None, json=None, timeout=15):    return _session.put(url, headers=headers, json=json, timeout=timeout)
 def _post(url, headers=None, json=None, timeout=15):   return _session.post(url, headers=headers, json=json, timeout=timeout)
 
-def gh_headers(token: str):
-    return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-def gh_contents_url(owner, repo, path):
-    return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-def gh_ref_heads(owner, repo, branch):
-    return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
+def gh_headers(token: str): return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+def gh_contents_url(owner, repo, path): return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+def gh_ref_heads(owner, repo, branch):  return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
 
 def get_file(owner, repo, path, token, ref=None):
     params = {"ref": ref} if ref else {}
@@ -84,16 +83,14 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     if not base_sha: return False
     r_feat = _get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200: return True
-    if r_feat.status_code != 404:
-        raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
+    if r_feat.status_code != 404: raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
     r_create = _post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
                      headers=gh_headers(token),
                      json={"ref": f"refs/heads/{feature_branch}", "sha": base_sha})
     return r_create.status_code in (201, 422)
 
-def save_json_to_github(owner, repo, path, token, branch, payload_dict,
-                        commit_message, author_name=None, author_email=None,
-                        use_feature_branch=False, feature_branch_name="aff-mapping-app"):
+def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
+                        author_name=None, author_email=None, use_feature_branch=False, feature_branch_name="aff-mapping-app"):
     content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
     target_branch = branch
@@ -102,8 +99,7 @@ def save_json_to_github(owner, repo, path, token, branch, payload_dict,
     sha = get_file_sha(owner, repo, path, token, ref=target_branch)
     data = {"message": commit_message, "content": content_b64, "branch": target_branch}
     if sha: data["sha"] = sha
-    if author_name and author_email:
-        data["committer"] = {"name": author_name, "email": author_email}
+    if author_name and author_email: data["committer"] = {"name": author_name, "email": author_email}
     r = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r.status_code in (200, 201): return r.json()
     if r.status_code == 409:
@@ -122,8 +118,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     r = get_file(owner, repo, path, token, ref=target_branch)
     lines, sha = "", None
     if r.status_code == 200:
-        sha = r.json()["sha"]
-        existing = base64.b64decode(r.json()["content"]).decode("utf-8")
+        sha = r.json()["sha"]; existing = base64.b64decode(r.json()["content"]).decode("utf-8")
         lines = existing if existing.endswith("\n") else (existing + "\n")
     elif r.status_code != 404:
         raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
@@ -158,14 +153,12 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
     params = {"ref": ref} if ref else {}
     r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
-        j = r.json()
-        raw = None
+        j = r.json(); raw = None
         if "content" in j and j["content"]:
             try: raw = base64.b64decode(j["content"])
             except Exception: raw = None
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _get(j["download_url"])
-            if r2.status_code == 200: raw = r2.content
+            r2 = _get(j["download_url"]);  raw = r2.content if r2.status_code == 200 else None
         if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
         text, _ = _decode_bytes_to_text(raw)
         sample = text[:4096]
@@ -192,14 +185,12 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     params = {"ref": ref} if ref else {}
     r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
-        j = r.json()
-        raw = None
+        j = r.json(); raw = None
         if "content" in j and j["content"]:
             try: raw = base64.b64decode(j["content"])
             except Exception: raw = None
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _get(j["download_url"])
-            if r2.status_code == 200: raw = r2.content
+            r2 = _get(j["download_url"]);  raw = r2.content if r2.status_code == 200 else None
         if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
         df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
         return _strip_object_columns(df)
@@ -211,39 +202,26 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
 # ---------------------------------------------------------------------
 def canon_text(val: str, for_trim: bool=False) -> str:
     """
-    Lowercases, strips spaces, and removes leading/trailing punctuation.
-    Keeps hyphens, slashes, and alphanumerics.
-    Examples: 'SE.' -> 'se', ' S, ' -> 's', 'e-tron 45' -> 'e-tron 45'
+    Lowercases, strips spaces, removes leading/trailing punctuation (keeps hyphens/slashes).
+    Also normalizes trim synonyms when for_trim=True.
     """
     s = (val or "").strip().lower()
-    # remove leading/trailing punctuation except hyphen and slash
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
-    # collapse inner whitespace
     s = re.sub(r"\s+", " ", s)
     if for_trim:
-        # normalize common synonyms
         repl = {
-            "all wheel drive": "awd", "all-wheel drive": "awd", "4wd":"awd","4x4":"awd",
+            "all wheel drive":"awd","all-wheel drive":"awd","4wd":"awd","4x4":"awd",
             "front wheel drive":"fwd","front-wheel drive":"fwd",
             "rear wheel drive":"rwd","rear-wheel drive":"rwd",
             "two wheel drive":"2wd","two-wheel drive":"2wd",
             "plug-in hybrid":"phev","electric":"ev","bev":"ev",
         }
-        for k, v in repl.items():
-            s = s.replace(k, v)
+        for k, v in repl.items(): s = s.replace(k, v)
     return s
 
 def canon_key(year: str, make: str, model: str, trim: str) -> str:
     return f"{canon_text(year)}|{canon_text(make)}|{canon_text(model)}|{canon_text(trim, for_trim=True)}"
-
-def secrets_status():
-    missing = []
-    if not GH_TOKEN:  missing.append("github.token")
-    if not GH_OWNER:  missing.append("github.owner")
-    if not GH_REPO:   missing.append("github.repo")
-    if not GH_BRANCH: missing.append("github.branch")
-    return missing
 
 def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
     return [c for c in CADS_CODE_PREFS if c in df.columns] or list(df.columns)
@@ -252,7 +230,62 @@ def get_model_code_candidates(df: pd.DataFrame) -> List[str]:
     return [c for c in CADS_MODEL_CODE_PREFS if c in df.columns] or list(df.columns)
 
 # ---------------------------------------------------------------------
-# Filtering (unchanged core but uses canonical inputs at call sites)
+# Mapping search – single best result by exact Trim/Year/Make; model similarity
+# ---------------------------------------------------------------------
+def model_similarity(a: str, b: str) -> float:
+    """
+    Score for model strings (canonical): exact=1.0; contains either way=0.9; fuzzy ratio otherwise.
+    """
+    a = canon_text(a); b = canon_text(b)
+    if not a and not b: return 0.0
+    if a == b: return 1.0
+    if a in b or b in a: return 0.9
+    return difflib.SequenceMatcher(None, a, b).ratio()
+
+def pick_best_exact_trim_mapping(
+    mappings: Dict[str, Dict[str, str]],
+    year: str, make: str, model: str, trim: str
+) -> Optional[Tuple[str, Dict[str, str], float]]:
+    """
+    Return ONE best mapping where:
+      - trim matches EXACT (canonical)
+      - year matches EXACT (if provided)
+      - make matches EXACT
+      - model chosen by highest similarity (exact > contains > fuzzy)
+    """
+    cy  = canon_text(year)
+    cmk = canon_text(make)
+    cmd = canon_text(model)
+    ctr = canon_text(trim, for_trim=True)
+
+    if not cmk or not ctr:
+        return None  # require at least make + trim
+
+    candidates: List[Tuple[str, Dict[str, str], float]] = []
+    for k, v in mappings.items():
+        vy  = canon_text(v.get("year",""))
+        vmk = canon_text(v.get("make",""))
+        vmd = canon_text(v.get("model",""))
+        vtr = canon_text(v.get("trim",""), for_trim=True)
+
+        # Trim must be exact
+        if vtr != ctr: continue
+        # Make must be exact
+        if cmk and vmk != cmk: continue
+        # Year must be exact IF provided
+        if cy and vy != cy: continue
+
+        score = model_similarity(cmd, vmd)
+        candidates.append((k, v, score))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda t: t[2], reverse=True)
+    return candidates[0]  # (key, value, score)
+
+# ---------------------------------------------------------------------
+# CADS filter – strict Trim; model tolerant via contains at call sites
 # ---------------------------------------------------------------------
 def filter_cads(
     df: pd.DataFrame,
@@ -304,31 +337,15 @@ def filter_cads(
                 if model_col and md:
                     mo = col_equals(model_col, md); masks.append(mo) if mo is not None else None
 
-    # Make / Model
+    # Make (exact) and Model (contains unless exact_mmt=True)
     if make_col and mk:
-        masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
+        masks.append(col_equals(make_col, mk))
     if model_col and md:
         masks.append(col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
 
-    # Trim
+    # Trim – exact by default
     if trim_col and tr:
-        mode = (trim_match_mode or "Exact").strip().lower()
-        if mode == "exact":      masks.append(col_equals(trim_col, tr))
-        elif mode == "contains": masks.append(col_contains(trim_col, tr))
-        elif mode == "token or":
-            # simple token OR
-            toks = [t for t in re.split(r"[^\w]+", canon_text(tr, True)) if t]
-            series_toks = df2[trim_col].astype(str).apply(lambda s: set(re.split(r"[^\w]+", canon_text(s, True))))
-            masks.append(series_toks.apply(lambda s: any(t in s for t in toks)))
-        elif mode == "fuzzy":
-            series = df2[trim_col].astype(str).apply(lambda s: canon_text(s, True))
-            target = canon_text(tr, True)
-            masks.append(series.apply(lambda s: difflib.SequenceMatcher(None, s, target).ratio() >= float(trim_fuzzy_threshold)))
-        else:
-            # Token AND default
-            toks = [t for t in re.split(r"[^\w]+", canon_text(tr, True)) if t]
-            series_toks = df2[trim_col].astype(str).apply(lambda s: set(re.split(r"[^\w]+", canon_text(s, True))))
-            masks.append(series_toks.apply(lambda s: all(t in s for t in toks)))
+        masks.append(col_equals(trim_col, tr))
 
     # Year
     if year_col and y:
@@ -364,94 +381,12 @@ def filter_cads(
     return res
 
 # ---------------------------------------------------------------------
-# Mapping search utilities
+# CADS matching for a single mapping: Code → Model Code → strict YMMT
 # ---------------------------------------------------------------------
-def build_key(year: str, make: str, model: str, trim: str, vehicle: str) -> str:
-    y, mk, md, tr, vh = map(_normalize, (year, make, model, trim, vehicle))
-    if mk and (y or md or tr): return f"{y}-{mk}-{md}-{tr}".strip("-")
-    elif mk and vh:            return f"{mk}:{vh}"
-    elif mk and md:            return f"{mk}:{md}"
-    else:                      return mk or vh or "UNSPECIFIED"
-
-def _normalize(val: str) -> str:
-    return (val or "").strip()
-
-def find_existing_mappings(
-    mappings: Dict[str, Dict[str, str]],
-    year: str, make: str, model: str, trim: str, vehicle: str, code_input: str,
-    exact_year: bool = True, case_sensitive: bool = False,
-    ignore_year: bool = False, ignore_trim: bool = False,
-    require_trim_exact_if_provided: bool = True, disallow_lenient_when_trim: bool = True,
-) -> List[Tuple[str, Dict[str, str], str]]:
-    # Canonicalize inputs
-    y_in  = canon_text(year)
-    mk_in = canon_text(make)
-    md_in = canon_text(model)
-    tr_in = canon_text(trim, for_trim=True)
-    code_in = (code_input or "").strip()
-
-    results = []
-    trim_provided = (tr_in != "")
-
-    if trim_provided and disallow_lenient_when_trim:
-        ignore_trim = False  # hard override
-
-    for k, v in mappings.items():
-        vy  = canon_text(v.get("year",""))
-        vmk = canon_text(v.get("make",""))
-        vmd = canon_text(v.get("model",""))
-        vtr = canon_text(v.get("trim",""), for_trim=True)
-        vcode = (v.get("code","") or "").strip()
-
-        # Code path (require exact trim if provided)
-        if code_in and vcode and (vcode.lower() == code_in.lower()):
-            if (not trim_provided) or (vtr == tr_in):
-                results.append((k, v, "by_code"))
-            continue
-
-        # Strict YMMT path
-        strict_ok = True
-        if y_in and not ignore_year:
-            strict_ok = (vy == y_in)
-        if mk_in and strict_ok:
-            strict_ok = (vmk == mk_in)
-        if md_in and strict_ok:
-            strict_ok = (vmd == md_in)
-        if trim_provided and require_trim_exact_if_provided and not ignore_trim and strict_ok:
-            strict_ok = (vtr == tr_in)
-        elif tr_in and strict_ok:
-            strict_ok = (vtr == tr_in)
-
-        if strict_ok and (mk_in or md_in or tr_in or y_in):
-            results.append((k, v, "strict_ymmt"))
-            continue
-
-        # Lenient suppressed when trim provided
-        if trim_provided and disallow_lenient_when_trim and not ignore_trim:
-            continue
-
-        # Lenient: no year
-        if mk_in and md_in and (vmk == mk_in) and (vmd == md_in) and (not tr_in or vtr == tr_in):
-            results.append((k, v, "lenient_no_year"))
-            continue
-
-        # Lenient: no trim
-        if mk_in and md_in and (vmk == mk_in) and (vmd == md_in) and (not y_in or vy == y_in):
-            results.append((k, v, "lenient_no_trim"))
-            continue
-
-        # Make+Model only
-        if mk_in and md_in and (vmk == mk_in) and (vmd == md_in):
-            results.append((k, v, "make_model_only"))
-            continue
-
-    return results
-
 def match_cads_rows_for_mapping(df: pd.DataFrame, mapping: Dict[str, str]) -> pd.DataFrame:
-    """Code-first, fallback strict YMMT; uses canonical text comparisons."""
     df2 = _strip_object_columns(df.copy())
 
-    # 1) by CODE union
+    # Code union
     code_val = (mapping.get("code","") or "").strip()
     if code_val:
         hits = []
@@ -463,36 +398,33 @@ def match_cads_rows_for_mapping(df: pd.DataFrame, mapping: Dict[str, str]) -> pd
         if hits:
             return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
 
-    # 2) strict YMMT fallback (Exact everything; canonicalized)
-    y  = canon_text(mapping.get("year",""))
-    mk = canon_text(mapping.get("make",""))
-    md = canon_text(mapping.get("model",""))
-    tr = canon_text(mapping.get("trim",""), for_trim=True)
+    # Model Code union
+    model_code_val = (mapping.get("model_code","") or "").strip()
+    if model_code_val:
+        hits = []
+        for col in get_model_code_candidates(df2):
+            if col in df2.columns:
+                series = df2[col].astype(str).str.strip().str.lower()
+                mask = series == model_code_val.lower()
+                if mask.any(): hits.append(df2[mask])
+        if hits:
+            return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
 
-    year_col    = next((c for c in ["AD_YEAR","Year","MY","ModelYear","Model Year"] if c in df2.columns), None)
-    make_col    = next((c for c in ["AD_MAKE","Make","MakeName","Manufacturer"] if c in df2.columns), None)
-    model_col   = next((c for c in ["AD_MODEL","Model","Line","Carline","Series"] if c in df2.columns), None)
-    trim_col    = next((c for c in ["AD_TRIM","Trim","Grade","Variant","Submodel"] if c in df2.columns), None)
+    # Strict YMMT fallback (Trim exact; Model contains)
+    yv  = canon_text(mapping.get("year",""))
+    mkv = canon_text(mapping.get("make",""))
+    mdv = canon_text(mapping.get("model",""))
+    trv = canon_text(mapping.get("trim",""), True)
 
-    mask = pd.Series([True] * len(df2), index=df2.index)
-    if year_col and y:
-        try:
-            mask = mask & (df2[year_col].astype(int) == int(y))
-        except Exception:
-            mask = mask & (df2[year_col].astype(str).str.lower() == y.lower())
-    if make_col and mk:
-        mask = mask & (df2[make_col].astype(str).str.lower() == mk.lower())
-    if model_col and md:
-        mask = mask & (df2[model_col].astype(str).str.lower() == md.lower())
-    if trim_col and tr:
-        # canonical compare for trim
-        mask = mask & (df2[trim_col].astype(str).apply(lambda s: canon_text(s, True)) == tr)
-
-    res = df2[mask]
-    return res.reset_index(drop=True)
+    return filter_cads(
+        df2, yv, mkv, mdv, trv, "", "",
+        exact_year=True, exact_mmt=False, case_sensitive=False,  # model contains, make exact
+        strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
+        trim_match_mode="Exact", trim_synonyms=True, trim_fuzzy_threshold=0.65
+    ).reset_index(drop=True)
 
 # ---------------------------------------------------------------------
-# Query params helpers
+# UI helpers
 # ---------------------------------------------------------------------
 def get_query_param(name: str, default: str = "") -> str:
     try:
@@ -507,6 +439,14 @@ def _extract_year_token(s: str) -> str:
     if not s: return ""
     m = re.search(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s)
     return m.group(0) if m else ""
+
+def secrets_status():
+    missing = []
+    if not GH_TOKEN:  missing.append("github.token")
+    if not GH_OWNER:  missing.append("github.owner")
+    if not GH_REPO:   missing.append("github.repo")
+    if not GH_BRANCH: missing.append("github.branch")
+    return missing
 
 # ---------------------------------------------------------------------
 # UI
@@ -535,41 +475,12 @@ if AGENT_MODE:
         except Exception:
             st.session_state.mappings = {}
 
-    q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")
-    q_ignore_trim_param = get_query_param("ignore_trim", "")
-    if q_ignore_trim_param == "":
-        q_ignore_trim = (False if canon_text(q_trim, True) else True)
-    else:
-        q_ignore_trim = (q_ignore_trim_param.lower() == "true")
-    q_lenient_trim = (get_query_param("lenient_trim", "false").lower() == "true")
-
-    # Exact-key (canonical) lookup first
-    strict_key_agent = canon_key(q_year, q_make, q_model, q_trim)
-    exact_hit_agent = None
-    for k, v in st.session_state.mappings.items():
-        if canon_key(v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")) == strict_key_agent:
-            exact_hit_agent = (k, v, "exact_key")
-            break
-
-    if exact_hit_agent:
-        matches = [exact_hit_agent]
-    else:
-        matches = find_existing_mappings(
-            st.session_state.mappings,
-            q_year, q_make, q_model, q_trim, q_vehicle, q_code,
-            exact_year=True, case_sensitive=False,
-            ignore_year=q_ignore_year,
-            ignore_trim=(q_ignore_trim or q_lenient_trim),
-            require_trim_exact_if_provided=(not q_lenient_trim),
-            disallow_lenient_when_trim=True
-        )
-        # HARD gate by canonical trim
-        tr_in = canon_text(q_trim, True)
-        if tr_in:
-            matches = [(k, v, r) for (k, v, r) in matches if canon_text(v.get("trim",""), True) == tr_in]
+    # Single best (strict trim/year/make; model tolerant)
+    best = pick_best_exact_trim_mapping(st.session_state.mappings, q_year, q_make, q_model, q_trim)
 
     st.subheader("Mozenda Agent Mode")
     st.caption("Output minimized for scraper consumption.")
+
     if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
         for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
                   "code_input","model_code_input","prev_inputs","results_df",
@@ -580,24 +491,19 @@ if AGENT_MODE:
         st.write({"status":"CLEARED"})
         st.stop()
 
-    if matches:
-        rows = []
-        for k, v, reason in matches:
-            rows.append({
-                "key": k,
-                "year": v.get("year",""),
-                "make": v.get("make",""),
-                "model": v.get("model",""),
-                "trim": v.get("trim",""),
-                "vehicle": v.get("vehicle",""),
-                "code": v.get("code",""),
-                "model_code": v.get("model_code",""),
-                "reason": reason,
-            })
-        st.success(f"Mapped: {len(rows)}")
-        st.dataframe(pd.DataFrame(rows), use_container_width=True)
+    if best:
+        k, v, score = best
+        row = {
+            "key": k, "score": round(score,3),
+            "year": v.get("year",""), "make": v.get("make",""), "model": v.get("model",""),
+            "trim": v.get("trim",""), "vehicle": v.get("vehicle",""),
+            "code": v.get("code",""), "model_code": v.get("model_code",""),
+            "reason": "exact_trim_best_model",
+        }
+        st.success("Mapped: 1")
+        st.dataframe(pd.DataFrame([row]), use_container_width=True)
         st.text("STATUS=MAPPED")
-        st.write({"status":"MAPPED","count":len(rows),"data":rows})
+        st.write({"status":"MAPPED","count":1,"data":[row]})
         st.stop()
     else:
         st.error("NEEDS_MAPPING")
@@ -621,13 +527,14 @@ with st.expander("📦 Data source / diagnostics"):
             st.info("Mappings file does not exist yet (will be created on first commit).")
         else:
             st.warning(f"Could not read file metadata ({r_meta.status_code}).")
-        if st.button("🔄 Reload mappings (diagnostics)"):
+        if st.button("🔄 Reload mappings (diagnostics)", key="diag_reload_btn"):
             existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
             st.session_state.mappings = existing or {}
-            st.success(f"Reloaded. Count: {len(st.session_state.mappings)}")
+            st.success(f"Reloaded. Current count: {len(st.session_state.mappings)}")
     except Exception as diag_err:
         st.error(f"Diagnostics error: {diag_err}")
 
+# Load mappings on first interactive run
 if "mappings" not in st.session_state:
     try:
         existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
@@ -687,6 +594,7 @@ if uploaded:
     except Exception as e:
         st.sidebar.error(f"Failed to parse uploaded JSON: {e}")
 
+# --------------------- CADS settings / controls -----------------------
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
@@ -695,9 +603,9 @@ cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type
 
 st.sidebar.subheader("Matching Controls")
 EXACT_YEAR = st.sidebar.checkbox("Exact Year match", value=True)
-EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False)
+EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False)  # model contains by default
 CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False)
-BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exists", value=True)
+BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exists", value=False)  # allow CADS search
 IGNORE_YEAR = st.sidebar.checkbox("Ignore Year when detecting existing mapping", value=False)
 IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=False)
 LENIENT_TRIM_THIS_RUN = st.sidebar.checkbox("Temporarily ignore Trim (this run only)", value=False)
@@ -728,7 +636,7 @@ st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Land Rover")
-with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Discovery Sport")
+with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Discovery / Discovery Sport")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., S / SE / Technology Package")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
@@ -742,64 +650,40 @@ if prev_inputs != current_inputs:
         st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
-# Debug banner for current canonical inputs
-st.caption(f"🔎 Canonical inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' Model='{canon_text(model)}' Trim='{canon_text(trim, True)}'")
+# Debug banner for canonical inputs
+st.caption(f"🔎 Canonical → Year='{canon_text(year)}' Make='{canon_text(make)}' Model='{canon_text(model)}' Trim='{canon_text(trim, True)}'")
 
 # --------------------- Existing mapping detection (interactive) -------
-strict_key = canon_key(year, make, model, trim)
-exact_hit = None
-for k, v in st.session_state.mappings.items():
-    if canon_key(v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")) == strict_key:
-        exact_hit = (k, v, "exact_key")
-        break
-
-if exact_hit:
-    matches = [exact_hit]
-else:
-    matches = find_existing_mappings(
-        st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
-        exact_year=EXACT_YEAR, case_sensitive=False, ignore_year=IGNORE_YEAR,
-        ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
-        require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN),
-        disallow_lenient_when_trim=True
-    )
-    # Hard gate by canonical trim
-    tr_in = canon_text(trim, True)
-    if tr_in:
-        matches = [(k, v, r) for (k, v, r) in matches if canon_text(v.get("trim",""), True) == tr_in]
+best = pick_best_exact_trim_mapping(st.session_state.mappings, year, make, model, trim)
 
 st.subheader("Existing Mapping (for current inputs)")
-if matches:
-    st.success(f"Already mapped: {len(matches)} match(es).")
-    rows = []
-    for k, v, reason in matches:
-        rows.append({
-            "Match Level": reason,
-            "Key": k,
-            "Year": v.get("year",""),
-            "Make": v.get("make",""),
-            "Model": v.get("model",""),
-            "Trim": v.get("trim",""),
-            "Vehicle": v.get("vehicle",""),
-            "Code": v.get("code",""),
-            "Model Code": v.get("model_code",""),
-        })
+if best:
+    k, v, score = best
+    rows = [{
+        "Match Level": "exact_trim_best_model",
+        "Score": round(score,3),
+        "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
+        "Model": v.get("model",""), "Trim": v.get("trim",""),
+        "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
+        "Model Code": v.get("model_code",""),
+    }]
+    st.success("Already mapped: 1 match.")
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
-    st.info("No existing mapping detected for current inputs.")
+    st.info("No existing mapping detected for current inputs (Trim must be exact; Model may vary as long as it’s similar).")
 
 cc1, cc2, cc3, cc4 = st.columns(4)
 with cc1:
-    if st.button("📋 Copy first match's Code to input"):
-        if matches:
-            st.session_state["code_input"] = (matches[0][1].get("code","") or "").strip()
-            st.success(f"Copied code to input.")
+    if st.button("📋 Copy mapped Code to input", key="copy_code_btn"):
+        if best:
+            st.session_state["code_input"] = (best[1].get("code","") or "").strip()
+            st.success("Copied mapped Code to input.")
         else:
-            st.info("No matches to copy from.")
+            st.info("No mapped vehicle to copy from.")
 
-# --------------------- Search CADS (Code-first, then strict YMMT) -----
+# --------------------- Search CADS — single mapped record -------------
 with cc3:
-    if st.button("🔎 Search CADS"):
+    if st.button("🔎 Search CADS", key="search_cads"):
         try:
             # Load CADS
             if cads_upload is not None:
@@ -818,32 +702,12 @@ with cc3:
 
             df_cads = _strip_object_columns(df_cads)
 
-            mapped_record = exact_hit[1] if exact_hit else (matches[0][1] if matches else None)
-            if mapped_record:
-                # 1) CODE-first (union across candidate code columns)
-                code_val = (mapped_record.get("code","") or "").strip()
-                model_code_val = (mapped_record.get("model_code","") or "").strip()
-
-                df_hits = []
-                if code_val:
-                    for col in get_cads_code_candidates(df_cads):
-                        if col in df_cads.columns:
-                            series = df_cads[col].astype(str).str.strip().str.lower()
-                            mask = series == code_val.lower()
-                            if mask.any(): df_hits.append(df_cads[mask])
-
-                # If no 'code' hits, try model_code union (many OEMs)
-                if not df_hits and model_code_val:
-                    for col in get_model_code_candidates(df_cads):
-                        if col in df_cads.columns:
-                            series = df_cads[col].astype(str).str.strip().str.lower()
-                            mask = series == model_code_val.lower()
-                            if mask.any(): df_hits.append(df_cads[mask])
-
-                if df_hits:
-                    df_res = pd.concat(df_hits, axis=0).drop_duplicates().reset_index(drop=True)
-                    st.success(f"Found {len(df_res)} CADS row(s) by Code/Model Code.")
-                    selectable = df_res.copy()
+            if best:
+                mapping = best[1]
+                df_match = match_cads_rows_for_mapping(df_cads, mapping)
+                if len(df_match) > 0:
+                    st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle (Code→ModelCode→YMMT).")
+                    selectable = df_match.copy()
                     if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                     st.session_state["results_df"] = selectable
                     st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
@@ -851,57 +715,27 @@ with cc3:
                     st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
                     st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
                 else:
-                    # 2) Strict YMMT fallback (canonical, exact everything)
-                    yv = canon_text(mapped_record.get("year",""))
-                    mkv = canon_text(mapped_record.get("make",""))
-                    mdv = canon_text(mapped_record.get("model",""))
-                    trv = canon_text(mapped_record.get("trim",""), True)
-
-                    results = filter_cads(
-                        df_cads, yv, mkv, mdv, trv, "", "",
-                        exact_year=True, exact_mmt=True, case_sensitive=False,
-                        strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
-                        trim_match_mode="Exact", trim_synonyms=True, trim_fuzzy_threshold=0.65
-                    )
-
-                    if len(results) > 0:
-                        st.success(f"Found {len(results)} CADS row(s) by strict YMMT.")
-                        selectable = results.copy()
-                        if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
-                        st.session_state["results_df"] = selectable
-                        st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
-                        st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
-                        st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
-                        st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
-                    else:
-                        st.warning("No CADS rows found via Code or strict YMMT for the mapped vehicle. "
-                                   "If CADS Model differs (e.g., 'Discovery Sport' vs 'Discovery'), toggle Exact MMT OFF and rerun.")
+                    st.warning("No CADS rows found by Code/ModelCode/YMMT for the mapped vehicle. "
+                               "If CADS Model differs (e.g., 'Discovery Sport' vs 'Discovery'), ensure Model contains is allowed (it is by default).")
             else:
-                # No mapped record – run filter with current inputs (canonical)
-                effective_trim_mode = "Exact" if canon_text(trim, True) and not (IGNORE_TRIM or LENIENT_TRIM_THIS_RUN) else TRIM_MATCH_MODE
+                st.info("No mapped vehicle found yet; running filter on current inputs (Trim=Exact; Model contains).")
                 results = filter_cads(
                     df_cads, canon_text(year), canon_text(make), canon_text(model), canon_text(trim, True), canon_text(vehicle), model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=False,
                     strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
-                    trim_match_mode=effective_trim_mode, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
+                    trim_match_mode="Exact", trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Try toggling Exact MMT OFF, or omit Trim to broaden.")
-                    sugg_df, _ = suggest_top_trims(
-                        df_cads, canon_text(year), canon_text(make), canon_text(model), canon_text(trim, True),
-                        top_n=SUGGESTION_COUNT, trim_synonyms=TRIM_SYNONYMS, restrict_to_make_model=True, case_sensitive=False
-                    )
-                    if sugg_df.empty:
-                        st.info("No suggestions found (relax filters or check spelling).")
-                    else:
-                        selectable = sugg_df.copy()
-                        if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
-                        st.session_state["results_df"] = selectable
-                        st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
-                        st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
-                        st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
-                        st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
-                        st.success(f"Loaded {len(selectable)} trim suggestions.")
+                    st.warning("No CADS rows matched inputs. Try toggling Exact MMT OFF or omitting Trim to broaden.")
+                else:
+                    st.success(f"Found {len(results)} CADS row(s).")
+                    selectable = results.copy()
+                    if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
+                    st.session_state["results_df"] = selectable
+                    st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
+                    st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
+                    st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                    st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
         except FileNotFoundError as fnf:
             st.error(str(fnf))
             st.info(f"Ensure CADS exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` @ `{GH_BRANCH}`.")
@@ -909,21 +743,25 @@ with cc3:
             st.error(f"CADS search failed: {e}")
 
 with cc4:
-    if st.button("📋 Copy first CADS Model Code to input"):
-        if "results_df" in st.session_state and "model_code_column" in st.session_state:
+    if st.button("📋 Copy first CADS Model Code to input", key="copy_model_code_btn"):
+        if "results_df" in st.session_state:
             df_r = st.session_state["results_df"]
-            mc_col = st.session_state["model_code_column"]
-            if mc_col and mc_col in df_r.columns:
+            # pick a likely model code col
+            mc_cols = [c for c in CADS_MODEL_CODE_PREFS if c in df_r.columns] or list(df_r.columns)
+            mc_col = mc_cols[0] if mc_cols else None
+            st.session_state["model_code_column"] = mc_col
+            if mc_col:
                 vals = df_r[mc_col].dropna().tolist()
                 if vals:
                     st.session_state["model_code_input"] = str(vals[0]).strip()
                     st.success(f"Copied model code '{vals[0]}' to Model Code input.")
                 else:
-                    st.info("No model code values in current results.")
+                    st.info("No model code values in current CADS results.")
             else:
-                st.info("No model code column detected in current results.")
+                st.info("No model code column detected in current CADS results.")
 
-if st.button("🧹 Clear Inputs (Interactive)"):
+# Clear button (interactive area)
+if st.button("🧹 Clear Inputs (Interactive)", key="clear_inputs_btn"):
     for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
               "code_input","model_code_input","prev_inputs","results_df",
               "code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
@@ -949,17 +787,18 @@ if "results_df" in st.session_state:
         index=0 if model_code_candidates else 0,
         key="model_code_column_select",
     )
+
     df_show = st.session_state["results_df"]
     front_cols = [c for c in ["Select","Similarity"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
     with csel1:
-        if st.button("✅ Select All"):
+        if st.button("✅ Select All", key="select_all_btn"):
             df_tmp = df_show.copy(); df_tmp["Select"] = True
             st.session_state["results_df"] = df_tmp; df_show = df_tmp
     with csel2:
-        if st.button("🧹 Clear Selection"):
+        if st.button("🧹 Clear Selection", key="clear_selection_btn"):
             df_tmp = df_show.copy(); df_tmp["Select"] = False
             st.session_state["results_df"] = df_tmp; df_show = df_tmp
 
@@ -969,7 +808,7 @@ if "results_df" in st.session_state:
     selected_rows = edited[edited["Select"] == True]
     st.caption(f"Selected {len(selected_rows)} vehicle(s).")
 
-    if st.button("➕ Add selected vehicle(s) to mappings"):
+    if st.button("➕ Add selected vehicle(s) to mappings", key="add_selected_to_mappings"):
         if selected_rows.empty:
             st.warning("No rows selected.")
         else:
@@ -984,19 +823,19 @@ if "results_df" in st.session_state:
 
             added = 0
             for _, row in df2.iterrows():
-                yv  = _normalize(row.get(year_col, ""))    if year_col else ""
-                mkv = _normalize(row.get(make_col, ""))    if make_col else ""
-                mdv = _normalize(row.get(model_col, ""))   if model_col else ""
-                trv = _normalize(row.get(trim_col, ""))    if trim_col else ""
-                vhv = _normalize(row.get(vehicle_col, "")) if vehicle_col else ""
-                key = build_key(yv, mkv, mdv, trv, vhv)
+                yv  = (row.get(year_col, "") if year_col else "").strip()
+                mkv = (row.get(make_col, "") if make_col else "").strip()
+                mdv = (row.get(model_col,"") if model_col else "").strip()
+                trv = (row.get(trim_col, "") if trim_col else "").strip()
+                vhv = (row.get(vehicle_col,"") if vehicle_col else "").strip()
+                key = f"{yv}-{mkv}-{mdv}-{trv}".strip("-")
 
-                code_val       = _normalize(str(row.get(code_col, ""))) if code_col else ""
-                model_code_val = _normalize(str(row.get(model_code_col, ""))) if model_code_col else ""
+                code_val       = (str(row.get(code_col, "")) if code_col else "").strip()
+                model_code_val = (str(row.get(model_code_col, "")) if model_code_col else "").strip()
 
                 existing = st.session_state.mappings.get(key)
                 if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
-                    st.warning(f"Key '{key}' already exists with a different Code/Model Code. Overwriting.")
+                    st.warning(f"Key '{key}' exists with different Code/Model Code. Overwriting.")
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val, "model_code": model_code_val,
