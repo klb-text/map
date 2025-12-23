@@ -6,9 +6,9 @@
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
 # + Suggestions mirror the normal results table (ALL columns, same selection UX)
 # + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
-# + Hardened existing-mapping detection: require exact Trim when provided (unless explicitly ignored)
-# + Persist "Already mapped" banner across reruns and add per-run lenient trim override
-# + STRICT FILTER on current inputs: when user types a Trim, only that Trim's mapping is shown
+# + STRICT TRIM ENFORCEMENT: when Trim provided, only exact-Trim matches are shown (no lenient paths)
+# + CADS search: if Trim provided and strict, force Trim=Exact for that run (Model remains contains unless Exact MMT toggled)
+# + Snapshot cleared on input changes to avoid carry-over
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -298,6 +298,10 @@ def _to_int_or_str(val: str):
     except Exception:
         return s
 
+def _eq(a: str, b: str, case_sensitive: bool = False) -> bool:
+    a = _normalize(a); b = _normalize(b)
+    return (a == b) if case_sensitive else (a.lower() == b.lower())
+
 def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
     prefs = [c for c in CADS_CODE_PREFS if c in df.columns]
     return prefs if prefs else list(df.columns)
@@ -314,12 +318,8 @@ def _split_year_tokens(s: str) -> List[str]:
 
 # ---- Flexible TRIM helpers ----
 def _normalize_trim_text(s: str, use_synonyms: bool = True) -> str:
-    """
-    Lowercases and normalizes common drivetrain/powertrain synonyms:
-    AWD synonyms + FWD/RWD/2WD + PHEV/EV
-    """
     s = (s or "").lower()
-    s = re.sub(r"[‐‑–—]", "-", s)           # normalize various dash chars
+    s = re.sub(r"[‐‑–—]", "-", s)
     s = re.sub(r"\s+", " ", s).strip()
     if use_synonyms:
         repl = {
@@ -347,9 +347,6 @@ def _trim_tokens(s: str, use_synonyms: bool = True) -> List[str]:
     return [t for t in tokens if t]
 
 def _trim_token_and_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True) -> pd.Series:
-    """
-    True when ALL tokens in user_trim appear in the row's trim tokens (order-insensitive).
-    """
     user_tokens = _trim_tokens(user_trim, use_synonyms=use_synonyms)
     if not user_tokens:
         return pd.Series([True] * len(series), index=series.index)
@@ -357,9 +354,6 @@ def _trim_token_and_mask(series: pd.Series, user_trim: str, use_synonyms: bool =
     return row_tokens_list.apply(lambda toks: all(tok in toks for tok in user_tokens))
 
 def _trim_token_or_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True) -> pd.Series:
-    """
-    True when ANY token in user_trim appears in the row's trim tokens.
-    """
     user_tokens = _trim_tokens(user_trim, use_synonyms=use_synonyms)
     if not user_tokens:
         return pd.Series([True] * len(series), index=series.index)
@@ -367,18 +361,12 @@ def _trim_token_or_mask(series: pd.Series, user_trim: str, use_synonyms: bool = 
     return row_tokens_list.apply(lambda toks: any(tok in toks for tok in user_tokens))
 
 def _trim_fuzzy_mask(series: pd.Series, user_trim: str, use_synonyms: bool = True, threshold: float = 0.65) -> pd.Series:
-    """
-    True when normalized row trim is similar to normalized user trim, per difflib ratio >= threshold.
-    """
     norm_user = _normalize_trim_text(user_trim, use_synonyms=use_synonyms)
-    if not norm_user:
-        return pd.Series([True] * len(series), index=series.index)
     norms = series.astype(str).apply(lambda s: _normalize_trim_text(s, use_synonyms=use_synonyms))
     return norms.apply(lambda s: difflib.SequenceMatcher(None, norm_user, s).ratio() >= threshold)
 
 # ---- Top-N Trim Suggestions (returns ALL columns) ----
 def _tokenized_year_match(series: pd.Series, year: str) -> pd.Series:
-    """Return a mask that matches 'year' as a distinct token in series values like '2024/2025'."""
     yr = _normalize(year)
     if not yr:
         return pd.Series([True] * len(series), index=series.index)
@@ -395,28 +383,19 @@ def suggest_top_trims(
     restrict_to_make_model: bool = True,
     case_sensitive: bool = False,
 ) -> Tuple[pd.DataFrame, Optional[str]]:
-    """
-    Compute Top-N closest trims by fuzzy similarity (difflib) within the current Make/Model (+ Year tokens) context.
-    Returns (suggestions_df_with_ALL_columns, trim_col_used).
-    """
-    # Resolve columns
     year_col    = _find_col(df, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
     make_col    = _find_col(df, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
     model_col   = _find_col(df, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
     trim_col    = _find_col(df, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
 
-    # Normalize frame
     df2 = df.copy()
     df2 = _strip_object_columns(df2)
 
-    # Context mask: Make + Model (exact for Make; contains for Model), and Year token match
     ctx_mask = pd.Series([True] * len(df2), index=df2.index)
     if restrict_to_make_model:
         if make_col and make:
             mk = _normalize(make)
-            ctx_mask = ctx_mask & (
-                (df2[make_col] == mk) if case_sensitive else (df2[make_col].str.lower() == mk.lower())
-            )
+            ctx_mask = ctx_mask & (df2[make_col].str.lower() == mk.lower())
         if model_col and model:
             md = _normalize(model)
             ctx_mask = ctx_mask & df2[model_col].str.contains(md, case=case_sensitive, na=False)
@@ -427,13 +406,11 @@ def suggest_top_trims(
     if trim_col is None or cand.empty:
         return (pd.DataFrame(), trim_col)
 
-    # Fuzzy score between normalized user trim and candidate trims (with synonyms)
     norm_user = _normalize_trim_text(user_trim, use_synonyms=trim_synonyms)
     def _score(s: str) -> float:
         return difflib.SequenceMatcher(None, norm_user, _normalize_trim_text(s, use_synonyms=trim_synonyms)).ratio()
 
     cand["Similarity"] = cand[trim_col].astype(str).apply(_score)
-    # Sort by score desc; take Top-N; include ALL columns
     top = cand.sort_values("Similarity", ascending=False).head(int(top_n)).copy()
     top["Similarity"] = top["Similarity"].apply(lambda v: round(float(v), 3))
     cols = ["Similarity"] + [c for c in top.columns if c != "Similarity"]
@@ -448,11 +425,7 @@ def filter_cads(
     trim_match_mode: str = "Token AND", trim_synonyms: bool = True, trim_fuzzy_threshold: float = 0.65,
 ) -> pd.DataFrame:
     """
-    Filter CADS with optional Model Code, strict AND, tokenized Year, and flexible Trim:
-      - Model Code union exact across columns; optionally AND with exact Make+Model.
-      - Trim match modes: Exact | Contains | Token AND | Token OR | Fuzzy (threshold).
-      - Year numeric exact or tokenized exact if composite.
-      - Combine masks with strict AND (default).
+    Filter CADS with optional Model Code, strict AND, tokenized Year, and flexible Trim.
     """
     y, mk, md, tr, vh, mc = map(_normalize, (year, make, model, trim, vehicle, model_code))
     df2 = df.copy()
@@ -584,10 +557,6 @@ def secrets_status():
     if not GH_BRANCH: missing.append("github.branch")
     return missing
 
-def _eq(a: str, b: str, case_sensitive: bool = False) -> bool:
-    a = _normalize(a); b = _normalize(b)
-    return (a == b) if case_sensitive else (a.lower() == b.lower())
-
 def build_key(year: str, make: str, model: str, trim: str, vehicle: str) -> str:
     y, mk, md, tr, vh = map(_normalize, (year, make, model, trim, vehicle))
     if mk and (y or md or tr):
@@ -606,11 +575,16 @@ def find_existing_mappings(
     case_sensitive: bool = False,
     ignore_year: bool = False,
     ignore_trim: bool = False,
-    require_trim_exact_if_provided: bool = True,  # enforce exact trim when provided (unless explicitly ignored)
+    require_trim_exact_if_provided: bool = True,
+    disallow_lenient_when_trim: bool = True,  # suppress lenient reasons when Trim provided
 ) -> List[Tuple[str, Dict[str, str], str]]:
     y, mk, md, tr, vh, code_in = map(_normalize, (year, make, model, trim, vehicle, code_input))
     results = []
     trim_provided = (tr != "")
+
+    # HARD OVERRIDE: if Trim provided and we disallow lenient, never ignore trim downstream
+    if trim_provided and disallow_lenient_when_trim:
+        ignore_trim = False
 
     for k, v in mappings.items():
         vy  = _normalize(v.get("year", ""))
@@ -620,12 +594,13 @@ def find_existing_mappings(
         vvh = _normalize(v.get("vehicle", ""))
         vcode = _normalize(v.get("code", ""))
 
-        # 0) Direct code match wins
+        # 0) by_code — require exact trim if provided
         if code_in and vcode and _eq(vcode, code_in, case_sensitive):
-            results.append((k, v, "by_code"))
+            if not trim_provided or _eq(vtr, tr, case_sensitive):
+                results.append((k, v, "by_code"))
             continue
 
-        # 1) Strict YMMT (with year handling and trim requirement)
+        # 1) strict_ymmt
         strict_ok = True
         if y and not ignore_year:
             if exact_year:
@@ -639,25 +614,23 @@ def find_existing_mappings(
         if mk and not _eq(vmk, mk, case_sensitive): strict_ok = False
         if md and not _eq(vmd, md, case_sensitive): strict_ok = False
 
-        # enforce trim equality if provided and not ignored
+        # Trim exact if provided
         if trim_provided and require_trim_exact_if_provided and not ignore_trim:
             if not _eq(vtr, tr, case_sensitive):
                 strict_ok = False
-        else:
-            # If trim is provided but ignore_trim=True, allow strict without trim equality
-            if trim_provided and ignore_trim:
-                pass
-            else:
-                # If trim not provided, strict YMMT can still be ok
-                if tr and not _eq(vtr, tr, case_sensitive):
-                    strict_ok = False
+        elif tr and not _eq(vtr, tr, case_sensitive):
+            strict_ok = False
 
         if strict_ok and (mk or md or tr or y):
             results.append((k, v, "strict_ymmt"))
             continue
 
-        # 2) Lenient: drop year (ONLY if trim either not provided or explicitly ignored)
-        if mk and md and (not (trim_provided and require_trim_exact_if_provided and not ignore_trim)):
+        # 2) lenient paths suppressed when Trim provided and not ignoring trim
+        if trim_provided and disallow_lenient_when_trim and not ignore_trim:
+            continue
+
+        # 2a) lenient_no_year
+        if mk and md:
             ly_ok = True
             if not _eq(vmk, mk, case_sensitive): ly_ok = False
             if not _eq(vmd, md, case_sensitive): ly_ok = False
@@ -666,11 +639,11 @@ def find_existing_mappings(
                 results.append((k, v, "lenient_no_year"))
                 continue
 
-        # 3) Lenient: drop trim (ONLY when ignore_trim=True or trim not provided)
-        if mk and md and (not trim_provided or ignore_trim):
+        # 2b) lenient_no_trim
+        if mk and md:
             lt_ok = True
-            if mk and not _eq(vmk, mk, case_sensitive): lt_ok = False
-            if md and not _eq(vmd, md, case_sensitive): lt_ok = False
+            if not _eq(vmk, mk, case_sensitive): lt_ok = False
+            if not _eq(vmd, md, case_sensitive): lt_ok = False
             if y and not ignore_year:
                 if exact_year:
                     try:
@@ -679,14 +652,15 @@ def find_existing_mappings(
                         if not _eq(vy, y, case_sensitive): lt_ok = False
                 else:
                     if not _eq(vy, y, case_sensitive): lt_ok = False
-            if lt_ok and (mk and md):
+            if lt_ok:
                 results.append((k, v, "lenient_no_trim"))
                 continue
 
-        # 4) Make+Model only (ONLY when trim not provided or ignored)
-        if mk and md and (not trim_provided or ignore_trim) and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
+        # 2c) make_model_only
+        if mk and md and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
             results.append((k, v, "make_model_only"))
             continue
+
     return results
 
 def match_cads_rows_for_mapping(
@@ -778,11 +752,9 @@ if AGENT_MODE:
     q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")  # tolerant by default
 
     # Smart default for ignore_trim:
-    # If trim is provided and caller didn't set ignore_trim, default to False (require exact trim).
-    # If trim not provided, default to True to allow mapping by make+model(+year).
     q_ignore_trim_param = get_query_param("ignore_trim", "")
     if q_ignore_trim_param == "":
-        q_ignore_trim = (False if q_trim else True)
+        q_ignore_trim = (False if _normalize(q_trim) else True)
     else:
         q_ignore_trim = (q_ignore_trim_param.lower() == "true")
 
@@ -798,8 +770,17 @@ if AGENT_MODE:
         exact_year=q_exact_year, case_sensitive=q_case_sens,
         ignore_year=q_ignore_year,
         ignore_trim=(q_ignore_trim or q_lenient_trim),
-        require_trim_exact_if_provided=(not q_lenient_trim)
+        require_trim_exact_if_provided=(not q_lenient_trim),
+        disallow_lenient_when_trim=True
     )
+
+    # --- HARD GATE (Agent): if Trim provided, keep only exact-Trim matches ---
+    if (q_trim or "").strip():
+        matches = [
+            (k, v, reason)
+            for (k, v, reason) in matches
+            if _eq(v.get("trim", ""), q_trim, q_case_sens)
+        ]
 
     st.subheader("Mozenda Agent Mode")
     st.caption("Output minimized for scraper consumption.")
@@ -970,7 +951,7 @@ IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping",
 LENIENT_TRIM_THIS_RUN = st.sidebar.checkbox(
     "Temporarily ignore Trim (this run only)",
     value=False,
-    help="Use lenient matching for this run even if Trim is provided. Helpful when SE should match an existing S mapping."
+    help="Use lenient matching for this run even if Trim is provided."
 )
 
 LOAD_CADS_DETAILS_ON_MATCH = st.sidebar.checkbox("Load CADS details when mapping exists", value=True, key="load_cads_details_checkbox")
@@ -1031,52 +1012,36 @@ with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placehold
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
-# Clear stale CADS results (AND stale match snapshots) when inputs change
+# Clear stale CADS + snapshot on input changes
 current_inputs = (_normalize(year), _normalize(make), _normalize(model), _normalize(trim), _normalize(vehicle), _normalize(model_code_input))
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
-    # Clear results and suggestions state
-    st.session_state.pop("results_df", None)
-    st.session_state.pop("code_candidates", None)
-    st.session_state.pop("model_code_candidates", None)
-    st.session_state.pop("code_column", None)
-    st.session_state.pop("model_code_column", None)
-    # NEW: clear last successful matches snapshot so it doesn't carry over to new Trim
-    st.session_state.pop("last_matches", None)
+    for k in ["results_df","code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
+        st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
-# Existing mapping detection (interactive)
+# Existing mapping detection (interactive) — strict trim enforcement when Trim provided
 matches = find_existing_mappings(
     st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
     exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR,
     ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
-    require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN)
+    require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN),
+    disallow_lenient_when_trim=True
 )
 
-# NEW: Filter matches to STRICT trim-only when Trim is provided and not lenient
-def _eq_case(a: str, b: str, case_sensitive: bool) -> bool:
-    a = (a or "").strip(); b = (b or "").strip()
-    return (a == b) if case_sensitive else (a.lower() == b.lower())
-
-if (trim or "").strip() and not (IGNORE_TRIM or LENIENT_TRIM_THIS_RUN):
+# --- HARD GATE (Interactive): if Trim provided, keep only exact-Trim matches ---
+if (trim or "").strip():
     matches = [
         (k, v, reason)
         for (k, v, reason) in matches
-        if reason in ("by_code", "strict_ymmt") and _eq_case(v.get("trim", ""), trim, CASE_SENSITIVE)
+        if _eq(v.get("trim", ""), trim, CASE_SENSITIVE)
     ]
 
-# Persist a snapshot of last matches so reruns (e.g., Search CADS) don't lose the banner
-if matches:
-    st.session_state["last_matches"] = matches
-elif "last_matches" not in st.session_state:
-    st.session_state["last_matches"] = []
-
 st.subheader("Existing Mapping (for current inputs)")
-render_matches = matches if matches else st.session_state.get("last_matches", [])
-if render_matches:
-    st.success(f"Already mapped: {len(render_matches)} match(es) found.")
+if matches:
+    st.success(f"Already mapped: {len(matches)} match(es) found.")
     rows = []
-    for k, v, reason in render_matches:
+    for k, v, reason in matches:
         rows.append({
             "Match Level": reason,
             "Key": k,
@@ -1089,32 +1054,22 @@ if render_matches:
             "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
-    st.caption(
-        "Match Level values: "
-        "by_code = exact code match; "
-        "strict_ymmt = exact Year/Make/Model/Trim (+ year rules); "
-        "lenient_no_year = Make+Model(+Trim exact), Year ignored; "
-        "lenient_no_trim = Make+Model+Year exact, Trim ignored; "
-        "make_model_only = Make+Model exact (Trim/Year ignored)."
-    )
-    if any(reason in ("lenient_no_trim", "make_model_only") for _, _, reason in render_matches):
-        st.warning("A mapping exists for this Make/Model (and possibly Year), but Trim differs. "
-                   "Use 'Temporarily ignore Trim (this run only)' if you want lenient detection.")
+    st.caption("Strict Trim is enforced when Trim input is present; only by_code/strict_ymmt with the same Trim can match.")
 else:
     st.info("No existing mapping detected for current inputs (try toggling Ignore Year/Trim or case sensitivity).")
 
 ccol1, ccol2, ccol3 = st.columns(3)
 with ccol1:
     if st.button("📋 Copy first match's Code to input", key="copy_code_btn"):
-        if render_matches:
-            first_code = render_matches[0][1].get("code", "")
+        if matches:
+            first_code = matches[0][1].get("code", "")
             st.session_state["code_input"] = first_code
             st.success(f"Copied code '{first_code}' to the Mapped Code input.")
         else:
             st.info("No matches available to copy from.")
 
 # Load CADS details and enrich Model Code if missing
-if render_matches and LOAD_CADS_DETAILS_ON_MATCH:
+if matches and LOAD_CADS_DETAILS_ON_MATCH:
     try:
         if cads_upload is not None:
             if cads_upload.name.lower().endswith(".xlsx"):
@@ -1132,12 +1087,11 @@ if render_matches and LOAD_CADS_DETAILS_ON_MATCH:
 
         df_cads_all = _strip_object_columns(df_cads_all)
 
-        for k, v, reason in render_matches:
+        for k, v, reason in matches:
             df_match = match_cads_rows_for_mapping(df_cads_all, v, case_sensitive=CASE_SENSITIVE, exact_year=EXACT_YEAR)
             count = len(df_match)
             display_df = df_match.head(MAX_CADS_ROWS_PER_MATCH) if count > MAX_CADS_ROWS_PER_MATCH else df_match
 
-            # Try to surface Model Code from CADS
             mc_cols = get_model_code_candidates(df_match)
             mc_values = []
             for col in mc_cols:
@@ -1187,8 +1141,7 @@ with b2:
 with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
-            # Use current render_matches to decide block behavior; banner persists via snapshot
-            if BLOCK_SEARCH_IF_MAPPED and (render_matches and len(render_matches) > 0):
+            if BLOCK_SEARCH_IF_MAPPED and matches:
                 st.info("Search blocked: a mapping already exists. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
             else:
                 # Load CADS
@@ -1206,17 +1159,19 @@ with b3:
                     else:
                         df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-                # Run filter
+                # If Trim is provided and we are not lenient, force Trim=Exact for this search run
+                effective_trim_mode = "Exact" if _normalize(trim) and not (IGNORE_TRIM or LENIENT_TRIM_THIS_RUN) else TRIM_MATCH_MODE
+
                 results = filter_cads(
                     df_cads, year, make, model, trim, vehicle, model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
                     strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
-                    trim_match_mode=TRIM_MATCH_MODE, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
+                    trim_match_mode=effective_trim_mode, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
 
-                # Show results OR mirror suggestions into results table
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Building top trim suggestions for your context (Make/Model/Year).")
+                    st.warning("No CADS rows matched your input. Tips: check spelling ('Discovery' vs 'Discovery Sport'), "
+                               "toggle Exact MMT, or omit Trim to broaden.")
                     try:
                         sugg_df, _used_trim_col = suggest_top_trims(
                             df_cads,
@@ -1232,7 +1187,6 @@ with b3:
                         if sugg_df.empty:
                             st.info("No suggestions found (try relaxing filters, switching Trim match mode, or omitting Trim).")
                         else:
-                            # MIRROR: push suggestions into normal results table state
                             selectable = sugg_df.copy()
                             if "Select" not in selectable.columns:
                                 selectable.insert(0, "Select", False)
