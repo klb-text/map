@@ -5,6 +5,7 @@
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
 # + Suggestions now MIRROR the normal results table (ALL columns, same selection UX)
+# + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -44,6 +45,30 @@ CADS_CODE_PREFS       = ["STYLE_ID", "AD_MFGCODE", "AD_VEH_ID"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
 
 # ---------------------------------------------------------------------
+# Resilient HTTP (retries + timeouts)
+# ---------------------------------------------------------------------
+from requests.adapters import HTTPAdapter, Retry
+_session = requests.Session()
+_retries = Retry(
+    total=3,
+    backoff_factor=0.5,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET", "PUT", "POST"],
+)
+_adapter = HTTPAdapter(max_retries=_retries)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
+
+def _get(url, headers=None, params=None, timeout=15):
+    return _session.get(url, headers=headers, params=params, timeout=timeout)
+
+def _put(url, headers=None, json=None, timeout=15):
+    return _session.put(url, headers=headers, json=json, timeout=timeout)
+
+def _post(url, headers=None, json=None, timeout=15):
+    return _session.post(url, headers=headers, json=json, timeout=timeout)
+
+# ---------------------------------------------------------------------
 # GitHub helpers
 # ---------------------------------------------------------------------
 def gh_headers(token: str):
@@ -53,11 +78,12 @@ def gh_contents_url(owner, repo, path):
     return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
 
 def gh_ref_heads(owner, repo, branch):
-    return f"https://api.github.com/repos/{owner}/{repo}/git/ref/heads/{branch}"
+    # Correct path: refs (plural)
+    return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
 
 def get_file(owner, repo, path, token, ref=None):
     params = {"ref": ref} if ref else {}
-    return requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
+    return _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
 
 def get_file_sha(owner, repo, path, token, ref=None):
     r = get_file(owner, repo, path, token, ref)
@@ -78,7 +104,7 @@ def load_json_from_github(owner, repo, path, token, ref=None):
     raise RuntimeError(f"Failed to load file ({r.status_code}): {r.text}")
 
 def get_branch_head_sha(owner, repo, branch, token):
-    r = requests.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token))
+    r = _get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token))
     if r.status_code == 200:
         return r.json()["object"]["sha"]
     if r.status_code == 404:
@@ -89,12 +115,12 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     base_sha = get_branch_head_sha(owner, repo, source_branch, token)
     if not base_sha:
         return False
-    r_feat = requests.get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
+    r_feat = _get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200:
         return True
     if r_feat.status_code != 404:
         raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
-    r_create = requests.post(
+    r_create = _post(
         f"https://api.github.com/repos/{owner}/{repo}/git/refs",
         headers=gh_headers(token),
         json={"ref": f"refs/heads/{feature_branch}", "sha": base_sha},
@@ -117,14 +143,14 @@ def save_json_to_github(
         data["sha"] = sha
     if author_name and author_email:
         data["committer"] = {"name": author_name, "email": author_email}
-    r = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
+    r = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r.status_code in (200, 201):
         return r.json()
     if r.status_code == 409:
         latest_sha = get_file_sha(owner, repo, path, token, ref=target_branch)
         if latest_sha and not data.get("sha"):
             data["sha"] = latest_sha
-            r2 = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
+            r2 = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
             if r2.status_code in (200, 201):
                 return r2.json()
     raise RuntimeError(f"Failed to save file ({r.status_code}): {r.text}")
@@ -150,7 +176,7 @@ def append_jsonl_to_github(
     data = {"message": commit_message, "content": content_b64, "branch": target_branch}
     if sha:
         data["sha"] = sha
-    r2 = requests.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
+    r2 = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r2.status_code in (200, 201):
         return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
@@ -158,6 +184,12 @@ def append_jsonl_to_github(
 # ---------------------------------------------------------------------
 # CADS loaders (CSV/Excel) + caching
 # ---------------------------------------------------------------------
+def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
+    obj_cols = df.select_dtypes(include=["object"]).columns
+    if len(obj_cols) > 0:
+        df[obj_cols] = df[obj_cols].apply(lambda s: s.str.strip())
+    return df
+
 @st.cache_data(ttl=600)
 def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
     if not raw or raw.strip() == b"":
@@ -174,7 +206,7 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
     import csv
     params = {"ref": ref} if ref else {}
-    r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
+    r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
         raw = None
@@ -184,7 +216,7 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
             except Exception:
                 raw = None
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = requests.get(j["download_url"])
+            r2 = _get(j["download_url"])
             if r2.status_code == 200:
                 raw = r2.content
         if raw is None or raw.strip() == b"":
@@ -208,7 +240,7 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
         df = df.dropna(how="all")
         if df.empty or len(df.columns) == 0:
             raise ValueError("CADS CSV parsed but produced no columns or rows. Check delimiter and headers.")
-        df = df.astype(str).applymap(lambda x: str(x).strip() if pd.notnull(x) else "")
+        df = _strip_object_columns(df)
         return df
     if r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
@@ -217,7 +249,7 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
 @st.cache_data(ttl=600)
 def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
     params = {"ref": ref} if ref else {}
-    r = requests.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
+    r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
     if r.status_code == 200:
         j = r.json()
         raw = None
@@ -227,13 +259,13 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
             except Exception:
                 raw = None
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = requests.get(j["download_url"])
+            r2 = _get(j["download_url"])
             if r2.status_code == 200:
                 raw = r2.content
         if raw is None or raw.strip() == b"":
             raise ValueError(f"CADS file `{path}` appears to be empty or unavailable via API.")
         df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
-        df = df.astype(str).applymap(lambda x: str(x).strip())
+        df = _strip_object_columns(df)
         return df
     if r.status_code == 404:
         raise FileNotFoundError(f"CADS file not found at {path} in {owner}/{repo}@{ref or 'default'}")
@@ -280,17 +312,30 @@ def _split_year_tokens(s: str) -> List[str]:
 # ---- Flexible TRIM helpers ----
 def _normalize_trim_text(s: str, use_synonyms: bool = True) -> str:
     """
-    Lowercases and normalizes AWD synonyms:
-    'all wheel drive', 'all-wheel drive', '4wd', '4x4' -> 'awd'
+    Lowercases and normalizes common drivetrain/powertrain synonyms:
+    AWD synonyms + FWD/RWD/2WD + PHEV/EV
     """
     s = (s or "").lower()
     s = re.sub(r"[‐‑–—]", "-", s)           # normalize various dash chars
     s = re.sub(r"\s+", " ", s).strip()
     if use_synonyms:
-        s = s.replace("all wheel drive", "awd")
-        s = s.replace("all-wheel drive", "awd")
-        s = s.replace("4wd", "awd")
-        s = s.replace("4x4", "awd")
+        repl = {
+            "all wheel drive": "awd",
+            "all-wheel drive": "awd",
+            "4wd": "awd",
+            "4x4": "awd",
+            "front wheel drive": "fwd",
+            "front-wheel drive": "fwd",
+            "rear wheel drive": "rwd",
+            "rear-wheel drive": "rwd",
+            "two wheel drive": "2wd",
+            "two-wheel drive": "2wd",
+            "plug-in hybrid": "phev",
+            "electric": "ev",
+            "bev": "ev",
+        }
+        for k, v in repl.items():
+            s = s.replace(k, v)
     return s
 
 def _trim_tokens(s: str, use_synonyms: bool = True) -> List[str]:
@@ -359,7 +404,7 @@ def suggest_top_trims(
 
     # Normalize frame
     df2 = df.copy()
-    df2 = df2.astype(str).applymap(lambda x: str(x).strip())
+    df2 = _strip_object_columns(df2)
 
     # Context mask: Make + Model (exact for Make; contains for Model), and Year token match
     ctx_mask = pd.Series([True] * len(df2), index=df2.index)
@@ -379,7 +424,7 @@ def suggest_top_trims(
     if trim_col is None or cand.empty:
         return (pd.DataFrame(), trim_col)
 
-    # Fuzzy score between normalized user trim and candidate trims (with AWD synonyms)
+    # Fuzzy score between normalized user trim and candidate trims (with synonyms)
     norm_user = _normalize_trim_text(user_trim, use_synonyms=trim_synonyms)
     def _score(s: str) -> float:
         return difflib.SequenceMatcher(None, norm_user, _normalize_trim_text(s, use_synonyms=trim_synonyms)).ratio()
@@ -387,9 +432,7 @@ def suggest_top_trims(
     cand["Similarity"] = cand[trim_col].astype(str).apply(_score)
     # Sort by score desc; take Top-N; include ALL columns
     top = cand.sort_values("Similarity", ascending=False).head(int(top_n)).copy()
-    # Round similarity for display
     top["Similarity"] = top["Similarity"].apply(lambda v: round(float(v), 3))
-    # Move Similarity to the first column for visibility
     cols = ["Similarity"] + [c for c in top.columns if c != "Similarity"]
     top = top[cols].reset_index(drop=True)
     return (top, trim_col)
@@ -647,11 +690,128 @@ def match_cads_rows_for_mapping(
     return out.reset_index(drop=True)
 
 # ---------------------------------------------------------------------
+# Query param helpers + Year token fallback (Mozenda friendly)
+# ---------------------------------------------------------------------
+def get_query_param(name: str, default: str = "") -> str:
+    try:
+        params = st.experimental_get_query_params()
+        val = params.get(name, [default])
+        return str(val[0]).strip()
+    except Exception:
+        return default
+
+def _extract_year_token(s: str) -> str:
+    """
+    Extract a 4-digit year token from a free text (e.g., vehicle description),
+    returns "" if none found. Range supports 1950–2050.
+    """
+    s = (s or "").strip()
+    if not s:
+        return ""
+    m = re.search(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s)
+    return m.group(0) if m else ""
+
+# ---------------------------------------------------------------------
 # UI
 # ---------------------------------------------------------------------
 st.title("AFF Vehicle Mapping")
 
+# ---------------------------------------------------------------------
+# Mozenda Agent Mode (query-param driven; scraper-friendly)
+# ---------------------------------------------------------------------
+AGENT_MODE = (get_query_param("agent").lower() == "mozenda")
+
+if AGENT_MODE:
+    # Read inputs from query parameters
+    q_year    = get_query_param("year")
+    q_make    = get_query_param("make")
+    q_model   = get_query_param("model")
+    q_trim    = get_query_param("trim")
+    q_vehicle = get_query_param("vehicle")
+    q_model_code = get_query_param("model_code")
+    q_code    = get_query_param("code")
+
+    # Fallback: if year missing, try to extract from vehicle free text
+    if not q_year and q_vehicle:
+        guessed_year = _extract_year_token(q_vehicle)
+        if guessed_year:
+            q_year = guessed_year
+
+    # Load mappings on first agent run
+    if "mappings" not in st.session_state:
+        try:
+            existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
+            st.session_state.mappings = existing or {}
+        except Exception:
+            st.session_state.mappings = {}
+
+    # Mozenda-friendly detection defaults:
+    q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")  # tolerant by default
+    q_ignore_trim = (get_query_param("ignore_trim", "true").lower() == "true")
+    q_exact_year  = (get_query_param("exact_year", "true").lower() == "true")
+    q_case_sens   = (get_query_param("case_sensitive", "false").lower() == "true")
+
+    matches = find_existing_mappings(
+        st.session_state.mappings,
+        q_year, q_make, q_model, q_trim, q_vehicle, q_code,
+        exact_year=q_exact_year, case_sensitive=q_case_sens,
+        ignore_year=q_ignore_year, ignore_trim=q_ignore_trim
+    )
+
+    st.subheader("Mozenda Agent Mode")
+    st.caption("Output minimized for scraper consumption.")
+
+    # Clear button (Agent)
+    if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
+        # Reset common keys to let agent proceed to next vehicle cleanly
+        for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
+                  "code_input","model_code_input","prev_inputs","results_df",
+                  "code_candidates","model_code_candidates","code_column","model_code_column"]:
+            st.session_state.pop(k, None)
+        st.success("Agent state cleared. Ready for next vehicle.")
+        st.text("STATUS=CLEARED")
+        st.write({"status": "CLEARED"})
+        st.stop()
+
+    if matches:
+        # Surface mapped vehicles compactly
+        rows = []
+        for k, v, reason in matches:
+            rows.append({
+                "key": k,
+                "year": v.get("year", ""),
+                "make": v.get("make", ""),
+                "model": v.get("model", ""),
+                "trim": v.get("trim", ""),
+                "vehicle": v.get("vehicle", ""),
+                "code": v.get("code", ""),
+                "model_code": v.get("model_code", ""),
+                "reason": reason,
+            })
+        st.success(f"Mapped: {len(rows)} match(es)")
+        df_out = pd.DataFrame(rows)
+        st.dataframe(df_out, use_container_width=True)
+        # Plain token for Mozenda:
+        st.text("STATUS=MAPPED")
+        # Compact JSON blob:
+        st.write({"status": "MAPPED", "count": len(rows), "data": rows})
+        st.stop()
+    else:
+        st.error("NEEDS_MAPPING")
+        # Plain token for Mozenda:
+        st.text("STATUS=NEEDS_MAPPING")
+        st.write({
+            "status": "NEEDS_MAPPING",
+            "inputs": {
+                "year": q_year, "make": q_make, "model": q_model,
+                "trim": q_trim, "vehicle": q_vehicle, "model_code": q_model_code, "code": q_code
+            }
+        })
+        st.stop()
+
+# ---------------------------------------------------------------------
 # Diagnostics
+# ---------------------------------------------------------------------
 with st.expander("📦 Data source / diagnostics"):
     try:
         st.write({"owner": GH_OWNER, "repo": GH_REPO, "branch": GH_BRANCH, "mappings_path": MAPPINGS_PATH})
@@ -671,7 +831,7 @@ with st.expander("📦 Data source / diagnostics"):
     except Exception as diag_err:
         st.error(f"Diagnostics error: {diag_err}")
 
-# Load mappings on first run
+# Load mappings on first run (interactive)
 if "mappings" not in st.session_state:
     try:
         existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
@@ -775,7 +935,7 @@ TRIM_MATCH_MODE = st.sidebar.selectbox(
     key="trim_match_mode_select",
 )
 TRIM_SYNONYMS = st.sidebar.checkbox(
-    "Trim: normalize AWD synonyms (AWD/All‑Wheel Drive/4WD/4x4)",
+    "Trim: normalize AWD/FWD/RWD/2WD + PHEV/EV synonyms",
     value=True,
     key="trim_synonyms_checkbox",
 )
@@ -794,6 +954,14 @@ TABLE_HEIGHT = st.sidebar.slider(
     "Results table height (px)",
     min_value=400, max_value=1200, value=700, step=50, key="table_height_slider"
 )
+
+# Sidebar: Clear (Interactive)
+if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
+    for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
+              "code_input","model_code_input","prev_inputs","results_df",
+              "code_candidates","model_code_candidates","code_column","model_code_column"]:
+        st.session_state.pop(k, None)
+    st.sidebar.success("Interactive inputs/state cleared.")
 
 # ---------------------------------------------------------------------
 # Mapping editor inputs
@@ -818,7 +986,6 @@ if prev_inputs != current_inputs:
     st.session_state.pop("model_code_candidates", None)
     st.session_state.pop("code_column", None)
     st.session_state.pop("model_code_column", None)
-
     st.session_state["prev_inputs"] = current_inputs
 
 # Existing mapping detection
@@ -869,7 +1036,7 @@ if matches:
                 else:
                     df_cads_all = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-            df_cads_all = df_cads_all.astype(str).applymap(lambda x: str(x).strip())
+            df_cads_all = _strip_object_columns(df_cads_all)
 
             for k, v, reason in matches:
                 df_match = match_cads_rows_for_mapping(df_cads_all, v, case_sensitive=CASE_SENSITIVE, exact_year=EXACT_YEAR)
@@ -1018,6 +1185,14 @@ with b4:
             else:
                 st.info("No model code column detected in current CADS results.")
 
+# Clear button (interactive area)
+if st.button("🧹 Clear Inputs (Interactive)", key="clear_inputs_btn"):
+    for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
+              "code_input","model_code_input","prev_inputs","results_df",
+              "code_candidates","model_code_candidates","code_column","model_code_column"]:
+        st.session_state.pop(k, None)
+    st.success("Inputs cleared.")
+
 st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
 
 # ---------------------------------------------------------------------
@@ -1067,7 +1242,7 @@ if "results_df" in st.session_state:
         use_container_width=True,
         num_rows="dynamic",
         column_order=col_order,
-        height=TABLE_HEIGHT,  # <— resizeable table height to reduce truncation
+        height=TABLE_HEIGHT,  # — resizeable table height to reduce truncation
     )
     st.session_state["results_df"] = edited
 
@@ -1100,6 +1275,10 @@ if "results_df" in st.session_state:
                 code_val       = _normalize(str(row.get(code_col, ""))) if code_col else ""
                 model_code_val = _normalize(str(row.get(model_code_col, ""))) if model_code_col else ""
 
+                existing = st.session_state.mappings.get(key)
+                if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
+                    st.warning(f"Key '{key}' already exists with a different Code/Model Code. Overwriting.")
+
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val, "model_code": model_code_val,
@@ -1128,3 +1307,4 @@ if st.session_state.mappings:
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
+# --- EOF ---
