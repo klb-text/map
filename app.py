@@ -4,8 +4,9 @@
 # + robust existing-mapping detection + CADS details for matches + Model Code support
 # + strict AND filters, lock Model Code to Make+Model, tokenized Year
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
-# + Suggestions now MIRROR the normal results table (ALL columns, same selection UX)
+# + Suggestions mirror the normal results table (ALL columns, same selection UX)
 # + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
+# + Hardened existing-mapping detection: require exact Trim when provided (unless explicitly ignored)
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -599,10 +600,16 @@ def build_key(year: str, make: str, model: str, trim: str, vehicle: str) -> str:
 def find_existing_mappings(
     mappings: Dict[str, Dict[str, str]],
     year: str, make: str, model: str, trim: str, vehicle: str, code_input: str,
-    exact_year: bool = True, case_sensitive: bool = False, ignore_year: bool = False, ignore_trim: bool = False
+    exact_year: bool = True,
+    case_sensitive: bool = False,
+    ignore_year: bool = False,
+    ignore_trim: bool = False,
+    require_trim_exact_if_provided: bool = True,  # enforce exact trim when provided (unless explicitly ignored)
 ) -> List[Tuple[str, Dict[str, str], str]]:
     y, mk, md, tr, vh, code_in = map(_normalize, (year, make, model, trim, vehicle, code_input))
     results = []
+    trim_provided = (tr != "")
+
     for k, v in mappings.items():
         vy  = _normalize(v.get("year", ""))
         vmk = _normalize(v.get("make", ""))
@@ -611,10 +618,12 @@ def find_existing_mappings(
         vvh = _normalize(v.get("vehicle", ""))
         vcode = _normalize(v.get("code", ""))
 
+        # 0) Direct code match wins
         if code_in and vcode and _eq(vcode, code_in, case_sensitive):
             results.append((k, v, "by_code"))
             continue
 
+        # 1) Strict YMMT (with year handling and trim requirement)
         strict_ok = True
         if y and not ignore_year:
             if exact_year:
@@ -624,14 +633,29 @@ def find_existing_mappings(
                     if not _eq(vy, y, case_sensitive): strict_ok = False
             else:
                 if not _eq(vy, y, case_sensitive): strict_ok = False
+
         if mk and not _eq(vmk, mk, case_sensitive): strict_ok = False
         if md and not _eq(vmd, md, case_sensitive): strict_ok = False
-        if tr and not ignore_trim and not _eq(vtr, tr, case_sensitive): strict_ok = False
+
+        # enforce trim equality if provided and not ignored
+        if trim_provided and require_trim_exact_if_provided and not ignore_trim:
+            if not _eq(vtr, tr, case_sensitive):
+                strict_ok = False
+        else:
+            # If trim is provided but ignore_trim=True, allow strict without trim equality
+            if trim_provided and ignore_trim:
+                pass
+            else:
+                # If trim not provided, strict YMMT can still be ok
+                if tr and not _eq(vtr, tr, case_sensitive):
+                    strict_ok = False
+
         if strict_ok and (mk or md or tr or y):
             results.append((k, v, "strict_ymmt"))
             continue
 
-        if mk and md:
+        # 2) Lenient: drop year (ONLY if trim either not provided or explicitly ignored)
+        if mk and md and (not (trim_provided and require_trim_exact_if_provided and not ignore_trim)):
             ly_ok = True
             if not _eq(vmk, mk, case_sensitive): ly_ok = False
             if not _eq(vmd, md, case_sensitive): ly_ok = False
@@ -640,22 +664,25 @@ def find_existing_mappings(
                 results.append((k, v, "lenient_no_year"))
                 continue
 
-        lt_ok = True
-        if mk and not _eq(vmk, mk, case_sensitive): lt_ok = False
-        if md and not _eq(vmd, md, case_sensitive): lt_ok = False
-        if y and not ignore_year:
-            if exact_year:
-                try:
-                    if int(vy) != int(y): lt_ok = False
-                except Exception:
+        # 3) Lenient: drop trim (ONLY when ignore_trim=True or trim not provided)
+        if mk and md and (not trim_provided or ignore_trim):
+            lt_ok = True
+            if mk and not _eq(vmk, mk, case_sensitive): lt_ok = False
+            if md and not _eq(vmd, md, case_sensitive): lt_ok = False
+            if y and not ignore_year:
+                if exact_year:
+                    try:
+                        if int(vy) != int(y): lt_ok = False
+                    except Exception:
+                        if not _eq(vy, y, case_sensitive): lt_ok = False
+                else:
                     if not _eq(vy, y, case_sensitive): lt_ok = False
-            else:
-                if not _eq(vy, y, case_sensitive): lt_ok = False
-        if lt_ok and (mk and md):
-            results.append((k, v, "lenient_no_trim"))
-            continue
+            if lt_ok and (mk and md):
+                results.append((k, v, "lenient_no_trim"))
+                continue
 
-        if mk and md and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
+        # 4) Make+Model only (ONLY when trim not provided or ignored)
+        if mk and md and (not trim_provided or ignore_trim) and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
             results.append((k, v, "make_model_only"))
             continue
     return results
@@ -747,7 +774,16 @@ if AGENT_MODE:
 
     # Mozenda-friendly detection defaults:
     q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")  # tolerant by default
-    q_ignore_trim = (get_query_param("ignore_trim", "true").lower() == "true")
+
+    # Smart default for ignore_trim:
+    # If trim is provided and caller didn't set ignore_trim, default to False (require exact trim).
+    # If trim not provided, default to True to allow mapping by make+model(+year).
+    q_ignore_trim_param = get_query_param("ignore_trim", "")
+    if q_ignore_trim_param == "":
+        q_ignore_trim = (False if q_trim else True)
+    else:
+        q_ignore_trim = (q_ignore_trim_param.lower() == "true")
+
     q_exact_year  = (get_query_param("exact_year", "true").lower() == "true")
     q_case_sens   = (get_query_param("case_sensitive", "false").lower() == "true")
 
@@ -755,7 +791,8 @@ if AGENT_MODE:
         st.session_state.mappings,
         q_year, q_make, q_model, q_trim, q_vehicle, q_code,
         exact_year=q_exact_year, case_sensitive=q_case_sens,
-        ignore_year=q_ignore_year, ignore_trim=q_ignore_trim
+        ignore_year=q_ignore_year, ignore_trim=q_ignore_trim,
+        require_trim_exact_if_provided=True
     )
 
     st.subheader("Mozenda Agent Mode")
@@ -918,7 +955,10 @@ EXACT_MMT  = st.sidebar.checkbox("Exact Make/Model/Trim match", value=False, key
 CASE_SENSITIVE = st.sidebar.checkbox("Case sensitive matching", value=False, key="case_sensitive_checkbox")
 BLOCK_SEARCH_IF_MAPPED = st.sidebar.checkbox("Block CADS search if mapping exists", value=True, key="block_search_checkbox")
 IGNORE_YEAR = st.sidebar.checkbox("Ignore Year when detecting existing mapping", value=False, key="ignore_year_checkbox")
-IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=True, key="ignore_trim_checkbox")
+
+# IMPORTANT: default False to prevent S vs SE false positives
+IGNORE_TRIM = st.sidebar.checkbox("Ignore Trim when detecting existing mapping", value=False, key="ignore_trim_checkbox")
+
 LOAD_CADS_DETAILS_ON_MATCH = st.sidebar.checkbox("Load CADS details when mapping exists", value=True, key="load_cads_details_checkbox")
 MAX_CADS_ROWS_PER_MATCH = st.sidebar.number_input("Max CADS rows to show per match", min_value=1, max_value=10000, value=1000, step=50, key="max_cads_rows_input")
 
@@ -988,10 +1028,11 @@ if prev_inputs != current_inputs:
     st.session_state.pop("model_code_column", None)
     st.session_state["prev_inputs"] = current_inputs
 
-# Existing mapping detection
+# Existing mapping detection (interactive)
 matches = find_existing_mappings(
     st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
-    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR, ignore_trim=IGNORE_TRIM
+    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR, ignore_trim=IGNORE_TRIM,
+    require_trim_exact_if_provided=True
 )
 
 st.subheader("Existing Mapping (for current inputs)")
@@ -1242,7 +1283,7 @@ if "results_df" in st.session_state:
         use_container_width=True,
         num_rows="dynamic",
         column_order=col_order,
-        height=TABLE_HEIGHT,  # — resizeable table height to reduce truncation
+        height=TABLE_HEIGHT,  # resizeable table height to reduce truncation
     )
     st.session_state["results_df"] = edited
 
