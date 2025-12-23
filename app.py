@@ -3,7 +3,8 @@
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # + Single-best mapping on Y/M/M/T (Trim exact/subset; Make exact; Year token-aware; Model similarity)
 # + Land Rover family enforcement (Range Rover / Discovery / Defender) to prevent cross-family mismatches
-# + Canonicalization; Code-first CADS search; detailed matching trace
+# + Canonicalization; Code-first CADS search; direct CADS search by current inputs (ignores mapping)
+# + Two CADS result tables (Mapped Vehicle vs Direct Input Search) with independent selection & add-to-mapping
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -594,8 +595,9 @@ if AGENT_MODE:
 
     if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
         for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-                  "code_input","model_code_input","prev_inputs","results_df",
-                  "code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
+                  "code_input","model_code_input","prev_inputs","results_df_mapped","results_df_inputs",
+                  "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
+                  "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
             st.session_state.pop(k, None)
         st.success("Agent state cleared. Ready for next vehicle.")
         st.text("STATUS=CLEARED")
@@ -726,8 +728,9 @@ TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", min_value=400, max
 
 if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
     for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-              "code_input","model_code_input","prev_inputs","results_df",
-              "code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
+              "code_input","model_code_input","prev_inputs","results_df_mapped","results_df_inputs",
+              "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
         st.session_state.pop(k, None)
     st.sidebar.success("Interactive inputs/state cleared.")
 
@@ -746,7 +749,9 @@ model_code_input = st.text_input("Model Code (optional)", key="model_code_input"
 current_inputs = (canon_text(year), canon_text(make), canon_text(model), canon_text(trim, True), canon_text(vehicle), (model_code_input or "").strip())
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
-    for k in ["results_df","code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
+    for k in ["results_df_mapped","results_df_inputs",
+              "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
         st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
@@ -782,7 +787,9 @@ if best:
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No existing mapping detected for current inputs.")
-    # Trace: why rows were excluded
+
+# ---- Trace: why rows were excluded (optional diagnostic)
+with st.expander("🧪 Matching trace"):
     cmk = canon_text(make); ctr = canon_text(trim, True)
     trace = {"trim_mismatch":0, "make_mismatch":0, "year_mismatch":0, "lr_family_mismatch":0, "candidates":0}
     sample_rows = []
@@ -811,23 +818,15 @@ else:
             "LRFamily": detect_lr_family(vmd)
         })
         if len(sample_rows) >= 12: break
-    with st.expander("🧪 Matching trace"):
-        st.write(trace)
-        if sample_rows:
-            st.dataframe(pd.DataFrame(sample_rows), use_container_width=True)
+    st.write(trace)
+    if sample_rows:
+        st.dataframe(pd.DataFrame(sample_rows), use_container_width=True)
 
-cc1, cc2, cc3, cc4 = st.columns(4)
-with cc1:
-    if st.button("📋 Copy mapped Code to input", key="copy_code_btn"):
-        if best:
-            st.session_state["code_input"] = (best[1].get("code","") or "").strip()
-            st.success("Copied mapped Code to input.")
-        else:
-            st.info("No mapped vehicle to copy from.")
-
-# --------------------- Search CADS — single mapped record -------------
-with cc3:
-    if st.button("🔎 Search CADS", key="search_cads"):
+# --------------------- CADS SEARCH BUTTONS ----------------------------
+b1, b2, b3, b4 = st.columns(4)
+with b2:
+    # MAPPED VEHICLE PATH (Code → Model Code → fallback)
+    if st.button("🔎 Search CADS (mapped vehicle)", key="search_cads_mapped"):
         try:
             # Load CADS
             if cads_upload is not None:
@@ -859,108 +858,109 @@ with cc3:
                     st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle (Code→ModelCode→YMMT).")
                     selectable = df_match.copy()
                     if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
-                    st.session_state["results_df"] = selectable
-                    st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
-                    st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
-                    st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
-                    st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+                    st.session_state["results_df_mapped"] = selectable
+                    st.session_state["code_candidates_mapped"] = get_cads_code_candidates(selectable)
+                    st.session_state["model_code_candidates_mapped"] = get_model_code_candidates(selectable)
+                    st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state["code_candidates_mapped"] else None
+                    st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state["model_code_candidates_mapped"] else None
                 else:
                     st.warning("No CADS rows found by Code/ModelCode/YMMT for the mapped vehicle.")
             else:
-                st.info("No mapped vehicle found yet; running filter on current inputs (Trim exact/subset; Model contains; Year token-aware).")
-                results = filter_cads(
-                    df_cads, year, make, model, trim, "", "",
-                    exact_mmt=EXACT_MMT, case_sensitive=False, strict_and=STRICT_AND,
-                    trim_exact_only=TRIM_EXACT_ONLY, enforce_lr_family=ENFORCE_LR_FAMILY
-                )
-                if len(results) == 0:
-                    st.warning("No CADS rows matched inputs. Try toggling Model exact/contains or relaxing Trim exact-only.")
-                else:
-                    st.success(f"Found {len(results)} CADS row(s).")
-                    selectable = results.copy()
-                    if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
-                    st.session_state["results_df"] = selectable
-                    st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
-                    st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
-                    st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
-                    st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+                st.info("No mapped vehicle; use 'Search CADS (use current inputs)' instead.")
         except FileNotFoundError as fnf:
             st.error(str(fnf))
             st.info(f"Ensure CADS exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` @ `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-with cc4:
-    if st.button("📋 Copy first CADS Model Code to input", key="copy_model_code_btn"):
-        if "results_df" in st.session_state:
-            df_r = st.session_state["results_df"]
-            mc_cols = [c for c in CADS_MODEL_CODE_PREFS if c in df_r.columns] or list(df_r.columns)
-            mc_col = mc_cols[0] if mc_cols else None
-            st.session_state["model_code_column"] = mc_col
-            if mc_col:
-                vals = df_r[mc_col].dropna().tolist()
-                if vals:
-                    st.session_state["model_code_input"] = str(vals[0]).strip()
-                    st.success(f"Copied model code '{vals[0]}' to Model Code input.")
+with b3:
+    # DIRECT INPUT PATH (ignore mapping; return Evoque options when asked)
+    if st.button("🔎 Search CADS (use current inputs)", key="search_cads_inputs"):
+        try:
+            # Load CADS
+            if cads_upload is not None:
+                if cads_upload.name.lower().endswith(".xlsx"):
+                    df_cads = pd.read_excel(cads_upload, engine="openpyxl")
                 else:
-                    st.info("No model code values in current CADS results.")
+                    df_cads = pd.read_csv(cads_upload)
             else:
-                st.info("No model code column detected in current CADS results.")
+                if CADS_IS_EXCEL:
+                    sheet_arg = CADS_SHEET_NAME
+                    try: sheet_arg = int(sheet_arg)
+                    except Exception: pass
+                    df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+                else:
+                    df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-# Clear button (interactive area)
-if st.button("🧹 Clear Inputs (Interactive)", key="clear_inputs_btn"):
-    for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-              "code_input","model_code_input","prev_inputs","results_df",
-              "code_candidates","model_code_candidates","code_column","model_code_column","last_matches"]:
-        st.session_state.pop(k, None)
-    st.success("Inputs cleared.")
+            df_cads = _strip_object_columns(df_cads)
 
-st.caption("Local changes persist while you navigate pages. Use **Commit mappings to GitHub** (sidebar) to save permanently.")
+            # Direct filter by inputs (Trim exact/subset; Model contains; Year token-aware; family respected)
+            results = filter_cads(
+                df_cads, year, make, model, trim, "", "",
+                exact_mmt=EXACT_MMT, case_sensitive=False, strict_and=STRICT_AND,
+                trim_exact_only=TRIM_EXACT_ONLY, enforce_lr_family=ENFORCE_LR_FAMILY
+            )
+            if len(results) == 0:
+                st.warning("No CADS rows matched your inputs. Try relaxing Trim exact-only or Model exact.")
+            else:
+                st.success(f"Found {len(results)} CADS row(s) for current inputs.")
+                selectable = results.copy()
+                if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
+                st.session_state["results_df_inputs"] = selectable
+                st.session_state["code_candidates_inputs"] = get_cads_code_candidates(selectable)
+                st.session_state["model_code_candidates_inputs"] = get_model_code_candidates(selectable)
+                st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state["code_candidates_inputs"] else None
+                st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state["model_code_candidates_inputs"] else None
+        except FileNotFoundError as fnf:
+            st.error(str(fnf))
+            st.info(f"Ensure CADS exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` @ `{GH_BRANCH}`.")
+        except Exception as e:
+            st.error(f"CADS search failed: {e}")
 
-# --------------------- Results selection ------------------------------
-if "results_df" in st.session_state:
-    st.subheader("Select vehicles from CADS results")
-    code_candidates = st.session_state.get("code_candidates", [])
-    model_code_candidates = st.session_state.get("model_code_candidates", [])
-    st.session_state["code_column"] = st.selectbox(
-        "Mapped Code column (from CADS results)",
-        options=code_candidates if code_candidates else list(st.session_state["results_df"].columns),
+# --------------------- Results: MAPPED VEHICLE ------------------------
+if "results_df_mapped" in st.session_state:
+    st.subheader("Select vehicles from CADS results — Mapped Vehicle")
+    df_show = st.session_state["results_df_mapped"]
+    code_candidates = st.session_state.get("code_candidates_mapped", [])
+    model_code_candidates = st.session_state.get("model_code_candidates_mapped", [])
+
+    st.session_state["code_column_mapped"] = st.selectbox(
+        "Mapped Code column (mapped results)",
+        options=code_candidates if code_candidates else list(df_show.columns),
         index=0 if code_candidates else 0,
-        key="code_column_select",
+        key="code_column_select_mapped",
     )
-    st.session_state["model_code_column"] = st.selectbox(
-        "Model Code column (from CADS results)",
-        options=model_code_candidates if model_code_candidates else list(st.session_state["results_df"].columns),
+    st.session_state["model_code_column_mapped"] = st.selectbox(
+        "Model Code column (mapped results)",
+        options=model_code_candidates if model_code_candidates else list(df_show.columns),
         index=0 if model_code_candidates else 0,
-        key="model_code_column_select",
+        key="model_code_column_select_mapped",
     )
 
-    df_show = st.session_state["results_df"]
     front_cols = [c for c in ["Select","Similarity"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
     with csel1:
-        if st.button("✅ Select All", key="select_all_btn"):
+        if st.button("✅ Select All (mapped)", key="select_all_mapped_btn"):
             df_tmp = df_show.copy(); df_tmp["Select"] = True
-            st.session_state["results_df"] = df_tmp; df_show = df_tmp
+            st.session_state["results_df_mapped"] = df_tmp; df_show = df_tmp
     with csel2:
-        if st.button("🧹 Clear Selection", key="clear_selection_btn"):
+        if st.button("🧹 Clear Selection (mapped)", key="clear_selection_mapped_btn"):
             df_tmp = df_show.copy(); df_tmp["Select"] = False
-            st.session_state["results_df"] = df_tmp; df_show = df_tmp
+            st.session_state["results_df_mapped"] = df_tmp; df_show = df_tmp
 
     edited = st.data_editor(
-        df_show, key="results_editor", use_container_width=True,
+        df_show, key="results_editor_mapped", use_container_width=True,
         num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT
     )
-    st.session_state["results_df"] = edited
-
+    st.session_state["results_df_mapped"] = edited
     selected_rows = edited[edited["Select"] == True]
-    st.caption(f"Selected {len(selected_rows)} vehicle(s).")
+    st.caption(f"(Mapped) Selected {len(selected_rows)} vehicle(s).")
 
-    if st.button("➕ Add selected vehicle(s) to mappings", key="add_selected_to_mappings"):
+    if st.button("➕ Add selected (mapped results) to mappings", key="add_selected_to_mappings_mapped"):
         if selected_rows.empty:
-            st.warning("No rows selected.")
+            st.warning("No rows selected (mapped).")
         else:
             df2 = selected_rows.copy()
             year_col    = next((c for c in ["AD_YEAR","Year","MY","ModelYear","Model Year"] if c in df2.columns), None)
@@ -968,8 +968,8 @@ if "results_df" in st.session_state:
             model_col   = next((c for c in ["AD_MODEL","Model","Line","Carline","Series"] if c in df2.columns), None)
             trim_col    = next((c for c in ["AD_TRIM","Trim","Grade","Variant","Submodel"] if c in df2.columns), None)
             vehicle_col = next((c for c in ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series"] if c in df2.columns), None)
-            code_col        = st.session_state.get("code_column")
-            model_code_col  = st.session_state.get("model_code_column")
+            code_col        = st.session_state.get("code_column_mapped")
+            model_code_col  = st.session_state.get("model_code_column_mapped")
 
             added = 0
             for _, row in df2.iterrows():
@@ -985,13 +985,89 @@ if "results_df" in st.session_state:
 
                 existing = st.session_state.mappings.get(key)
                 if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
-                    st.warning(f"Key '{key}' exists with different Code/Model Code. Overwriting.")
+                    st.warning(f"[Mapped] Key '{key}' exists with different Code/Model Code. Overwriting.")
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val, "model_code": model_code_val,
                 }
                 added += 1
-            st.success(f"Added/updated {added} mapping(s). Commit them in the sidebar.")
+            st.success(f"[Mapped] Added/updated {added} mapping(s). Commit them in the sidebar.")
+
+# --------------------- Results: DIRECT INPUT SEARCH -------------------
+if "results_df_inputs" in st.session_state:
+    st.subheader("Select vehicles from CADS results — Direct Input Search")
+    df_show = st.session_state["results_df_inputs"]
+    code_candidates = st.session_state.get("code_candidates_inputs", [])
+    model_code_candidates = st.session_state.get("model_code_candidates_inputs", [])
+
+    st.session_state["code_column_inputs"] = st.selectbox(
+        "Mapped Code column (input results)",
+        options=code_candidates if code_candidates else list(df_show.columns),
+        index=0 if code_candidates else 0,
+        key="code_column_select_inputs",
+    )
+    st.session_state["model_code_column_inputs"] = st.selectbox(
+        "Model Code column (input results)",
+        options=model_code_candidates if model_code_candidates else list(df_show.columns),
+        index=0 if model_code_candidates else 0,
+        key="model_code_column_select_inputs",
+    )
+
+    front_cols = [c for c in ["Select","Similarity"] if c in df_show.columns]
+    col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
+
+    csel1, csel2 = st.columns(2)
+    with csel1:
+        if st.button("✅ Select All (inputs)", key="select_all_inputs_btn"):
+            df_tmp = df_show.copy(); df_tmp["Select"] = True
+            st.session_state["results_df_inputs"] = df_tmp; df_show = df_tmp
+    with csel2:
+        if st.button("🧹 Clear Selection (inputs)", key="clear_selection_inputs_btn"):
+            df_tmp = df_show.copy(); df_tmp["Select"] = False
+            st.session_state["results_df_inputs"] = df_tmp; df_show = df_tmp
+
+    edited = st.data_editor(
+        df_show, key="results_editor_inputs", use_container_width=True,
+        num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT
+    )
+    st.session_state["results_df_inputs"] = edited
+    selected_rows = edited[edited["Select"] == True]
+    st.caption(f"(Inputs) Selected {len(selected_rows)} vehicle(s).")
+
+    if st.button("➕ Add selected (input results) to mappings", key="add_selected_to_mappings_inputs"):
+        if selected_rows.empty:
+            st.warning("No rows selected (inputs).")
+        else:
+            df2 = selected_rows.copy()
+            year_col    = next((c for c in ["AD_YEAR","Year","MY","ModelYear","Model Year"] if c in df2.columns), None)
+            make_col    = next((c for c in ["AD_MAKE","Make","MakeName","Manufacturer"] if c in df2.columns), None)
+            model_col   = next((c for c in ["AD_MODEL","Model","Line","Carline","Series"] if c in df2.columns), None)
+            trim_col    = next((c for c in ["AD_TRIM","Trim","Grade","Variant","Submodel"] if c in df2.columns), None)
+            vehicle_col = next((c for c in ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series"] if c in df2.columns), None)
+            code_col        = st.session_state.get("code_column_inputs")
+            model_code_col  = st.session_state.get("model_code_column_inputs")
+
+            added = 0
+            for _, row in df2.iterrows():
+                yv  = (row.get(year_col, "") if year_col else "").strip()
+                mkv = (row.get(make_col, "") if make_col else "").strip()
+                mdv = (row.get(model_col,"") if model_col else "").strip()
+                trv = (row.get(trim_col, "") if trim_col else "").strip()
+                vhv = (row.get(vehicle_col,"") if vehicle_col else "").strip()
+                key = f"{yv}-{mkv}-{mdv}-{trv}".strip("-")
+
+                code_val       = (str(row.get(code_col, "")) if code_col else "").strip()
+                model_code_val = (str(row.get(model_code_col, "")) if model_code_col else "").strip()
+
+                existing = st.session_state.mappings.get(key)
+                if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
+                    st.warning(f"[Inputs] Key '{key}' exists with different Code/Model Code. Overwriting.")
+                st.session_state.mappings[key] = {
+                    "year": yv, "make": mkv, "model": mdv, "trim": trv,
+                    "vehicle": vhv, "code": code_val, "model_code": model_code_val,
+                }
+                added += 1
+            st.success(f"[Inputs] Added/updated {added} mapping(s). Commit them in the sidebar.")
 
 # --------------------- Current mappings table -------------------------
 st.subheader("Current Mappings (session)")
