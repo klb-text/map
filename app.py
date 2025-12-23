@@ -6,9 +6,8 @@
 # + FLEXIBLE TRIM MATCHING (Exact / Contains / Token AND / Token OR / Fuzzy) + Top-N Trim Suggestions
 # + Suggestions mirror the normal results table (ALL columns, same selection UX)
 # + Mozenda Agent Mode: query-param driven results w/ STATUS (MAPPED/NEEDS_MAPPING) + Clear
-# + STRICT TRIM ENFORCEMENT: when Trim provided, only exact-Trim matches are shown (no lenient paths)
-# + CADS search: if Trim provided and strict, force Trim=Exact for that run (Model remains contains unless Exact MMT toggled)
-# + Snapshot cleared on input changes to avoid carry-over
+# + Exact YMMT lookup first (returns a single mapped vehicle if present)
+# + Strict Trim gate + Code-first CADS search + snapshot clearing on input changes
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -323,19 +322,11 @@ def _normalize_trim_text(s: str, use_synonyms: bool = True) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     if use_synonyms:
         repl = {
-            "all wheel drive": "awd",
-            "all-wheel drive": "awd",
-            "4wd": "awd",
-            "4x4": "awd",
-            "front wheel drive": "fwd",
-            "front-wheel drive": "fwd",
-            "rear wheel drive": "rwd",
-            "rear-wheel drive": "rwd",
-            "two wheel drive": "2wd",
-            "two-wheel drive": "2wd",
-            "plug-in hybrid": "phev",
-            "electric": "ev",
-            "bev": "ev",
+            "all wheel drive": "awd","all-wheel drive": "awd","4wd": "awd","4x4": "awd",
+            "front wheel drive": "fwd","front-wheel drive": "fwd",
+            "rear wheel drive": "rwd","rear-wheel drive": "rwd",
+            "two wheel drive": "2wd","two-wheel drive": "2wd",
+            "plug-in hybrid": "phev","electric": "ev","bev": "ev",
         }
         for k, v in repl.items():
             s = s.replace(k, v)
@@ -370,28 +361,21 @@ def _tokenized_year_match(series: pd.Series, year: str) -> pd.Series:
     yr = _normalize(year)
     if not yr:
         return pd.Series([True] * len(series), index=series.index)
-    return series.astype(str).apply(lambda s: yr in _split_year_tokens(s))
+    tokens = series.astype(str).apply(lambda s: re.split(r"[\/\-\|\s,;]+", s.strip()))
+    return tokens.apply(lambda toks: yr in toks)
 
 def suggest_top_trims(
-    df: pd.DataFrame,
-    year: str,
-    make: str,
-    model: str,
-    user_trim: str,
-    top_n: int = 50,
-    trim_synonyms: bool = True,
-    restrict_to_make_model: bool = True,
-    case_sensitive: bool = False,
+    df: pd.DataFrame, year: str, make: str, model: str, user_trim: str,
+    top_n: int = 50, trim_synonyms: bool = True, restrict_to_make_model: bool = True, case_sensitive: bool = False,
 ) -> Tuple[pd.DataFrame, Optional[str]]:
-    year_col    = _find_col(df, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
-    make_col    = _find_col(df, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
-    model_col   = _find_col(df, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
-    trim_col    = _find_col(df, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
+    year_col    = _find_col(df, ["AD_YEAR","Year","MY","ModelYear","Model Year"])
+    make_col    = _find_col(df, ["AD_MAKE","Make","MakeName","Manufacturer"])
+    model_col   = _find_col(df, ["AD_MODEL","Model","Line","Carline","Series"])
+    trim_col    = _find_col(df, ["AD_TRIM","Trim","Grade","Variant","Submodel"])
 
-    df2 = df.copy()
-    df2 = _strip_object_columns(df2)
+    df2 = _strip_object_columns(df.copy())
 
-    ctx_mask = pd.Series([True] * len(df2), index=df2.index)
+    ctx_mask = pd.Series([True]*len(df2), index=df2.index)
     if restrict_to_make_model:
         if make_col and make:
             mk = _normalize(make)
@@ -424,27 +408,14 @@ def filter_cads(
     strict_and: bool = True, lock_modelcode_make_model: bool = True, tokenize_year: bool = True,
     trim_match_mode: str = "Token AND", trim_synonyms: bool = True, trim_fuzzy_threshold: float = 0.65,
 ) -> pd.DataFrame:
-    """
-    Filter CADS with optional Model Code, strict AND, tokenized Year, and flexible Trim.
-    """
     y, mk, md, tr, vh, mc = map(_normalize, (year, make, model, trim, vehicle, model_code))
-    df2 = df.copy()
+    df2 = _strip_object_columns(df.copy())
 
-    YEAR_CANDS    = ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"]
-    MAKE_CANDS    = ["AD_MAKE", "Make", "MakeName", "Manufacturer"]
-    MODEL_CANDS   = ["AD_MODEL", "Model", "Line", "Carline", "Series"]
-    TRIM_CANDS    = ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"]
-    VEHICLE_CANDS = ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"]
-
-    year_col    = _find_col(df2, YEAR_CANDS)
-    make_col    = _find_col(df2, MAKE_CANDS)
-    model_col   = _find_col(df2, MODEL_CANDS)
-    trim_col    = _find_col(df2, TRIM_CANDS)
-    vehicle_col = _find_col(df2, VEHICLE_CANDS)
-
-    for col in [year_col, make_col, model_col, trim_col, vehicle_col]:
-        if col and col in df2.columns:
-            df2[col] = df2[col].astype(str).str.strip()
+    year_col    = _find_col(df2, ["AD_YEAR","Year","MY","ModelYear","Model Year"])
+    make_col    = _find_col(df2, ["AD_MAKE","Make","MakeName","Manufacturer"])
+    model_col   = _find_col(df2, ["AD_MODEL","Model","Line","Carline","Series"])
+    trim_col    = _find_col(df2, ["AD_TRIM","Trim","Grade","Variant","Submodel"])
+    vehicle_col = _find_col(df2, ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series"])
 
     def col_contains(col, val):
         if not col or val == "":
@@ -460,7 +431,7 @@ def filter_cads(
 
     masks = []
 
-    # 1) Model Code exact mask (union)
+    # Model Code exact union
     if mc:
         mc_union = None
         for mc_col in get_model_code_candidates(df2):
@@ -480,13 +451,13 @@ def filter_cads(
                     if mo is not None:
                         masks.append(mo)
 
-    # 2) Make / Model masks
+    # Make / Model
     if make_col and mk:
         masks.append(col_equals(make_col, mk) if exact_mmt else col_contains(make_col, mk))
     if model_col and md:
         masks.append(col_equals(model_col, md) if exact_mmt else col_contains(model_col, md))
 
-    # 3) Trim mask – per selected mode
+    # Trim per mode
     if trim_col and tr:
         trim_series = df2[trim_col].astype(str)
         mode = (trim_match_mode or "Token AND").strip().lower()
@@ -501,24 +472,21 @@ def filter_cads(
         else:
             masks.append(_trim_token_and_mask(trim_series, tr, use_synonyms=trim_synonyms))
 
-    # 4) Year mask
+    # Year mask
     if y and year_col:
-        y_parsed = _to_int_or_str(y)
         try:
             df_year_int = df2[year_col].astype(int)
-            masks.append(df_year_int == y_parsed)
+            masks.append(df_year_int == int(y))
         except Exception:
             series = df2[year_col].astype(str)
             if exact_year:
                 if tokenize_year:
-                    mask = series.apply(lambda s: y in _split_year_tokens(s))
-                    masks.append(mask)
+                    masks.append(series.apply(lambda s: y in re.split(r"[\/\-\|\s,;]+", s.strip())))
                 else:
                     masks.append(col_equals(year_col, y))
             else:
                 masks.append(col_contains(year_col, y))
 
-    # Combine masks
     if not masks:
         return df2.iloc[0:0]
 
@@ -533,7 +501,7 @@ def filter_cads(
             final = final | m
         res = df2[final]
 
-    # Secondary: if strict AND with model code returned nothing, show mc-only hits
+    # Secondary MC-only fallback
     if mc and strict_and and len(res) == 0:
         mc_only = None
         for mc_col in get_model_code_candidates(df2):
@@ -568,21 +536,24 @@ def build_key(year: str, make: str, model: str, trim: str, vehicle: str) -> str:
     else:
         return mk or vh or "UNSPECIFIED"
 
+def build_strict_key(year: str, make: str, model: str, trim: str) -> str:
+    """
+    Lowercased strict Y-M-M-T key used to find exactly one mapping if it exists.
+    """
+    return f"{(year or '').strip()}|{(make or '').strip()}|{(model or '').strip()}|{(trim or '').strip()}".lower()
+
 def find_existing_mappings(
     mappings: Dict[str, Dict[str, str]],
     year: str, make: str, model: str, trim: str, vehicle: str, code_input: str,
-    exact_year: bool = True,
-    case_sensitive: bool = False,
-    ignore_year: bool = False,
-    ignore_trim: bool = False,
+    exact_year: bool = True, case_sensitive: bool = False,
+    ignore_year: bool = False, ignore_trim: bool = False,
     require_trim_exact_if_provided: bool = True,
-    disallow_lenient_when_trim: bool = True,  # suppress lenient reasons when Trim provided
+    disallow_lenient_when_trim: bool = True,
 ) -> List[Tuple[str, Dict[str, str], str]]:
     y, mk, md, tr, vh, code_in = map(_normalize, (year, make, model, trim, vehicle, code_input))
     results = []
     trim_provided = (tr != "")
 
-    # HARD OVERRIDE: if Trim provided and we disallow lenient, never ignore trim downstream
     if trim_provided and disallow_lenient_when_trim:
         ignore_trim = False
 
@@ -591,16 +562,15 @@ def find_existing_mappings(
         vmk = _normalize(v.get("make", ""))
         vmd = _normalize(v.get("model", ""))
         vtr = _normalize(v.get("trim", ""))
-        vvh = _normalize(v.get("vehicle", ""))
         vcode = _normalize(v.get("code", ""))
 
-        # 0) by_code — require exact trim if provided
+        # Code path (require trim equality if provided)
         if code_in and vcode and _eq(vcode, code_in, case_sensitive):
             if not trim_provided or _eq(vtr, tr, case_sensitive):
                 results.append((k, v, "by_code"))
             continue
 
-        # 1) strict_ymmt
+        # Strict YMMT
         strict_ok = True
         if y and not ignore_year:
             if exact_year:
@@ -610,14 +580,10 @@ def find_existing_mappings(
                     if not _eq(vy, y, case_sensitive): strict_ok = False
             else:
                 if not _eq(vy, y, case_sensitive): strict_ok = False
-
         if mk and not _eq(vmk, mk, case_sensitive): strict_ok = False
         if md and not _eq(vmd, md, case_sensitive): strict_ok = False
-
-        # Trim exact if provided
         if trim_provided and require_trim_exact_if_provided and not ignore_trim:
-            if not _eq(vtr, tr, case_sensitive):
-                strict_ok = False
+            if not _eq(vtr, tr, case_sensitive): strict_ok = False
         elif tr and not _eq(vtr, tr, case_sensitive):
             strict_ok = False
 
@@ -625,11 +591,11 @@ def find_existing_mappings(
             results.append((k, v, "strict_ymmt"))
             continue
 
-        # 2) lenient paths suppressed when Trim provided and not ignoring trim
+        # Lenient paths suppressed when trim provided and not ignored
         if trim_provided and disallow_lenient_when_trim and not ignore_trim:
             continue
 
-        # 2a) lenient_no_year
+        # Lenient: drop year
         if mk and md:
             ly_ok = True
             if not _eq(vmk, mk, case_sensitive): ly_ok = False
@@ -639,7 +605,7 @@ def find_existing_mappings(
                 results.append((k, v, "lenient_no_year"))
                 continue
 
-        # 2b) lenient_no_trim
+        # Lenient: drop trim
         if mk and md:
             lt_ok = True
             if not _eq(vmk, mk, case_sensitive): lt_ok = False
@@ -656,7 +622,7 @@ def find_existing_mappings(
                 results.append((k, v, "lenient_no_trim"))
                 continue
 
-        # 2c) make_model_only
+        # Make+Model only
         if mk and md and _eq(vmk, mk, case_sensitive) and _eq(vmd, md, case_sensitive):
             results.append((k, v, "make_model_only"))
             continue
@@ -688,7 +654,7 @@ def match_cads_rows_for_mapping(
         df, y, mk, md, tr, vh, "",
         exact_year=exact_year, exact_mmt=True, case_sensitive=case_sensitive,
         strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
-        trim_match_mode="Token AND", trim_synonyms=True, trim_fuzzy_threshold=0.65
+        trim_match_mode="Exact", trim_synonyms=True, trim_fuzzy_threshold=0.65
     )
     return out.reset_index(drop=True)
 
@@ -704,10 +670,6 @@ def get_query_param(name: str, default: str = "") -> str:
         return default
 
 def _extract_year_token(s: str) -> str:
-    """
-    Extract a 4-digit year token from a free text (e.g., vehicle description),
-    returns "" if none found. Range supports 1950–2050.
-    """
     s = (s or "").strip()
     if not s:
         return ""
@@ -725,7 +687,6 @@ st.title("AFF Vehicle Mapping")
 AGENT_MODE = (get_query_param("agent").lower() == "mozenda")
 
 if AGENT_MODE:
-    # Read inputs from query parameters
     q_year    = get_query_param("year")
     q_make    = get_query_param("make")
     q_model   = get_query_param("model")
@@ -734,13 +695,12 @@ if AGENT_MODE:
     q_model_code = get_query_param("model_code")
     q_code    = get_query_param("code")
 
-    # Fallback: if year missing, try to extract from vehicle free text
     if not q_year and q_vehicle:
         guessed_year = _extract_year_token(q_vehicle)
         if guessed_year:
             q_year = guessed_year
 
-    # Load mappings on first agent run
+    # Load mappings
     if "mappings" not in st.session_state:
         try:
             existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
@@ -748,46 +708,44 @@ if AGENT_MODE:
         except Exception:
             st.session_state.mappings = {}
 
-    # Mozenda-friendly detection defaults:
-    q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")  # tolerant by default
-
-    # Smart default for ignore_trim:
+    q_ignore_year = (get_query_param("ignore_year", "true").lower() == "true")
     q_ignore_trim_param = get_query_param("ignore_trim", "")
     if q_ignore_trim_param == "":
         q_ignore_trim = (False if _normalize(q_trim) else True)
     else:
         q_ignore_trim = (q_ignore_trim_param.lower() == "true")
-
-    # Optional per-run lenient toggle for agent mode
     q_lenient_trim = (get_query_param("lenient_trim", "false").lower() == "true")
-
     q_exact_year  = (get_query_param("exact_year", "true").lower() == "true")
     q_case_sens   = (get_query_param("case_sensitive", "false").lower() == "true")
 
-    matches = find_existing_mappings(
-        st.session_state.mappings,
-        q_year, q_make, q_model, q_trim, q_vehicle, q_code,
-        exact_year=q_exact_year, case_sensitive=q_case_sens,
-        ignore_year=q_ignore_year,
-        ignore_trim=(q_ignore_trim or q_lenient_trim),
-        require_trim_exact_if_provided=(not q_lenient_trim),
-        disallow_lenient_when_trim=True
-    )
+    # Exact-key lookup first
+    strict_key_agent = build_strict_key(q_year, q_make, q_model, q_trim)
+    exact_hit_agent = None
+    for k, v in st.session_state.mappings.items():
+        if build_strict_key(v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")) == strict_key_agent:
+            exact_hit_agent = (k, v, "exact_key")
+            break
 
-    # --- HARD GATE (Agent): if Trim provided, keep only exact-Trim matches ---
-    if (q_trim or "").strip():
-        matches = [
-            (k, v, reason)
-            for (k, v, reason) in matches
-            if _eq(v.get("trim", ""), q_trim, q_case_sens)
-        ]
+    if exact_hit_agent:
+        matches = [exact_hit_agent]
+    else:
+        matches = find_existing_mappings(
+            st.session_state.mappings,
+            q_year, q_make, q_model, q_trim, q_vehicle, q_code,
+            exact_year=q_exact_year, case_sensitive=q_case_sens,
+            ignore_year=q_ignore_year,
+            ignore_trim=(q_ignore_trim or q_lenient_trim),
+            require_trim_exact_if_provided=(not q_lenient_trim),
+            disallow_lenient_when_trim=True
+        )
+        # HARD gate: Trim exact if provided
+        if (q_trim or "").strip():
+            matches = [(k, v, r) for (k, v, r) in matches if _eq(v.get("trim",""), q_trim, q_case_sens)]
 
     st.subheader("Mozenda Agent Mode")
     st.caption("Output minimized for scraper consumption.")
 
-    # Clear button (Agent)
     if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
-        # Reset common keys to let agent proceed to next vehicle cleanly
         for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
                   "code_input","model_code_input","prev_inputs","results_df",
                   "code_candidates","model_code_candidates","code_column","model_code_column",
@@ -799,7 +757,6 @@ if AGENT_MODE:
         st.stop()
 
     if matches:
-        # Surface mapped vehicles compactly
         rows = []
         for k, v, reason in matches:
             rows.append({
@@ -814,16 +771,12 @@ if AGENT_MODE:
                 "reason": reason,
             })
         st.success(f"Mapped: {len(rows)} match(es)")
-        df_out = pd.DataFrame(rows)
-        st.dataframe(df_out, use_container_width=True)
-        # Plain token for Mozenda:
+        st.dataframe(pd.DataFrame(rows), use_container_width=True)
         st.text("STATUS=MAPPED")
-        # Compact JSON blob:
         st.write({"status": "MAPPED", "count": len(rows), "data": rows})
         st.stop()
     else:
         st.error("NEEDS_MAPPING")
-        # Plain token for Mozenda:
         st.text("STATUS=NEEDS_MAPPING")
         st.write({
             "status": "NEEDS_MAPPING",
@@ -856,7 +809,7 @@ with st.expander("📦 Data source / diagnostics"):
     except Exception as diag_err:
         st.error(f"Diagnostics error: {diag_err}")
 
-# Load mappings on first run (interactive)
+# Load mappings on first interactive run
 if "mappings" not in st.session_state:
     try:
         existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
@@ -1020,22 +973,30 @@ if prev_inputs != current_inputs:
         st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
-# Existing mapping detection (interactive) — strict trim enforcement when Trim provided
-matches = find_existing_mappings(
-    st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
-    exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR,
-    ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
-    require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN),
-    disallow_lenient_when_trim=True
-)
+# ---------------------------------------------------------------------
+# Existing mapping detection (interactive) — EXACT YMMT FIRST
+# ---------------------------------------------------------------------
+strict_key = build_strict_key(year, make, model, trim)
+exact_hit = None
+for k, v in st.session_state.mappings.items():
+    if build_strict_key(v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")) == strict_key:
+        exact_hit = (k, v, "exact_key")
+        break
 
-# --- HARD GATE (Interactive): if Trim provided, keep only exact-Trim matches ---
-if (trim or "").strip():
-    matches = [
-        (k, v, reason)
-        for (k, v, reason) in matches
-        if _eq(v.get("trim", ""), trim, CASE_SENSITIVE)
-    ]
+if exact_hit:
+    matches = [exact_hit]  # show only the exact mapped vehicle
+else:
+    # Fallback: broader detection (still with strict trim gate)
+    matches = find_existing_mappings(
+        st.session_state.mappings, year, make, model, trim, vehicle, mapped_code,
+        exact_year=EXACT_YEAR, case_sensitive=CASE_SENSITIVE, ignore_year=IGNORE_YEAR,
+        ignore_trim=(IGNORE_TRIM or LENIENT_TRIM_THIS_RUN),
+        require_trim_exact_if_provided=(not LENIENT_TRIM_THIS_RUN),
+        disallow_lenient_when_trim=True
+    )
+    # HARD gate: if Trim provided, keep only exact-Trim matches
+    if (trim or "").strip():
+        matches = [(k, v, r) for (k, v, r) in matches if _eq(v.get("trim",""), trim, CASE_SENSITIVE)]
 
 st.subheader("Existing Mapping (for current inputs)")
 if matches:
@@ -1054,9 +1015,9 @@ if matches:
             "Model Code": v.get("model_code", ""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
-    st.caption("Strict Trim is enforced when Trim input is present; only by_code/strict_ymmt with the same Trim can match.")
+    st.caption("Exact YMMT is returned when present; otherwise strict-trim filtered detection applies.")
 else:
-    st.info("No existing mapping detected for current inputs (try toggling Ignore Year/Trim or case sensitivity).")
+    st.info("No existing mapping detected for current inputs.")
 
 ccol1, ccol2, ccol3 = st.columns(3)
 with ccol1:
@@ -1068,140 +1029,112 @@ with ccol1:
         else:
             st.info("No matches available to copy from.")
 
-# Load CADS details and enrich Model Code if missing
-if matches and LOAD_CADS_DETAILS_ON_MATCH:
-    try:
-        if cads_upload is not None:
-            if cads_upload.name.lower().endswith(".xlsx"):
-                df_cads_all = pd.read_excel(cads_upload, engine="openpyxl")
-            else:
-                df_cads_all = pd.read_csv(cads_upload)
-        else:
-            if CADS_IS_EXCEL:
-                sheet_arg = CADS_SHEET_NAME
-                try: sheet_arg = int(sheet_arg)
-                except Exception: pass
-                df_cads_all = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
-            else:
-                df_cads_all = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
-
-        df_cads_all = _strip_object_columns(df_cads_all)
-
-        for k, v, reason in matches:
-            df_match = match_cads_rows_for_mapping(df_cads_all, v, case_sensitive=CASE_SENSITIVE, exact_year=EXACT_YEAR)
-            count = len(df_match)
-            display_df = df_match.head(MAX_CADS_ROWS_PER_MATCH) if count > MAX_CADS_ROWS_PER_MATCH else df_match
-
-            mc_cols = get_model_code_candidates(df_match)
-            mc_values = []
-            for col in mc_cols:
-                if col in df_match.columns:
-                    mc_values.extend(df_match[col].dropna().unique().tolist())
-            mc_values = [val for val in mc_values if val]
-            mc_values = list(dict.fromkeys(mc_values))
-
-            with st.expander(f"🔎 CADS rows for match [{reason}] key '{k}' — {count} row(s)"):
-                if count == 0:
-                    st.info("No CADS rows matched this mapping by code or YMMT.")
-                else:
-                    if mc_values:
-                        st.caption(f"Model Code(s) detected: {', '.join(mc_values[:10])}{' …' if len(mc_values) > 10 else ''}")
-                    st.dataframe(display_df, use_container_width=True)
-                    if count > MAX_CADS_ROWS_PER_MATCH:
-                        st.caption(f"Showing first {MAX_CADS_ROWS_PER_MATCH} of {count} rows.")
-    except Exception as cad_err:
-        st.warning(f"Could not load CADS details: {cad_err}")
-
-# Add/Update/Delete local mapping
+# ---------------------------------------------------------------------
+# Search CADS — CODE FIRST, THEN STRICT YMMT
+# ---------------------------------------------------------------------
 b1, b2, b3, b4 = st.columns(4)
-with b1:
-    if st.button("Add/Update (local)", key="add_update_local"):
-        k = build_key(year, make, model, trim, vehicle)
-        if (not _normalize(make)) and (not _normalize(vehicle)):
-            st.error("Provide at least Make or Vehicle, and optionally Year/Model/Trim.")
-        else:
-            st.session_state.mappings[k] = {
-                "year": _normalize(year),
-                "make": _normalize(make),
-                "model": _normalize(model),
-                "trim": _normalize(trim),
-                "vehicle": _normalize(vehicle),
-                "code": _normalize(mapped_code),
-                "model_code": _normalize(model_code_input),
-            }
-            st.success(f"Updated local mapping for `{k}`.")
-with b2:
-    if st.button("Delete (local)", key="delete_local"):
-        k = build_key(year, make, model, trim, vehicle)
-        if k in st.session_state.mappings:
-            st.session_state.mappings.pop(k)
-            st.success(f"Deleted local mapping `{k}`.")
-        else:
-            st.warning("Mapping not found.")
 with b3:
     if st.button("🔎 Search CADS", key="search_cads"):
         try:
-            if BLOCK_SEARCH_IF_MAPPED and matches:
-                st.info("Search blocked: a mapping already exists. Toggle 'Block CADS search if mapping exists' OFF to search anyway.")
-            else:
-                # Load CADS
-                if cads_upload is not None:
-                    if cads_upload.name.lower().endswith(".xlsx"):
-                        df_cads = pd.read_excel(cads_upload, engine="openpyxl")
-                    else:
-                        df_cads = pd.read_csv(cads_upload)
+            # Load CADS
+            if cads_upload is not None:
+                if cads_upload.name.lower().endswith(".xlsx"):
+                    df_cads = pd.read_excel(cads_upload, engine="openpyxl")
                 else:
-                    if CADS_IS_EXCEL:
-                        sheet_arg = CADS_SHEET_NAME
-                        try: sheet_arg = int(sheet_arg)
-                        except Exception: pass
-                        df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
-                    else:
-                        df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
+                    df_cads = pd.read_csv(cads_upload)
+            else:
+                if CADS_IS_EXCEL:
+                    sheet_arg = CADS_SHEET_NAME
+                    try: sheet_arg = int(sheet_arg)
+                    except Exception: pass
+                    df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+                else:
+                    df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-                # If Trim is provided and we are not lenient, force Trim=Exact for this search run
+            # Use mapped record if present (prefer exact_hit; else first match)
+            mapped_record = exact_hit[1] if exact_hit else (matches[0][1] if matches else None)
+
+            if mapped_record:
+                # 1) Try CODE-first
+                code_val = (mapped_record.get("code","") or "").strip()
+                if code_val:
+                    df_hits = []
+                    df_cads2 = _strip_object_columns(df_cads.copy())
+                    for col in get_cads_code_candidates(df_cads2):
+                        if col in df_cads2.columns:
+                            series = df_cads2[col].astype(str).str.strip()
+                            mask = series.str.lower() == code_val.lower()
+                            if mask.any():
+                                df_hits.append(df_cads2[mask])
+                    if df_hits:
+                        df_res = pd.concat(df_hits, axis=0).drop_duplicates().reset_index(drop=True)
+                        st.success(f"Found {len(df_res)} CADS row(s) by Code={code_val}.")
+                        selectable = df_res.copy()
+                        if "Select" not in selectable.columns:
+                            selectable.insert(0, "Select", False)
+                        st.session_state["results_df"] = selectable
+                        st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
+                        st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
+                        st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                        st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+                        # Done
+                        raise SystemExit  # exit handler early to avoid strict YMMT fallback
+                # 2) Fallback: strict YMMT (Exact everything)
+                yv  = mapped_record.get("year","")
+                mkv = mapped_record.get("make","")
+                mdv = mapped_record.get("model","")
+                trv = mapped_record.get("trim","")
+                vhv = mapped_record.get("vehicle","")
+
+                results = filter_cads(
+                    df_cads, yv, mkv, mdv, trv, vhv, "",
+                    exact_year=True, exact_mmt=True, case_sensitive=False,
+                    strict_and=True, lock_modelcode_make_model=False, tokenize_year=True,
+                    trim_match_mode="Exact", trim_synonyms=True, trim_fuzzy_threshold=0.65
+                )
+                if len(results) > 0:
+                    st.success(f"Found {len(results)} CADS row(s) by strict YMMT.")
+                    selectable = results.copy()
+                    if "Select" not in selectable.columns:
+                        selectable.insert(0, "Select", False)
+                    st.session_state["results_df"] = selectable
+                    st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
+                    st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
+                    st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                    st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+                else:
+                    st.warning("No CADS rows found via Code or strict YMMT for the mapped vehicle. "
+                               "Consider loosening Model to 'contains' or Trim to 'contains' for diagnosis.")
+            else:
+                # No mapped record yet, run filter on current inputs
                 effective_trim_mode = "Exact" if _normalize(trim) and not (IGNORE_TRIM or LENIENT_TRIM_THIS_RUN) else TRIM_MATCH_MODE
-
                 results = filter_cads(
                     df_cads, year, make, model, trim, vehicle, model_code_input,
                     exact_year=EXACT_YEAR, exact_mmt=EXACT_MMT, case_sensitive=CASE_SENSITIVE,
                     strict_and=STRICT_AND, lock_modelcode_make_model=LOCK_MODEL_CODE_MAKE_MODEL, tokenize_year=TOKENIZE_YEAR,
                     trim_match_mode=effective_trim_mode, trim_synonyms=TRIM_SYNONYMS, trim_fuzzy_threshold=TRIM_FUZZY_THRESHOLD
                 )
-
                 if len(results) == 0:
-                    st.warning("No CADS rows matched your input. Tips: check spelling ('Discovery' vs 'Discovery Sport'), "
-                               "toggle Exact MMT, or omit Trim to broaden.")
-                    try:
-                        sugg_df, _used_trim_col = suggest_top_trims(
-                            df_cads,
-                            year=year,
-                            make=make,
-                            model=model,
-                            user_trim=trim,
-                            top_n=SUGGESTION_COUNT,
-                            trim_synonyms=TRIM_SYNONYMS,
-                            restrict_to_make_model=True,
-                            case_sensitive=CASE_SENSITIVE,
-                        )
-                        if sugg_df.empty:
-                            st.info("No suggestions found (try relaxing filters, switching Trim match mode, or omitting Trim).")
-                        else:
-                            selectable = sugg_df.copy()
-                            if "Select" not in selectable.columns:
-                                selectable.insert(0, "Select", False)
-
-                            st.session_state["results_df"] = selectable
-                            st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
-                            st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
-                            st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
-                            st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
-
-                            st.success(f"Loaded {len(selectable)} trim suggestions into the results table below (ALL CADS columns mirrored).")
-                    except Exception as e:
-                        st.error(f"Suggestion build failed: {e}")
+                    st.warning("No CADS rows matched your input. Try toggling Exact MMT, or omit Trim to broaden.")
+                    sugg_df, _used_trim_col = suggest_top_trims(
+                        df_cads, year=year, make=make, model=model, user_trim=trim,
+                        top_n=SUGGESTION_COUNT, trim_synonyms=TRIM_SYNONYMS,
+                        restrict_to_make_model=True, case_sensitive=CASE_SENSITIVE,
+                    )
+                    if sugg_df.empty:
+                        st.info("No suggestions found (relax filters or check spelling).")
+                    else:
+                        selectable = sugg_df.copy()
+                        if "Select" not in selectable.columns:
+                            selectable.insert(0, "Select", False)
+                        st.session_state["results_df"] = selectable
+                        st.session_state["code_candidates"] = get_cads_code_candidates(selectable)
+                        st.session_state["model_code_candidates"] = get_model_code_candidates(selectable)
+                        st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
+                        st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+                        st.success(f"Loaded {len(selectable)} trim suggestions into the results table below.")
                 else:
-                    st.success(f"Found {len(results)} CADS rows.")
+                    st.success(f"Found {len(results)} CADS row(s).")
                     selectable = results.copy()
                     if "Select" not in selectable.columns:
                         selectable.insert(0, "Select", False)
@@ -1210,11 +1143,16 @@ with b3:
                     st.session_state["model_code_candidates"] = get_model_code_candidates(results)
                     st.session_state["code_column"] = st.session_state["code_candidates"][0] if st.session_state["code_candidates"] else None
                     st.session_state["model_code_column"] = st.session_state["model_code_candidates"][0] if st.session_state["model_code_candidates"] else None
+
+        except SystemExit:
+            # Code-first path ended the handler intentionally
+            pass
         except FileNotFoundError as fnf:
             st.error(str(fnf))
             st.info(f"Ensure the CADS file exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` on branch `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
+
 with b4:
     if st.button("📋 Copy first CADS Model Code to input", key="copy_model_code_btn"):
         if "results_df" in st.session_state and "model_code_column" in st.session_state:
@@ -1263,7 +1201,6 @@ if "results_df" in st.session_state:
         key="model_code_column_select",
     )
 
-    # Column order: keep 'Select' and 'Similarity' up front if present
     df_show = st.session_state["results_df"]
     front_cols = [c for c in ["Select", "Similarity"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
@@ -1288,7 +1225,7 @@ if "results_df" in st.session_state:
         use_container_width=True,
         num_rows="dynamic",
         column_order=col_order,
-        height=TABLE_HEIGHT,  # resizeable table height to reduce truncation
+        height=TABLE_HEIGHT,
     )
     st.session_state["results_df"] = edited
 
@@ -1300,11 +1237,11 @@ if "results_df" in st.session_state:
             st.warning("No rows selected. Tick the 'Select' checkbox for one or more rows.")
         else:
             df2 = selected_rows.copy()
-            year_col    = _find_col(df2, ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"])
-            make_col    = _find_col(df2, ["AD_MAKE", "Make", "MakeName", "Manufacturer"])
-            model_col   = _find_col(df2, ["AD_MODEL", "Model", "Line", "Carline", "Series"])
-            trim_col    = _find_col(df2, ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"])
-            vehicle_col = _find_col(df2, ["Vehicle", "Description", "ModelTrim", "ModelName", "AD_SERIES", "Series"])
+            year_col    = _find_col(df2, ["AD_YEAR","Year","MY","ModelYear","Model Year"])
+            make_col    = _find_col(df2, ["AD_MAKE","Make","MakeName","Manufacturer"])
+            model_col   = _find_col(df2, ["AD_MODEL","Model","Line","Carline","Series"])
+            trim_col    = _find_col(df2, ["AD_TRIM","Trim","Grade","Variant","Submodel"])
+            vehicle_col = _find_col(df2, ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series"])
 
             code_col        = st.session_state.get("code_column")
             model_code_col  = st.session_state.get("model_code_column")
