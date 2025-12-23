@@ -92,5 +92,14 @@
     "vehicle": "4dr 4x2",
     "code": "467462",
     "model_code": "U1H/200A"
+  },
+  "2025-Land Rover-Discovery-P300 Dynamic SE": {
+    "year": "2025",
+    "make": "Land Rover",
+    "model": "Discovery",
+    "trim": "P300 Dynamic SE",
+    "vehicle": "4dr All-Wheel Drive",
+    "code": "459406",
+    "model_code": "HC462/462AF"
   }
 }
