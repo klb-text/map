@@ -110,5 +110,14 @@
     "vehicle": "All-Wheel Drive",
     "code": "458676",
     "model_code": "HM551/551EZ"
+  },
+  "2025-Land Rover-Range Rover Evoque-Core S": {
+    "year": "2025",
+    "make": "Land Rover",
+    "model": "Range Rover Evoque",
+    "trim": "Core S",
+    "vehicle": "All-Wheel Drive",
+    "code": "458675",
+    "model_code": "HM551/551BL"
   }
 }
