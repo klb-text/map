@@ -101,5 +101,14 @@
     "vehicle": "4dr All-Wheel Drive",
     "code": "459406",
     "model_code": "HC462/462AF"
+  },
+  "2025-Land Rover-Range Rover Evoque-Dynamic SE": {
+    "year": "2025",
+    "make": "Land Rover",
+    "model": "Range Rover Evoque",
+    "trim": "Dynamic SE",
+    "vehicle": "All-Wheel Drive",
+    "code": "458676",
+    "model_code": "HM551/551EZ"
   }
 }
