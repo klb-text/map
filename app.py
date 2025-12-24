@@ -137,74 +137,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     if sha: data["sha"] = sha
     r2 = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r2.status_code in (200, 201): return r2.json()
-    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
-
-# ---------------------------------------------------------------------
-# CADS loaders
-# ---------------------------------------------------------------------
-def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
-    obj_cols = df.select_dtypes(include=["object"]).columns
-    if len(obj_cols) > 0: df[obj_cols] = df[obj_cols].apply(lambda s: s.str.strip())
-    return df
-
-@st.cache_data(ttl=600)
-def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
-    if not raw or raw.strip() == b"": return ("", "empty")
-    encoding = "utf-8"
-    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"): encoding = "utf-16"
-    elif raw.startswith(b"\xef\xbb\xbf"): encoding = "utf-8-sig"
-    text = raw.decode(encoding, errors="replace")
-    return (text, encoding)
-
-@st.cache_data(ttl=600)
-def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
-    import csv
-    params = {"ref": ref} if ref else {}
-    r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
-    if r.status_code == 200:
-        j = r.json(); raw = None
-        if "content" in j and j["content"]:
-            try: raw = base64.b64decode(j["content"])
-            except Exception: raw = None
-        if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _get(j["download_url"]); raw = r2.content if r2.status_code == 200 else None
-        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
-        text, _ = _decode_bytes_to_text(raw)
-        sample = text[:4096]
-        delimiter = None
-        try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=[",","\t",";","|"])
-            delimiter = dialect.delimiter
-        except Exception:
-            for cand in [",","\t",";","|"]:
-                if cand in sample: delimiter = cand; break
-        if delimiter is None:
-            df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
-        else:
-            df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
-        df.columns = [str(c).strip() for c in df.columns]
-        df = df.dropna(how="all")
-        if df.empty or len(df.columns) == 0: raise ValueError("CADS CSV parsed but produced no columns/rows.")
-        return _strip_object_columns(df)
-    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
-
-@st.cache_data(ttl=600)
-def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
-    params = {"ref": ref} if ref else {}
-    r = _get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params)
-    if r.status_code == 200:
-        j = r.json(); raw = None
-        if "content" in j and j["content"]:
-            try: raw = base64.b64decode(j["content"])
-            except Exception: raw = None
-        if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _get(j["download_url"]); raw = r2.content if r2.status_code == 200 else None
-        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
-        df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
-        return _strip_object_columns(df)
-    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
+    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
 # Canonicalization / tokens / year / trim
@@ -277,16 +210,14 @@ MODEL_LIKE_PATTERNS  = ("model", "line", "carline", "series")
 SERIES_LIKE_PATTERNS = ("series", "submodel", "body", "trim", "description", "modeltrim")
 
 def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
-    cols = [c for c in df.columns]
-    def has_any_pattern(c: str, patterns: Tuple[str, ...]) -> bool:
+    cols = list(df.columns)
+    def has_any(c: str, patterns: Tuple[str, ...]) -> bool:
         lc = c.lower()
         return any(p in lc for p in patterns)
-    model_cols  = [c for c in cols if has_any_pattern(c, MODEL_LIKE_PATTERNS)]
-    series_cols = [c for c in cols if has_any_pattern(c, SERIES_LIKE_PATTERNS)]
-    # Keep order stable; drop duplicates if overlaps
-    model_cols  = list(dict.fromkeys(model_cols))
-    series_cols = [c for c in list(dict.fromkeys(series_cols)) if c not in model_cols]
-    return (model_cols, series_cols)
+    model_cols  = [c for c in cols if has_any(c, MODEL_LIKE_PATTERNS)]
+    series_cols = [c for c in cols if has_any(c, SERIES_LIKE_PATTERNS) and c not in model_cols]
+    # Dedup; keep order stable
+    return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
 
 def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
     parts = []
@@ -312,21 +243,20 @@ def compute_per_make_stopwords(
     df: pd.DataFrame, make_col: Optional[str], stopword_threshold: float = 0.40,
     token_min_len: int = 2
 ) -> Set[str]:
-    if make_col is None or make_col not in df.columns: return set()
-    # Group by make; we will compute stopwords on the current Make slice later (call site)
-    # This function returns stopwords for the whole DF if Make not filtered (call site should slice).
-    # For generality, we compute token frequencies on the provided df.
+    """
+    Data-driven: tokens that appear in >= stopword_threshold of rows for the given Make
+    are treated as non-discriminant.
+    """
     if "__effective_model__" not in df.columns:
         df = add_effective_model_column(df)
     total = len(df)
     if total == 0: return set()
-    freq = {}
+    freq: Dict[str,int] = {}
     for _, row in df.iterrows():
         toks = set(tokens(row["__effective_model__"], min_len=token_min_len))
         for t in toks:
             freq[t] = freq.get(t, 0) + 1
-    stop = {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
-    return stop
+    return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
 
 # ---------------------------------------------------------------------
 # Single-best mapping picker (generic, no hardcoding)
@@ -345,10 +275,9 @@ def pick_best_mapping(
     if not cmk:
         return None
 
-    # "Full-name exact" preference for multi-word inputs
+    # Preference for exact when multi-word model entered
     force_exact_model = model_exact_when_full and len(cmd.split()) >= 2
 
-    # Candidate selection
     candidates: List[Tuple[str, Dict[str, str], float]] = []
     for k, v in mappings.items():
         vmk = v.get("make","")
@@ -392,7 +321,6 @@ def filter_cads_generic(
     df2 = _strip_object_columns(df.copy())
     df2 = add_effective_model_column(df2)
 
-    # Find likely Year/Make/Trim columns
     YEAR_CANDS  = ["AD_YEAR","Year","MY","ModelYear","Model Year"]
     MAKE_CANDS  = ["AD_MAKE","Make","MakeName","Manufacturer"]
     TRIM_CANDS  = ["AD_TRIM","Trim","Grade","Variant","Submodel"]
@@ -413,24 +341,24 @@ def filter_cads_generic(
         s = df2[make_col].astype(str).str.lower()
         masks.append(s == mk)
 
-    # Model discriminant tokens (AND containment)
-    effective = df2["__effective_model__"]
+    # Model discriminant tokens
+    eff = df2["__effective_model__"]
     user_tokens = tokens(md, min_len=token_min_len)
-    # Slice DF to current make for stopword computation
+
+    # Compute stopwords on MAKE slice
     df_make_slice = df2[(df2[make_col].astype(str).str.lower() == mk)] if make_col else df2
     make_stopwords = compute_per_make_stopwords(df_make_slice, make_col, stopword_threshold, token_min_len)
     discriminant = [t for t in user_tokens if t not in make_stopwords]
-    # If multi-word and exact requested, prefer exact effective compare, else token-AND
+
+    # === MODEL MATCHING ===
+    # Prefer token-AND on discriminants; fallback token-OR if result empty.
     if md:
-        if exact_model_when_full and len(user_tokens) >= 2:
-            masks.append(effective == md)
+        if discriminant:
+            mask_and = eff.apply(lambda s: all(t in s for t in discriminant))
+            masks.append(mask_and)
         else:
-            if discriminant:
-                # Token-AND on discriminant tokens
-                masks.append(effective.apply(lambda s: all(t in s for t in discriminant)))
-            else:
-                # If all tokens are stopwords, fall back to contains on full md
-                masks.append(effective.str.contains(md, na=False))
+            # All tokens are stopwords → fallback to contains on full md
+            masks.append(eff.str.contains(md, na=False))
 
     # Trim gate
     if trim_col and tr:
@@ -450,10 +378,36 @@ def filter_cads_generic(
     if not masks:
         return df2.iloc[0:0]
 
+    # Combine masks
     m = masks[0]
     for mm in masks[1:]:
         m = (m & mm) if strict_and else (m | mm)
-    return df2[m]
+    result = df2[m]
+
+    # === Safe fallback: widen model from token-AND to token-OR if empty ===
+    if md and len(result) == 0 and discriminant:
+        mask_or = eff.apply(lambda s: any(t in s for t in discriminant))
+        m2 = mask_or
+        # Re-apply other (non-model) masks
+        if make_col and mk:
+            s = df2[make_col].astype(str).str.lower()
+            m2 = (m2 & (s == mk)) if strict_and else (m2 | (s == mk))
+        if trim_col and tr:
+            s = df2[trim_col].astype(str)
+            m_exact  = s.str.lower() == tr
+            if trim_exact_only:
+                m2 = (m2 & m_exact) if strict_and else (m2 | m_exact)
+            else:
+                m_subset = s.apply(lambda x: _trim_tokens(tr).issubset(_trim_tokens(x)))
+                tmask = (m_exact | m_subset)
+                m2 = (m2 & tmask) if strict_and else (m2 | tmask)
+        if year_col and y:
+            s = df2[year_col].astype(str)
+            ymask = s.apply(lambda vy: year_token_matches(vy, y))
+            m2 = (m2 & ymask) if strict_and else (m2 | ymask)
+        result = df2[m2]
+
+    return result
 
 # ---------------------------------------------------------------------
 # CADS matching for a single mapping: Code → Model Code → generic fallback
@@ -553,7 +507,6 @@ if AGENT_MODE:
         except Exception:
             st.session_state.mappings = {}
 
-    # Agent strictness defaults
     TRIM_EXACT_ONLY_AGENT      = (get_query_param("trim_exact_only", "false").lower() == "true")
     MODEL_EXACT_WHEN_FULL_AGENT= (get_query_param("model_exact_full", "true").lower() == "true")
 
@@ -840,7 +793,7 @@ with b3:
                 token_min_len=TOKEN_MIN_LEN,
             )
             if len(results) == 0:
-                st.warning("No CADS rows matched inputs. Try lowering stopword threshold, turning off 'Model exact when full', or relaxing Trim exact-only.")
+                st.warning("No CADS rows matched inputs. Try raising stopword threshold, turning off 'Model exact when full', or relaxing Trim exact-only.")
             else:
                 st.success(f"Found {len(results)} CADS row(s) for current inputs.")
                 selectable = results.copy()
@@ -875,7 +828,7 @@ if "results_df_mapped" in st.session_state:
         key="model_code_column_select_mapped",
     )
 
-    front_cols = [c for c in ["Select","Similarity","__effective_model__"] if c in df_show.columns]
+    front_cols = [c for c in ["Select","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
@@ -946,7 +899,7 @@ if "results_df_inputs" in st.session_state:
         key="model_code_column_select_inputs",
     )
 
-    front_cols = [c for c in ["Select","Similarity","__effective_model__"] if c in df_show.columns]
+    front_cols = [c for c in ["Select","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
