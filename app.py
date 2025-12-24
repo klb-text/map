@@ -2,23 +2,16 @@
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Generic model matching for 38+ OEMs using:
-#  - "Effective model" (concat of model-like CADS columns: AD_MODEL, AD_SERIES, Carline, Description, etc.)
+#  - "Effective model" (concat of model-like CADS columns)
 #  - Per-make token frequencies to identify stopwords (high-frequency tokens)
-#  - Token-AND containment on user model minus stopwords (discriminant tokens)
+#  - Tiered matching: Token-AND → Token-OR → Contains (non-stopword) → Contains (full text) → Fuzzy suggestions
 #  - Trim exact or token-subset; Year token-aware; Make exact
 # No hardcoded model lists per OEM.
 # Repo: klb-text/map, Branch: main
 
-import base64
-import json
-import time
-import io
-import re
-import difflib
+import base64, json, time, io, re, difflib
 from typing import Optional, List, Dict, Tuple, Set
-import requests
-import pandas as pd
-import streamlit as st
+import requests, pandas as pd, streamlit as st
 
 # ---------------------------------------------------------------------
 # Page config
@@ -40,7 +33,7 @@ CADS_PATH       = "CADS.csv"
 CADS_IS_EXCEL   = False
 CADS_SHEET_NAME_DEFAULT = "0"
 
-# Preferred ID columns in CADS (union scans)
+# ID columns in CADS (union scans)
 CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
 
@@ -204,18 +197,16 @@ def model_similarity(a: str, b: str) -> float:
     return difflib.SequenceMatcher(None, a, b).ratio()
 
 # ---------------------------------------------------------------------
-# Generic: detect model-like columns & build "effective model"
+# Detect model-like columns & build "effective model"
 # ---------------------------------------------------------------------
-MODEL_LIKE_PATTERNS  = ("model", "line", "carline", "series")
-SERIES_LIKE_PATTERNS = ("series", "submodel", "body", "trim", "description", "modeltrim")
+# Expanded detection: covers common variants across 38 OEMs
+MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
+SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
 
 def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     cols = list(df.columns)
-    def has_any(c: str, patterns: Tuple[str, ...]) -> bool:
-        lc = c.lower()
-        return any(p in lc for p in patterns)
-    model_cols  = [c for c in cols if has_any(c, MODEL_LIKE_PATTERNS)]
-    series_cols = [c for c in cols if has_any(c, SERIES_LIKE_PATTERNS) and c not in model_cols]
+    model_cols  = [c for c in cols if MODEL_LIKE_REGEX.search(c)]
+    series_cols = [c for c in cols if SERIES_LIKE_REGEX.search(c) and c not in model_cols]
     # Dedup; keep order stable
     return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
 
@@ -226,29 +217,38 @@ def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List
             v = str(row.get(c, "") or "").strip()
             if v:
                 parts.append(v)
+    # collapse into canonical effective model
     return canon_text(" ".join(parts))
 
-def add_effective_model_column(df: pd.DataFrame) -> pd.DataFrame:
-    model_cols, series_cols = detect_model_like_columns(df)
-    if not model_cols and not series_cols:
+def add_effective_model_column(df: pd.DataFrame, override_cols: Optional[List[str]] = None) -> Tuple[pd.DataFrame, List[str], List[str]]:
+    """
+    If override_cols provided, use only these columns to build effective model.
+    Otherwise auto-detect model-like & series-like columns.
+    Returns (df_with_effective_model, used_model_cols, used_series_cols).
+    """
+    if override_cols:
+        used_model_cols  = [c for c in override_cols if c in df.columns]
+        used_series_cols = []
+    else:
+        used_model_cols, used_series_cols = detect_model_like_columns(df)
+    if not used_model_cols and not used_series_cols:
         df["__effective_model__"] = ""
-        return df
-    df["__effective_model__"] = df.apply(lambda r: effective_model_row(r, model_cols, series_cols), axis=1)
-    return df
+        return df, used_model_cols, used_series_cols
+    df["__effective_model__"] = df.apply(lambda r: effective_model_row(r, used_model_cols, used_series_cols), axis=1)
+    return df, used_model_cols, used_series_cols
 
 # ---------------------------------------------------------------------
-# Per-make stopwords: tokens that appear in too many rows for that make
+# Per-make stopwords (data-driven)
 # ---------------------------------------------------------------------
 def compute_per_make_stopwords(
-    df: pd.DataFrame, make_col: Optional[str], stopword_threshold: float = 0.40,
-    token_min_len: int = 2
+    df: pd.DataFrame, stopword_threshold: float = 0.40, token_min_len: int = 2
 ) -> Set[str]:
     """
-    Data-driven: tokens that appear in >= stopword_threshold of rows for the given Make
+    Data-driven: tokens that appear in >= stopword_threshold of rows (already make-sliced)
     are treated as non-discriminant.
     """
     if "__effective_model__" not in df.columns:
-        df = add_effective_model_column(df)
+        df, _, _ = add_effective_model_column(df)
     total = len(df)
     if total == 0: return set()
     freq: Dict[str,int] = {}
@@ -259,7 +259,7 @@ def compute_per_make_stopwords(
     return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
 
 # ---------------------------------------------------------------------
-# Single-best mapping picker (generic, no hardcoding)
+# Single-best mapping picker (generic)
 # ---------------------------------------------------------------------
 def pick_best_mapping(
     mappings: Dict[str, Dict[str, str]],
@@ -275,7 +275,6 @@ def pick_best_mapping(
     if not cmk:
         return None
 
-    # Preference for exact when multi-word model entered
     force_exact_model = model_exact_when_full and len(cmd.split()) >= 2
 
     candidates: List[Tuple[str, Dict[str, str], float]] = []
@@ -307,8 +306,26 @@ def pick_best_mapping(
     return candidates[0]  # (key, value, score)
 
 # ---------------------------------------------------------------------
-# Generic CADS filter using effective model + per-make stopwords
+# Generic CADS filter using effective model + stopwords (tiered)
 # ---------------------------------------------------------------------
+def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
+    """
+    Return masks for the 4 tiers:
+      and_mask: token-AND on discriminants
+      or_mask:  token-OR  on discriminants
+      ns_mask:  contains on non-stopword text (join discriminants)
+      full_mask: contains on full model text
+    """
+    if not md:
+        true_mask = pd.Series([True]*len(eff), index=eff.index)
+        return true_mask, true_mask, true_mask, true_mask
+    and_mask  = eff.apply(lambda s: all(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
+    or_mask   = eff.apply(lambda s: any(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
+    ns_text   = " ".join(discriminant).strip()
+    ns_mask   = eff.str.contains(ns_text, na=False) if ns_text else eff.str.contains(md, na=False)
+    full_mask = eff.str.contains(md, na=False)
+    return and_mask, or_mask, ns_mask, full_mask
+
 def filter_cads_generic(
     df: pd.DataFrame,
     year: str, make: str, model: str, trim: str,
@@ -317,9 +334,10 @@ def filter_cads_generic(
     strict_and: bool,
     stopword_threshold: float,
     token_min_len: int,
-) -> pd.DataFrame:
+    effective_model_cols_override: Optional[List[str]] = None,
+) -> Tuple[pd.DataFrame, Dict[str, any]]:
     df2 = _strip_object_columns(df.copy())
-    df2 = add_effective_model_column(df2)
+    df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
 
     YEAR_CANDS  = ["AD_YEAR","Year","MY","ModelYear","Model Year"]
     MAKE_CANDS  = ["AD_MAKE","Make","MakeName","Manufacturer"]
@@ -336,78 +354,83 @@ def filter_cads_generic(
 
     masks = []
 
-    # Make exact
+    # Make slice and stopwords
     if make_col and mk:
-        s = df2[make_col].astype(str).str.lower()
-        masks.append(s == mk)
+        s_make = df2[make_col].astype(str).str.lower()
+        masks.append(s_make == mk)
+        df_make_slice = df2[s_make == mk]
+    else:
+        df_make_slice = df2
 
-    # Model discriminant tokens
     eff = df2["__effective_model__"]
     user_tokens = tokens(md, min_len=token_min_len)
-
-    # Compute stopwords on MAKE slice
-    df_make_slice = df2[(df2[make_col].astype(str).str.lower() == mk)] if make_col else df2
-    make_stopwords = compute_per_make_stopwords(df_make_slice, make_col, stopword_threshold, token_min_len)
+    make_stopwords = compute_per_make_stopwords(df_make_slice, stopword_threshold, token_min_len)
     discriminant = [t for t in user_tokens if t not in make_stopwords]
 
-    # === MODEL MATCHING ===
-    # Prefer token-AND on discriminants; fallback token-OR if result empty.
+    # MODEL tiered masks
+    and_mask, or_mask, ns_mask, full_mask = _tiered_model_mask(eff, md, discriminant)
     if md:
-        if discriminant:
-            mask_and = eff.apply(lambda s: all(t in s for t in discriminant))
-            masks.append(mask_and)
-        else:
-            # All tokens are stopwords → fallback to contains on full md
-            masks.append(eff.str.contains(md, na=False))
+        # Start with AND (primary)
+        masks.append(and_mask)
 
     # Trim gate
     if trim_col and tr:
-        s = df2[trim_col].astype(str)
-        m_exact  = s.str.lower() == tr
+        s_trim = df2[trim_col].astype(str)
+        m_exact  = s_trim.str.lower() == tr
         if trim_exact_only:
             masks.append(m_exact)
         else:
-            m_subset = s.apply(lambda x: _trim_tokens(tr).issubset(_trim_tokens(x)))
+            m_subset = s_trim.apply(lambda x: _trim_tokens(tr).issubset(_trim_tokens(x)))
             masks.append(m_exact | m_subset)
 
     # Year token-aware
     if year_col and y:
-        s = df2[year_col].astype(str)
-        masks.append(s.apply(lambda vy: year_token_matches(vy, y)))
-
-    if not masks:
-        return df2.iloc[0:0]
+        s_year = df2[year_col].astype(str)
+        masks.append(s_year.apply(lambda vy: year_token_matches(vy, y)))
 
     # Combine masks
-    m = masks[0]
-    for mm in masks[1:]:
-        m = (m & mm) if strict_and else (m | mm)
-    result = df2[m]
+    if not masks:
+        result = df2.iloc[0:0]
+    else:
+        m = masks[0]
+        for mm in masks[1:]:
+            m = (m & mm) if strict_and else (m | mm)
+        result = df2[m]
 
-    # === Safe fallback: widen model from token-AND to token-OR if empty ===
-    if md and len(result) == 0 and discriminant:
-        mask_or = eff.apply(lambda s: any(t in s for t in discriminant))
-        m2 = mask_or
-        # Re-apply other (non-model) masks
-        if make_col and mk:
-            s = df2[make_col].astype(str).str.lower()
-            m2 = (m2 & (s == mk)) if strict_and else (m2 | (s == mk))
-        if trim_col and tr:
-            s = df2[trim_col].astype(str)
-            m_exact  = s.str.lower() == tr
-            if trim_exact_only:
-                m2 = (m2 & m_exact) if strict_and else (m2 | m_exact)
-            else:
-                m_subset = s.apply(lambda x: _trim_tokens(tr).issubset(_trim_tokens(x)))
-                tmask = (m_exact | m_subset)
-                m2 = (m2 & tmask) if strict_and else (m2 | tmask)
-        if year_col and y:
-            s = df2[year_col].astype(str)
-            ymask = s.apply(lambda vy: year_token_matches(vy, y))
-            m2 = (m2 & ymask) if strict_and else (m2 | ymask)
+    # Fallback tiers if empty
+    tier_used = "AND"
+    if md and len(result) == 0:
+        # Try OR
+        tier_used = "OR"
+        m2 = or_mask
+        for mm in masks[1:]:  # reapply non-model masks
+            m2 = (m2 & mm) if strict_and else (m2 | mm)
         result = df2[m2]
+        if len(result) == 0:
+            # Try non-stopword contains
+            tier_used = "NS_CONTAINS"
+            m3 = ns_mask
+            for mm in masks[1:]:
+                m3 = (m3 & mm) if strict_and else (m3 | mm)
+            result = df2[m3]
+            if len(result) == 0:
+                # Try full model contains
+                tier_used = "FULL_CONTAINS"
+                m4 = full_mask
+                for mm in masks[1:]:
+                    m4 = (m4 & mm) if strict_and else (m4 | mm)
+                result = df2[m4]
 
-    return result
+    diag = {
+        "used_model_cols": used_model_cols,
+        "used_series_cols": used_series_cols,
+        "make_stopwords": sorted(list(make_stopwords))[:50],
+        "user_tokens": user_tokens,
+        "discriminant_tokens": discriminant,
+        "tier_used": tier_used,
+        "rows_after_tier": len(result),
+    }
+    return result, diag
 
 # ---------------------------------------------------------------------
 # CADS matching for a single mapping: Code → Model Code → generic fallback
@@ -426,9 +449,10 @@ def match_cads_rows_for_mapping(
     strict_and: bool,
     stopword_threshold: float,
     token_min_len: int,
-) -> pd.DataFrame:
+    effective_model_cols_override: Optional[List[str]] = None,
+) -> Tuple[pd.DataFrame, Dict[str, any]]:
     df2 = _strip_object_columns(df.copy())
-    df2 = add_effective_model_column(df2)
+    df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
 
     # Code union
     code_val = (mapping.get("code","") or "").strip()
@@ -440,7 +464,9 @@ def match_cads_rows_for_mapping(
                 mask = series == code_val.lower()
                 if mask.any(): hits.append(df2[mask])
         if hits:
-            return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
+            return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True), {
+                "used_model_cols": used_model_cols, "used_series_cols": used_series_cols, "tier_used": "CODE"
+            }
 
     # Model Code union
     model_code_val = (mapping.get("model_code","") or "").strip()
@@ -452,10 +478,12 @@ def match_cads_rows_for_mapping(
                 mask = series == model_code_val.lower()
                 if mask.any(): hits.append(df2[mask])
         if hits:
-            return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
+            return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True), {
+                "used_model_cols": used_model_cols, "used_series_cols": used_series_cols, "tier_used": "MODEL_CODE"
+            }
 
     # Generic fallback using effective model + stopwords
-    return filter_cads_generic(
+    res, diag = filter_cads_generic(
         df2,
         mapping.get("year",""), mapping.get("make",""), mapping.get("model",""), mapping.get("trim",""),
         exact_model_when_full=exact_model_when_full,
@@ -463,7 +491,10 @@ def match_cads_rows_for_mapping(
         strict_and=strict_and,
         stopword_threshold=stopword_threshold,
         token_min_len=token_min_len,
-    ).reset_index(drop=True)
+        effective_model_cols_override=effective_model_cols_override,
+    )
+    diag.update({"used_model_cols": used_model_cols, "used_series_cols": used_series_cols})
+    return res, diag
 
 # ---------------------------------------------------------------------
 # UI helpers
@@ -489,73 +520,6 @@ def secrets_status():
 # ---------------------------------------------------------------------
 st.title("AFF Vehicle Mapping")
 
-# --------------------- Agent Mode ------------------------------------
-AGENT_MODE = (get_query_param("agent").lower() == "mozenda")
-if AGENT_MODE:
-    q_year    = get_query_param("year")
-    q_make    = get_query_param("make")
-    q_model   = get_query_param("model")
-    q_trim    = get_query_param("trim")
-    q_vehicle = get_query_param("vehicle")
-    q_model_code = get_query_param("model_code")
-    q_code    = get_query_param("code")
-
-    if "mappings" not in st.session_state:
-        try:
-            existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
-            st.session_state.mappings = existing or {}
-        except Exception:
-            st.session_state.mappings = {}
-
-    TRIM_EXACT_ONLY_AGENT      = (get_query_param("trim_exact_only", "false").lower() == "true")
-    MODEL_EXACT_WHEN_FULL_AGENT= (get_query_param("model_exact_full", "true").lower() == "true")
-
-    best = pick_best_mapping(
-        st.session_state.mappings, q_year, q_make, q_model, q_trim,
-        trim_exact_only=TRIM_EXACT_ONLY_AGENT,
-        model_exact_when_full=MODEL_EXACT_WHEN_FULL_AGENT,
-    )
-
-    st.subheader("Mozenda Agent Mode")
-    st.caption("Output minimized for scraper consumption.")
-
-    if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
-        for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-                  "code_input","model_code_input","prev_inputs",
-                  "results_df_mapped","results_df_inputs",
-                  "code_candidates_mapped","code_candidates_inputs",
-                  "model_code_candidates_mapped","model_code_candidates_inputs",
-                  "code_column_mapped","code_column_inputs",
-                  "model_code_column_mapped","model_code_column_inputs"]:
-            st.session_state.pop(k, None)
-        st.success("Agent state cleared.")
-        st.text("STATUS=CLEARED")
-        st.write({"status":"CLEARED"})
-        st.stop()
-
-    if best:
-        k, v, score = best
-        row = {
-            "key": k, "score": round(score,3),
-            "year": v.get("year",""), "make": v.get("make",""), "model": v.get("model",""),
-            "trim": v.get("trim",""), "vehicle": v.get("vehicle",""),
-            "code": v.get("code",""), "model_code": v.get("model_code",""),
-            "reason": "generic_best_trim_model_year",
-        }
-        st.success("Mapped: 1")
-        st.dataframe(pd.DataFrame([row]), use_container_width=True)
-        st.text("STATUS=MAPPED")
-        st.write({"status":"MAPPED","count":1,"data":[row]})
-        st.stop()
-    else:
-        st.info("NEEDS_MAPPING")
-        st.text("STATUS=NEEDS_MAPPING")
-        st.write({"status":"NEEDS_MAPPING","inputs":{
-            "year":q_year,"make":q_make,"model":q_model,"trim":q_trim,
-            "vehicle":q_vehicle,"model_code":q_model_code,"code":q_code
-        }})
-        st.stop()
-
 # --------------------- Diagnostics -----------------------------------
 with st.expander("📦 Data source / diagnostics"):
     try:
@@ -572,7 +536,7 @@ with st.expander("📦 Data source / diagnostics"):
         if st.button("🔄 Reload mappings (diagnostics)", key="diag_reload_btn"):
             existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
             st.session_state.mappings = existing or {}
-            st.success(f"Reloaded. Count: {len(st.session_state.mappings)}")
+            st.success(f"Reloaded. Current count: {len(st.session_state.mappings)}")
     except Exception as diag_err:
         st.error(f"Diagnostics error: {diag_err}")
 
@@ -637,7 +601,7 @@ if uploaded:
     except Exception as e:
         st.sidebar.error(f"Failed to parse uploaded JSON: {e}")
 
-# --------------------- CADS & matching controls -----------------------
+# --------------------- CADS settings & matching controls --------------
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
@@ -645,13 +609,22 @@ CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHE
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
 
 st.sidebar.subheader("Matching Controls")
-TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=True)
-MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=True)
+TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
+MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.40, 0.05,
-                                       help="Tokens that appear in >= threshold of rows for the Make are treated as non-discriminant.")
+STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.50, 0.05,
+                                       help="Tokens appearing in ≥ threshold of rows for the Make are treated as non-discriminant.")
 TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1,
-                                  help="Ignore tokens shorter than this length for effective-model matching.")
+                                  help="Ignore tokens shorter than this for effective-model matching.")
+
+st.sidebar.subheader("Effective Model (override)")
+EFFECTIVE_MODEL_COLS_OVERRIDE = st.sidebar.text_input(
+    "Comma-separated CADS column names to use for effective model (optional)",
+    value="",
+    help="Example: AD_MODEL,AD_SERIES,ModelTrim,Description. If blank, auto-detect."
+)
+OVERRIDE_COLS = [c.strip() for c in EFFECTIVE_MODEL_COLS_OVERRIDE.split(",") if c.strip()] or None
+
 TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", min_value=400, max_value=1200, value=700, step=50)
 
 if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
@@ -660,7 +633,8 @@ if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
               "results_df_mapped","results_df_inputs",
               "code_candidates_mapped","code_candidates_inputs",
               "model_code_candidates_mapped","model_code_candidates_inputs",
-              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs"]:
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs",
+              "last_diag_inputs","last_diag_mapped"]:
         st.session_state.pop(k, None)
     st.sidebar.success("Interactive state cleared.")
 
@@ -682,7 +656,8 @@ if prev_inputs != current_inputs:
     for k in ["results_df_mapped","results_df_inputs",
               "code_candidates_mapped","code_candidates_inputs",
               "model_code_candidates_mapped","model_code_candidates_inputs",
-              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs"]:
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs",
+              "last_diag_inputs","last_diag_mapped"]:
         st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
@@ -691,7 +666,8 @@ st.caption(
     f"🔎 Inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' "
     f"Model='{canon_text(model)}' Trim='{canon_text(trim, True)}' | "
     f"TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, "
-    f"STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, TOKEN_MIN_LEN={TOKEN_MIN_LEN}"
+    f"STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, TOKEN_MIN_LEN={TOKEN_MIN_LEN}, "
+    f"OverrideCols={OVERRIDE_COLS or '(auto)'}"
 )
 
 # --------------------- Existing mapping detection (interactive) -------
@@ -722,6 +698,7 @@ b1, b2, b3, b4 = st.columns(4)
 with b2:
     if st.button("🔎 Search CADS (mapped vehicle)", key="search_cads_mapped"):
         try:
+            # Load CADS
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
@@ -739,16 +716,18 @@ with b2:
 
             if best:
                 mapping = best[1]
-                df_match = match_cads_rows_for_mapping(
+                df_match, diag = match_cads_rows_for_mapping(
                     df_cads, mapping,
                     exact_model_when_full=MODEL_EXACT_WHEN_FULL,
                     trim_exact_only=TRIM_EXACT_ONLY,
                     strict_and=STRICT_AND,
                     stopword_threshold=STOPWORD_THRESHOLD,
                     token_min_len=TOKEN_MIN_LEN,
+                    effective_model_cols_override=OVERRIDE_COLS,
                 )
+                st.session_state["last_diag_mapped"] = diag
                 if len(df_match) > 0:
-                    st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle.")
+                    st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle (tier={diag.get('tier_used')}).")
                     selectable = df_match.copy()
                     if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                     st.session_state["results_df_mapped"] = selectable
@@ -757,7 +736,7 @@ with b2:
                     st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state["code_candidates_mapped"] else None
                     st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state["model_code_candidates_mapped"] else None
                 else:
-                    st.warning("No CADS rows found via Code/ModelCode/YMMT for the mapped vehicle.")
+                    st.warning("No CADS rows found via Code/ModelCode/tiered fallback for the mapped vehicle.")
             else:
                 st.info("No mapped vehicle; use 'Search CADS (use current inputs)'.")
         except FileNotFoundError as fnf:
@@ -768,6 +747,7 @@ with b2:
 with b3:
     if st.button("🔎 Search CADS (use current inputs)", key="search_cads_inputs"):
         try:
+            # Load CADS
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
@@ -783,7 +763,7 @@ with b3:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
             df_cads = _strip_object_columns(df_cads)
 
-            results = filter_cads_generic(
+            results, diag = filter_cads_generic(
                 df_cads,
                 year, make, model, trim,
                 exact_model_when_full=MODEL_EXACT_WHEN_FULL,
@@ -791,11 +771,13 @@ with b3:
                 strict_and=STRICT_AND,
                 stopword_threshold=STOPWORD_THRESHOLD,
                 token_min_len=TOKEN_MIN_LEN,
+                effective_model_cols_override=OVERRIDE_COLS,
             )
+            st.session_state["last_diag_inputs"] = diag
             if len(results) == 0:
-                st.warning("No CADS rows matched inputs. Try raising stopword threshold, turning off 'Model exact when full', or relaxing Trim exact-only.")
+                st.warning("No CADS rows matched inputs. Try columns override, raise stopword threshold (e.g., 0.6), turn OFF 'Model exact when full', or relax Trim.")
             else:
-                st.success(f"Found {len(results)} CADS row(s) for current inputs.")
+                st.success(f"Found {len(results)} CADS row(s) for current inputs (tier={diag.get('tier_used')}).")
                 selectable = results.copy()
                 if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                 st.session_state["results_df_inputs"] = selectable
@@ -807,6 +789,47 @@ with b3:
             st.error(str(fnf))
         except Exception as e:
             st.error(f"CADS search failed: {e}")
+
+# --------------------- Diagnostics: effective model & tokens ----------
+with st.expander("🔬 Effective model diagnostics (current CADS / Make slice)"):
+    try:
+        # Load CADS once for preview
+        if cads_upload is not None:
+            if cads_upload.name.lower().endswith(".xlsx"):
+                df_prev = pd.read_excel(cads_upload, engine="openpyxl")
+            else:
+                df_prev = pd.read_csv(cads_upload)
+        else:
+            if CADS_IS_EXCEL:
+                sheet_arg = CADS_SHEET_NAME
+                try: sheet_arg = int(sheet_arg)
+                except Exception: pass
+                df_prev = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
+            else:
+                df_prev = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
+        df_prev = _strip_object_columns(df_prev)
+        df_prev, used_m_cols, used_s_cols = add_effective_model_column(df_prev, override_cols=OVERRIDE_COLS)
+        st.write({"used_model_cols": used_m_cols, "used_series_cols": used_s_cols})
+
+        # Show top 50 effective models for current Make slice
+        mk = canon_text(make)
+        make_col = next((c for c in ["AD_MAKE","Make","MakeName","Manufacturer"] if c in df_prev.columns), None)
+        if make_col and mk:
+            df_slice = df_prev[df_prev[make_col].astype(str).str.lower() == mk]
+        else:
+            df_slice = df_prev
+        st.write({"rows_in_make_slice": len(df_slice)})
+
+        preview = (df_slice["__effective_model__"].value_counts().reset_index().rename(columns={"index":"effective_model","__effective_model__":"count"})).head(50)
+        st.dataframe(preview, use_container_width=True)
+
+        # Show tokens/stopwords/discriminants for current inputs
+        u_tokens = tokens(canon_text(model), min_len=TOKEN_MIN_LEN)
+        stopwords = compute_per_make_stopwords(df_slice, STOPWORD_THRESHOLD, TOKEN_MIN_LEN)
+        disc = [t for t in u_tokens if t not in stopwords]
+        st.write({"user_tokens": u_tokens, "stopwords": sorted(list(stopwords))[:50], "discriminant_tokens": disc})
+    except Exception as e:
+        st.warning(f"Diagnostics preview failed: {e}")
 
 # --------------------- Results tables: Mapped Vehicle -----------------
 if "results_df_mapped" in st.session_state:
@@ -827,6 +850,9 @@ if "results_df_mapped" in st.session_state:
         index=0 if model_code_candidates else 0,
         key="model_code_column_select_mapped",
     )
+
+    st.caption(f"Tier used: {st.session_state.get('last_diag_mapped', {}).get('tier_used', '(n/a)')}")
+    st.caption(f"Effective model columns: {st.session_state.get('last_diag_mapped', {}).get('used_model_cols', [])} + {st.session_state.get('last_diag_mapped', {}).get('used_series_cols', [])}")
 
     front_cols = [c for c in ["Select","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
@@ -898,6 +924,9 @@ if "results_df_inputs" in st.session_state:
         index=0 if model_code_candidates else 0,
         key="model_code_column_select_inputs",
     )
+
+    st.caption(f"Tier used: {st.session_state.get('last_diag_inputs', {}).get('tier_used', '(n/a)')}")
+    st.caption(f"Effective model columns: {st.session_state.get('last_diag_inputs', {}).get('used_model_cols', [])} + {st.session_state.get('last_diag_inputs', {}).get('used_series_cols', [])}")
 
     front_cols = [c for c in ["Select","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
