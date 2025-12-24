@@ -1,10 +1,12 @@
 
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
-# + Single-best mapping on Y/M/M/T (Trim exact/subset; Make exact; Year token-aware; Model similarity)
-# + Land Rover family enforcement (Range Rover / Discovery / Defender) to prevent cross-family mismatches
-# + Canonicalization; Code-first CADS search; direct CADS search by current inputs (ignores mapping)
-# + Two CADS result tables (Mapped Vehicle vs Direct Input Search) with independent selection & add-to-mapping
+# Generic model matching for 38+ OEMs using:
+#  - "Effective model" (concat of model-like CADS columns: AD_MODEL, AD_SERIES, Carline, Description, etc.)
+#  - Per-make token frequencies to identify stopwords (high-frequency tokens)
+#  - Token-AND containment on user model minus stopwords (discriminant tokens)
+#  - Trim exact or token-subset; Year token-aware; Make exact
+# No hardcoded model lists per OEM.
 # Repo: klb-text/map, Branch: main
 
 import base64
@@ -13,7 +15,7 @@ import time
 import io
 import re
 import difflib
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Set
 import requests
 import pandas as pd
 import streamlit as st
@@ -38,7 +40,7 @@ CADS_PATH       = "CADS.csv"
 CADS_IS_EXCEL   = False
 CADS_SHEET_NAME_DEFAULT = "0"
 
-# Candidate ID columns in CADS
+# Preferred ID columns in CADS (union scans)
 CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
 
@@ -47,12 +49,7 @@ CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "M
 # ---------------------------------------------------------------------
 from requests.adapters import HTTPAdapter, Retry
 _session = requests.Session()
-_retries = Retry(
-    total=3,
-    backoff_factor=0.5,
-    status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["GET", "PUT", "POST"],
-)
+_retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])
 _adapter = HTTPAdapter(max_retries=_retries)
 _session.mount("https://", _adapter)
 _session.mount("http://", _adapter)
@@ -96,11 +93,8 @@ def ensure_feature_branch(owner, repo, token, source_branch, feature_branch):
     r_feat = _get(gh_ref_heads(owner, repo, feature_branch), headers=gh_headers(token))
     if r_feat.status_code == 200: return True
     if r_feat.status_code != 404: raise RuntimeError(f"Failed checking feature branch ({r_feat.status_code}): {r_feat.text}")
-    r_create = _post(
-        f"https://api.github.com/repos/{owner}/{repo}/git/refs",
-        headers=gh_headers(token),
-        json={"ref": f"refs/heads/{feature_branch}", "sha": base_sha},
-    )
+    r_create = _post(f"https://api.github.com/repos/{owner}/{repo}/git/refs", headers=gh_headers(token),
+                     json={"ref": f"refs/heads/{feature_branch}", "sha": base_sha})
     return r_create.status_code in (201, 422)
 
 def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
@@ -143,7 +137,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     if sha: data["sha"] = sha
     r2 = _put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data)
     if r2.status_code in (200, 201): return r2.json()
-    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r.text}")
+    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
 
 # ---------------------------------------------------------------------
 # CADS loaders
@@ -213,13 +207,9 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
-# Canonicalization + helpers
+# Canonicalization / tokens / year / trim
 # ---------------------------------------------------------------------
 def canon_text(val: str, for_trim: bool=False) -> str:
-    """
-    Lowercases, strips spaces, removes leading/trailing punctuation (keeps hyphens/slashes).
-    Normalizes trim synonyms when for_trim=True.
-    """
     s = (val or "").strip().lower()
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
@@ -235,68 +225,42 @@ def canon_text(val: str, for_trim: bool=False) -> str:
         for k, v in repl.items(): s = s.replace(k, v)
     return s
 
+def tokens(s: str, min_len: int = 2) -> List[str]:
+    s = canon_text(s)
+    tks = re.split(r"[^\w]+", s)
+    return [t for t in tks if t and len(t) >= min_len]
+
+def _trim_tokens(s: str) -> Set[str]:
+    return set(tokens(canon_text(s, True)))
+
 def _extract_years_from_text(s: str) -> set:
-    """
-    Extract potential year tokens from mapping or input text.
-    Supports:
-      - 4-digit years: 2024, 2025
-      - 'MY25', 'MY 25' -> 2025
-      - ranges/composites: '2024/2025', '2025-2026', '2024 | 2025'
-      - quarters/phrases: 'Q2-2025', '2025 Q4' -> 2025
-      - bare 2-digit '25' -> 2025 (only if no 4-digit found)
-    """
     s = (s or "").strip().lower()
     years = set()
-
-    # 4-digit
     for m in re.finditer(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s):
         years.add(int(m.group(0)))
-
-    # MY25 → 2025
     for m in re.finditer(r"\bmy\s*([0-9]{2})\b", s):
         years.add(2000 + int(m.group(1)))
-
-    # Qx-2025 or 2025-Qx → 2025
     for m in re.finditer(r"\b(?:q[1-4][\-\s]*)?(19[5-9]\d|20[0-4]\d|2050)\b", s):
         years.add(int(m.group(1)))
-
-    # bare 2-digit if nothing else
     if not years:
         for m in re.finditer(r"\b([0-9]{2})\b", s):
-            yy = int(m.group(1)); years.add(2000 + yy)
-
+            years.add(2000 + int(m.group(1)))
     return years
 
 def year_token_matches(mapping_year: str, user_year: str) -> bool:
     uy_set = _extract_years_from_text(user_year)
     my_set = _extract_years_from_text(mapping_year)
-    if not uy_set:  # user did not supply year → accept
-        return True
-    if not my_set:
-        return False
+    if not uy_set: return True
+    if not my_set: return False
     return bool(uy_set.intersection(my_set))
 
-def _trim_tokens(s: str) -> set:
-    s = canon_text(s, for_trim=True)
-    toks = re.split(r"[^\w]+", s)
-    return {t for t in toks if t}
-
 def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> Tuple[bool, float]:
-    """
-    Returns (match, score_weight):
-      - exact_only=True  -> only exact match counts (True, 1.0)
-      - exact_only=False -> exact (1.0) or token-subset (0.8)
-    """
     row = canon_text(row_trim, True)
     usr = canon_text(user_trim, True)
-    if not usr:
-        return (True, 0.5)
-    if row == usr:
-        return (True, 1.0)
-    if exact_only:
-        return (False, 0.0)
-    if _trim_tokens(usr).issubset(_trim_tokens(row)):
-        return (True, 0.8)
+    if not usr: return (True, 0.5)
+    if row == usr: return (True, 1.0)
+    if exact_only: return (False, 0.0)
+    if _trim_tokens(usr).issubset(_trim_tokens(row)): return (True, 0.8)
     return (False, 0.0)
 
 def model_similarity(a: str, b: str) -> float:
@@ -307,46 +271,70 @@ def model_similarity(a: str, b: str) -> float:
     return difflib.SequenceMatcher(None, a, b).ratio()
 
 # ---------------------------------------------------------------------
-# Land Rover family taxonomy & detector
+# Generic: detect model-like columns & build "effective model"
 # ---------------------------------------------------------------------
-LAND_ROVER_FAMILIES = {
-    "range rover": {
-        "range rover", "range rover sport", "range rover velar", "range rover evoque"
-    },
-    "discovery": {
-        "discovery", "discovery sport"
-    },
-    "defender": {
-        "defender", "defender 90", "defender 110", "defender 130"
-    },
-}
+MODEL_LIKE_PATTERNS  = ("model", "line", "carline", "series")
+SERIES_LIKE_PATTERNS = ("series", "submodel", "body", "trim", "description", "modeltrim")
 
-def detect_lr_family(model_text: str) -> Optional[str]:
-    """
-    Return 'range rover' | 'discovery' | 'defender' if model_text belongs to that family, else None.
-    """
-    md = canon_text(model_text)
-    if not md:
-        return None
-    for fam, names in LAND_ROVER_FAMILIES.items():
-        for name in names:
-            n = canon_text(name)
-            if md == n or (n in md) or (md in n):
-                return fam
-    # Keyword fallback
-    if "range rover" in md: return "range rover"
-    if "discovery" in md:   return "discovery"
-    if "defender" in md:    return "defender"
-    return None
+def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+    cols = [c for c in df.columns]
+    def has_any_pattern(c: str, patterns: Tuple[str, ...]) -> bool:
+        lc = c.lower()
+        return any(p in lc for p in patterns)
+    model_cols  = [c for c in cols if has_any_pattern(c, MODEL_LIKE_PATTERNS)]
+    series_cols = [c for c in cols if has_any_pattern(c, SERIES_LIKE_PATTERNS)]
+    # Keep order stable; drop duplicates if overlaps
+    model_cols  = list(dict.fromkeys(model_cols))
+    series_cols = [c for c in list(dict.fromkeys(series_cols)) if c not in model_cols]
+    return (model_cols, series_cols)
+
+def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
+    parts = []
+    for c in model_cols + series_cols:
+        if c in row.index:
+            v = str(row.get(c, "") or "").strip()
+            if v:
+                parts.append(v)
+    return canon_text(" ".join(parts))
+
+def add_effective_model_column(df: pd.DataFrame) -> pd.DataFrame:
+    model_cols, series_cols = detect_model_like_columns(df)
+    if not model_cols and not series_cols:
+        df["__effective_model__"] = ""
+        return df
+    df["__effective_model__"] = df.apply(lambda r: effective_model_row(r, model_cols, series_cols), axis=1)
+    return df
 
 # ---------------------------------------------------------------------
-# Single-best mapping picker (strict trim+make; token-aware year; tolerant model; LR family constraint)
+# Per-make stopwords: tokens that appear in too many rows for that make
+# ---------------------------------------------------------------------
+def compute_per_make_stopwords(
+    df: pd.DataFrame, make_col: Optional[str], stopword_threshold: float = 0.40,
+    token_min_len: int = 2
+) -> Set[str]:
+    if make_col is None or make_col not in df.columns: return set()
+    # Group by make; we will compute stopwords on the current Make slice later (call site)
+    # This function returns stopwords for the whole DF if Make not filtered (call site should slice).
+    # For generality, we compute token frequencies on the provided df.
+    if "__effective_model__" not in df.columns:
+        df = add_effective_model_column(df)
+    total = len(df)
+    if total == 0: return set()
+    freq = {}
+    for _, row in df.iterrows():
+        toks = set(tokens(row["__effective_model__"], min_len=token_min_len))
+        for t in toks:
+            freq[t] = freq.get(t, 0) + 1
+    stop = {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
+    return stop
+
+# ---------------------------------------------------------------------
+# Single-best mapping picker (generic, no hardcoding)
 # ---------------------------------------------------------------------
 def pick_best_mapping(
     mappings: Dict[str, Dict[str, str]],
     year: str, make: str, model: str, trim: str,
     trim_exact_only: bool = False,
-    enforce_lr_family: bool = True,
     model_exact_when_full: bool = True,
 ) -> Optional[Tuple[str, Dict[str, str], float]]:
     cmk = canon_text(make)
@@ -357,10 +345,10 @@ def pick_best_mapping(
     if not cmk:
         return None
 
-    # Land Rover family enforcement (user-side)
-    user_lr_family = detect_lr_family(model) if cmk == "land rover" else None
-    force_exact_model = model_exact_when_full and len(cmd.split()) >= 2  # treat multi-word as "full name"
+    # "Full-name exact" preference for multi-word inputs
+    force_exact_model = model_exact_when_full and len(cmd.split()) >= 2
 
+    # Candidate selection
     candidates: List[Tuple[str, Dict[str, str], float]] = []
     for k, v in mappings.items():
         vmk = v.get("make","")
@@ -368,29 +356,19 @@ def pick_best_mapping(
         vtr = v.get("trim","")
         vmd = v.get("model","")
 
-        # Make exact
-        if canon_text(vmk) != cmk:
+        if canon_text(vmk) != cmk:                   # Make exact
             continue
-        # Year token-aware
-        if not year_token_matches(vy, cy):
+        if not year_token_matches(vy, cy):           # Year token-aware
             continue
-        # Trim exact or subset (strict if requested)
-        tmatch, tscore = trim_matches(vtr, ctr, exact_only=trim_exact_only)
+        tmatch, tscore = trim_matches(vtr, ctr, exact_only=trim_exact_only)  # Trim gate
         if not tmatch:
             continue
 
-        # Land Rover family guard
-        if enforce_lr_family and cmk == "land rover" and user_lr_family:
-            candidate_family = detect_lr_family(vmd)
-            if candidate_family != user_lr_family:
-                continue
-
-        # Model similarity, optionally penalize non-exact when user typed full model
         ms = model_similarity(vmd, cmd)
         if force_exact_model and canon_text(vmd) != cmd:
-            ms = ms * 0.5  # dampen non-exact to keep exact on top
+            ms = ms * 0.5  # damp non-exact for multi-word input
 
-        score = tscore * 0.6 + ms * 0.4
+        score = tscore * 0.6 + ms * 0.4  # prioritize trim, then model
         candidates.append((k, v, score))
 
     if not candidates:
@@ -400,27 +378,28 @@ def pick_best_mapping(
     return candidates[0]  # (key, value, score)
 
 # ---------------------------------------------------------------------
-# CADS filter – strict Trim (exact or subset); model contains/exact; token-aware year; LR family constraint
+# Generic CADS filter using effective model + per-make stopwords
 # ---------------------------------------------------------------------
-def filter_cads(
+def filter_cads_generic(
     df: pd.DataFrame,
-    year: str, make: str, model: str, trim: str, vehicle: str, model_code: str = "",
-    exact_mmt: bool = False, case_sensitive: bool = False,
-    strict_and: bool = True,
-    trim_exact_only: bool = False,
-    enforce_lr_family: bool = True,
+    year: str, make: str, model: str, trim: str,
+    exact_model_when_full: bool,
+    trim_exact_only: bool,
+    strict_and: bool,
+    stopword_threshold: float,
+    token_min_len: int,
 ) -> pd.DataFrame:
     df2 = _strip_object_columns(df.copy())
+    df2 = add_effective_model_column(df2)
 
+    # Find likely Year/Make/Trim columns
     YEAR_CANDS  = ["AD_YEAR","Year","MY","ModelYear","Model Year"]
     MAKE_CANDS  = ["AD_MAKE","Make","MakeName","Manufacturer"]
-    MODEL_CANDS = ["AD_MODEL","Model","Line","Carline","Series"]
     TRIM_CANDS  = ["AD_TRIM","Trim","Grade","Variant","Submodel"]
 
-    year_col  = next((c for c in YEAR_CANDS  if c in df2.columns), None)
-    make_col  = next((c for c in MAKE_CANDS  if c in df2.columns), None)
-    model_col = next((c for c in MODEL_CANDS if c in df2.columns), None)
-    trim_col  = next((c for c in TRIM_CANDS  if c in df2.columns), None)
+    year_col = next((c for c in YEAR_CANDS if c in df2.columns), None)
+    make_col = next((c for c in MAKE_CANDS if c in df2.columns), None)
+    trim_col = next((c for c in TRIM_CANDS if c in df2.columns), None)
 
     y  = (year or "")
     mk = canon_text(make)
@@ -434,24 +413,26 @@ def filter_cads(
         s = df2[make_col].astype(str).str.lower()
         masks.append(s == mk)
 
-    # Model: exact or contains; apply LR family constraint if enabled
-    if model_col and md:
-        s = df2[model_col].astype(str).str.lower()
-        if enforce_lr_family and mk == "land rover":
-            user_lr_family = detect_lr_family(model)
-            if user_lr_family:
-                family_names = LAND_ROVER_FAMILIES[user_lr_family]
-                fam_mask = False
-                for name in family_names:
-                    n = canon_text(name)
-                    fam_mask = fam_mask | s.str.contains(n, na=False)
-                masks.append(fam_mask)
-            else:
-                masks.append((s == md) if exact_mmt else s.str.contains(md, na=False))
+    # Model discriminant tokens (AND containment)
+    effective = df2["__effective_model__"]
+    user_tokens = tokens(md, min_len=token_min_len)
+    # Slice DF to current make for stopword computation
+    df_make_slice = df2[(df2[make_col].astype(str).str.lower() == mk)] if make_col else df2
+    make_stopwords = compute_per_make_stopwords(df_make_slice, make_col, stopword_threshold, token_min_len)
+    discriminant = [t for t in user_tokens if t not in make_stopwords]
+    # If multi-word and exact requested, prefer exact effective compare, else token-AND
+    if md:
+        if exact_model_when_full and len(user_tokens) >= 2:
+            masks.append(effective == md)
         else:
-            masks.append((s == md) if exact_mmt else s.str.contains(md, na=False))
+            if discriminant:
+                # Token-AND on discriminant tokens
+                masks.append(effective.apply(lambda s: all(t in s for t in discriminant)))
+            else:
+                # If all tokens are stopwords, fall back to contains on full md
+                masks.append(effective.str.contains(md, na=False))
 
-    # Trim: exact or subset
+    # Trim gate
     if trim_col and tr:
         s = df2[trim_col].astype(str)
         m_exact  = s.str.lower() == tr
@@ -461,7 +442,7 @@ def filter_cads(
             m_subset = s.apply(lambda x: _trim_tokens(tr).issubset(_trim_tokens(x)))
             masks.append(m_exact | m_subset)
 
-    # Year: token-aware
+    # Year token-aware
     if year_col and y:
         s = df2[year_col].astype(str)
         masks.append(s.apply(lambda vy: year_token_matches(vy, y)))
@@ -471,12 +452,11 @@ def filter_cads(
 
     m = masks[0]
     for mm in masks[1:]:
-        m = m & mm if strict_and else m | mm
-
+        m = (m & mm) if strict_and else (m | mm)
     return df2[m]
 
 # ---------------------------------------------------------------------
-# CADS matching for a single mapping: Code → Model Code → fallback filter
+# CADS matching for a single mapping: Code → Model Code → generic fallback
 # ---------------------------------------------------------------------
 def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
     return [c for c in CADS_CODE_PREFS if c in df.columns] or list(df.columns)
@@ -487,12 +467,14 @@ def get_model_code_candidates(df: pd.DataFrame) -> List[str]:
 def match_cads_rows_for_mapping(
     df: pd.DataFrame,
     mapping: Dict[str, str],
-    exact_mmt: bool = False,
-    strict_and: bool = True,
-    trim_exact_only: bool = False,
-    enforce_lr_family: bool = True,
+    exact_model_when_full: bool,
+    trim_exact_only: bool,
+    strict_and: bool,
+    stopword_threshold: float,
+    token_min_len: int,
 ) -> pd.DataFrame:
     df2 = _strip_object_columns(df.copy())
+    df2 = add_effective_model_column(df2)
 
     # Code union
     code_val = (mapping.get("code","") or "").strip()
@@ -518,12 +500,15 @@ def match_cads_rows_for_mapping(
         if hits:
             return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
 
-    # Fallback strict YMMT
-    return filter_cads(
+    # Generic fallback using effective model + stopwords
+    return filter_cads_generic(
         df2,
         mapping.get("year",""), mapping.get("make",""), mapping.get("model",""), mapping.get("trim",""),
-        "", "", exact_mmt=exact_mmt, case_sensitive=False, strict_and=strict_and,
-        trim_exact_only=trim_exact_only, enforce_lr_family=enforce_lr_family
+        exact_model_when_full=exact_model_when_full,
+        trim_exact_only=trim_exact_only,
+        strict_and=strict_and,
+        stopword_threshold=stopword_threshold,
+        token_min_len=token_min_len,
     ).reset_index(drop=True)
 
 # ---------------------------------------------------------------------
@@ -536,12 +521,6 @@ def get_query_param(name: str, default: str = "") -> str:
         return str(val[0]).strip()
     except Exception:
         return default
-
-def _extract_year_token(s: str) -> str:
-    s = (s or "").strip()
-    if not s: return ""
-    m = re.search(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s)
-    return m.group(0) if m else ""
 
 def secrets_status():
     missing = []
@@ -567,10 +546,6 @@ if AGENT_MODE:
     q_model_code = get_query_param("model_code")
     q_code    = get_query_param("code")
 
-    if not q_year and q_vehicle:
-        y_guess = _extract_year_token(q_vehicle)
-        if y_guess: q_year = y_guess
-
     if "mappings" not in st.session_state:
         try:
             existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
@@ -578,15 +553,13 @@ if AGENT_MODE:
         except Exception:
             st.session_state.mappings = {}
 
-    # Defaults for agent mode
+    # Agent strictness defaults
     TRIM_EXACT_ONLY_AGENT      = (get_query_param("trim_exact_only", "false").lower() == "true")
-    ENFORCE_LR_FAMILY_AGENT    = (get_query_param("enforce_lr_family", "true").lower() == "true")
     MODEL_EXACT_WHEN_FULL_AGENT= (get_query_param("model_exact_full", "true").lower() == "true")
 
     best = pick_best_mapping(
         st.session_state.mappings, q_year, q_make, q_model, q_trim,
         trim_exact_only=TRIM_EXACT_ONLY_AGENT,
-        enforce_lr_family=ENFORCE_LR_FAMILY_AGENT,
         model_exact_when_full=MODEL_EXACT_WHEN_FULL_AGENT,
     )
 
@@ -595,11 +568,14 @@ if AGENT_MODE:
 
     if st.button("🧹 Clear (Agent)", key="agent_clear_btn"):
         for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-                  "code_input","model_code_input","prev_inputs","results_df_mapped","results_df_inputs",
-                  "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
-                  "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
+                  "code_input","model_code_input","prev_inputs",
+                  "results_df_mapped","results_df_inputs",
+                  "code_candidates_mapped","code_candidates_inputs",
+                  "model_code_candidates_mapped","model_code_candidates_inputs",
+                  "code_column_mapped","code_column_inputs",
+                  "model_code_column_mapped","model_code_column_inputs"]:
             st.session_state.pop(k, None)
-        st.success("Agent state cleared. Ready for next vehicle.")
+        st.success("Agent state cleared.")
         st.text("STATUS=CLEARED")
         st.write({"status":"CLEARED"})
         st.stop()
@@ -611,7 +587,7 @@ if AGENT_MODE:
             "year": v.get("year",""), "make": v.get("make",""), "model": v.get("model",""),
             "trim": v.get("trim",""), "vehicle": v.get("vehicle",""),
             "code": v.get("code",""), "model_code": v.get("model_code",""),
-            "reason": "exact_trim_or_subset_best_model_token_year_lr_family",
+            "reason": "generic_best_trim_model_year",
         }
         st.success("Mapped: 1")
         st.dataframe(pd.DataFrame([row]), use_container_width=True)
@@ -619,7 +595,7 @@ if AGENT_MODE:
         st.write({"status":"MAPPED","count":1,"data":[row]})
         st.stop()
     else:
-        st.error("NEEDS_MAPPING")
+        st.info("NEEDS_MAPPING")
         st.text("STATUS=NEEDS_MAPPING")
         st.write({"status":"NEEDS_MAPPING","inputs":{
             "year":q_year,"make":q_make,"model":q_model,"trim":q_trim,
@@ -643,7 +619,7 @@ with st.expander("📦 Data source / diagnostics"):
         if st.button("🔄 Reload mappings (diagnostics)", key="diag_reload_btn"):
             existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
             st.session_state.mappings = existing or {}
-            st.success(f"Reloaded. Current count: {len(st.session_state.mappings)}")
+            st.success(f"Reloaded. Count: {len(st.session_state.mappings)}")
     except Exception as diag_err:
         st.error(f"Diagnostics error: {diag_err}")
 
@@ -662,7 +638,7 @@ if st.sidebar.button("🔄 Reload from GitHub"):
     try:
         existing = load_json_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref=GH_BRANCH)
         st.session_state.mappings = existing or {}
-        st.sidebar.success("Reloaded from GitHub.")
+        st.sidebar.success("Reloaded.")
     except Exception as e:
         st.sidebar.error(f"Reload failed: {e}")
 
@@ -681,12 +657,13 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
                                        st.session_state.mappings, commit_msg,
                                        author_name="AFF Mapping App", author_email="aff-app@coxautoinc.com",
                                        use_feature_branch=use_feature_branch)
-            st.sidebar.success("Mappings committed ✅")
+            st.sidebar.success("Committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
             try:
                 append_jsonl_to_github(GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH,
-                    {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"), "user":"streamlit-app", "action":"commit",
-                     "count": len(st.session_state.mappings), "path": MAPPINGS_PATH,
+                    {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     "user":"streamlit-app","action":"commit",
+                     "count": len(st.session_state.mappings),"path": MAPPINGS_PATH,
                      "branch": GH_BRANCH if not use_feature_branch else "aff-mapping-app"},
                     commit_message="chore(app): append audit commit entry",
                     use_feature_branch=use_feature_branch)
@@ -699,15 +676,15 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
 st.sidebar.subheader("Backup / Restore")
 backup = json.dumps(st.session_state.mappings, indent=2, ensure_ascii=False)
 st.sidebar.download_button("⬇️ Download mappings.json", data=backup, file_name="mappings.json", mime="application/json")
-uploaded = st.sidebar.file_uploader("⬆️ Upload mappings.json (local restore)", type=["json"])
+uploaded = st.sidebar.file_uploader("⬆️ Upload mappings.json (restore)", type=["json"])
 if uploaded:
     try:
         st.session_state.mappings = json.load(uploaded)
-        st.sidebar.success("Local restore complete. Remember to Commit to GitHub.")
+        st.sidebar.success("Local restore complete. Remember to Commit.")
     except Exception as e:
         st.sidebar.error(f"Failed to parse uploaded JSON: {e}")
 
-# --------------------- CADS settings / matching controls --------------
+# --------------------- CADS & matching controls -----------------------
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
@@ -717,29 +694,29 @@ cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type
 st.sidebar.subheader("Matching Controls")
 TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=True)
 MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=True)
-ENFORCE_LR_FAMILY = st.sidebar.checkbox(
-    "Require same Land Rover family (Range Rover / Discovery / Defender)",
-    value=True,
-    help="When Make=Land Rover, only mappings from the same family as the input Model are allowed."
-)
-EXACT_MMT  = st.sidebar.checkbox("CADS fallback: Model exact (otherwise contains)", value=False)
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
+STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.40, 0.05,
+                                       help="Tokens that appear in >= threshold of rows for the Make are treated as non-discriminant.")
+TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1,
+                                  help="Ignore tokens shorter than this length for effective-model matching.")
 TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", min_value=400, max_value=1200, value=700, step=50)
 
 if st.sidebar.button("🧹 Clear (Interactive)", key="sidebar_clear_btn"):
     for k in ["year_input","make_input","model_input","trim_input","vehicle_input",
-              "code_input","model_code_input","prev_inputs","results_df_mapped","results_df_inputs",
-              "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
-              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
+              "code_input","model_code_input","prev_inputs",
+              "results_df_mapped","results_df_inputs",
+              "code_candidates_mapped","code_candidates_inputs",
+              "model_code_candidates_mapped","model_code_candidates_inputs",
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs"]:
         st.session_state.pop(k, None)
-    st.sidebar.success("Interactive inputs/state cleared.")
+    st.sidebar.success("Interactive state cleared.")
 
 # --------------------- Mapping editor inputs --------------------------
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Land Rover")
-with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Range Rover Evoque / Discovery Sport")
+with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Range Rover Evoque")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., S / SE / R-Dynamic")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
@@ -750,25 +727,24 @@ current_inputs = (canon_text(year), canon_text(make), canon_text(model), canon_t
 prev_inputs = st.session_state.get("prev_inputs")
 if prev_inputs != current_inputs:
     for k in ["results_df_mapped","results_df_inputs",
-              "code_candidates_mapped","code_candidates_inputs","model_code_candidates_mapped","model_code_candidates_inputs",
-              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs","last_matches"]:
+              "code_candidates_mapped","code_candidates_inputs",
+              "model_code_candidates_mapped","model_code_candidates_inputs",
+              "code_column_mapped","code_column_inputs","model_code_column_mapped","model_code_column_inputs"]:
         st.session_state.pop(k, None)
     st.session_state["prev_inputs"] = current_inputs
 
-# Debug banner for canonical inputs & LR family
-detected_family = detect_lr_family(model) if canon_text(make) == "land rover" else None
+# Debug banner
 st.caption(
-    f"🔎 Canonical → Year='{canon_text(year)}' Make='{canon_text(make)}' "
-    f"Model='{canon_text(model)}' (LR family={detected_family or 'n/a'}) "
-    f"Trim='{canon_text(trim, True)}' | TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, "
-    f"MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, ENFORCE_LR_FAMILY={ENFORCE_LR_FAMILY}"
+    f"🔎 Inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' "
+    f"Model='{canon_text(model)}' Trim='{canon_text(trim, True)}' | "
+    f"TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, "
+    f"STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, TOKEN_MIN_LEN={TOKEN_MIN_LEN}"
 )
 
 # --------------------- Existing mapping detection (interactive) -------
 best = pick_best_mapping(
     st.session_state.mappings, year, make, model, trim,
     trim_exact_only=TRIM_EXACT_ONLY,
-    enforce_lr_family=ENFORCE_LR_FAMILY,
     model_exact_when_full=MODEL_EXACT_WHEN_FULL,
 )
 
@@ -776,7 +752,7 @@ st.subheader("Existing Mapping (for current inputs)")
 if best:
     k, v, score = best
     rows = [{
-        "Match Level": "exact_trim_or_subset_best_model_token_year_lr_family",
+        "Match Level": "generic_best_trim_model_year",
         "Score": round(score,3),
         "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
         "Model": v.get("model",""), "Trim": v.get("trim",""),
@@ -788,47 +764,11 @@ if best:
 else:
     st.info("No existing mapping detected for current inputs.")
 
-# ---- Trace: why rows were excluded (optional diagnostic)
-with st.expander("🧪 Matching trace"):
-    cmk = canon_text(make); ctr = canon_text(trim, True)
-    trace = {"trim_mismatch":0, "make_mismatch":0, "year_mismatch":0, "lr_family_mismatch":0, "candidates":0}
-    sample_rows = []
-    for k2, v2 in st.session_state.mappings.items():
-        vmk = v2.get("make",""); vy = v2.get("year",""); vtr = v2.get("trim",""); vmd = v2.get("model","")
-        # Trim gates
-        tmatch, _ = trim_matches(vtr, ctr, exact_only=TRIM_EXACT_ONLY)
-        if not tmatch:
-            trace["trim_mismatch"] += 1; continue
-        # Make gate
-        if canon_text(vmk) != cmk:
-            trace["make_mismatch"] += 1; continue
-        # Year gate
-        if not year_token_matches(vy, year):
-            trace["year_mismatch"] += 1; continue
-        # LR family gate
-        if ENFORCE_LR_FAMILY and cmk == "land rover":
-            uf = detect_lr_family(model)
-            cf = detect_lr_family(vmd)
-            if uf and cf and uf != cf:
-                trace["lr_family_mismatch"] += 1; continue
-        trace["candidates"] += 1
-        sample_rows.append({
-            "Key": k2, "Year": vy, "Make": vmk, "Model": vmd, "Trim": vtr,
-            "ModelSimilarity": round(model_similarity(vmd, canon_text(model)), 3),
-            "LRFamily": detect_lr_family(vmd)
-        })
-        if len(sample_rows) >= 12: break
-    st.write(trace)
-    if sample_rows:
-        st.dataframe(pd.DataFrame(sample_rows), use_container_width=True)
-
-# --------------------- CADS SEARCH BUTTONS ----------------------------
+# --------------------- CADS search buttons ----------------------------
 b1, b2, b3, b4 = st.columns(4)
 with b2:
-    # MAPPED VEHICLE PATH (Code → Model Code → fallback)
     if st.button("🔎 Search CADS (mapped vehicle)", key="search_cads_mapped"):
         try:
-            # Load CADS
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
@@ -842,20 +782,20 @@ with b2:
                     df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
                 else:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
-
             df_cads = _strip_object_columns(df_cads)
 
             if best:
                 mapping = best[1]
                 df_match = match_cads_rows_for_mapping(
                     df_cads, mapping,
-                    exact_mmt=EXACT_MMT,
-                    strict_and=STRICT_AND,
+                    exact_model_when_full=MODEL_EXACT_WHEN_FULL,
                     trim_exact_only=TRIM_EXACT_ONLY,
-                    enforce_lr_family=ENFORCE_LR_FAMILY
+                    strict_and=STRICT_AND,
+                    stopword_threshold=STOPWORD_THRESHOLD,
+                    token_min_len=TOKEN_MIN_LEN,
                 )
                 if len(df_match) > 0:
-                    st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle (Code→ModelCode→YMMT).")
+                    st.success(f"Found {len(df_match)} CADS row(s) for mapped vehicle.")
                     selectable = df_match.copy()
                     if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                     st.session_state["results_df_mapped"] = selectable
@@ -864,20 +804,17 @@ with b2:
                     st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state["code_candidates_mapped"] else None
                     st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state["model_code_candidates_mapped"] else None
                 else:
-                    st.warning("No CADS rows found by Code/ModelCode/YMMT for the mapped vehicle.")
+                    st.warning("No CADS rows found via Code/ModelCode/YMMT for the mapped vehicle.")
             else:
-                st.info("No mapped vehicle; use 'Search CADS (use current inputs)' instead.")
+                st.info("No mapped vehicle; use 'Search CADS (use current inputs)'.")
         except FileNotFoundError as fnf:
             st.error(str(fnf))
-            st.info(f"Ensure CADS exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` @ `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
 with b3:
-    # DIRECT INPUT PATH (ignore mapping; return Evoque options when asked)
     if st.button("🔎 Search CADS (use current inputs)", key="search_cads_inputs"):
         try:
-            # Load CADS
             if cads_upload is not None:
                 if cads_upload.name.lower().endswith(".xlsx"):
                     df_cads = pd.read_excel(cads_upload, engine="openpyxl")
@@ -891,17 +828,19 @@ with b3:
                     df_cads = load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
                 else:
                     df_cads = load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
-
             df_cads = _strip_object_columns(df_cads)
 
-            # Direct filter by inputs (Trim exact/subset; Model contains; Year token-aware; family respected)
-            results = filter_cads(
-                df_cads, year, make, model, trim, "", "",
-                exact_mmt=EXACT_MMT, case_sensitive=False, strict_and=STRICT_AND,
-                trim_exact_only=TRIM_EXACT_ONLY, enforce_lr_family=ENFORCE_LR_FAMILY
+            results = filter_cads_generic(
+                df_cads,
+                year, make, model, trim,
+                exact_model_when_full=MODEL_EXACT_WHEN_FULL,
+                trim_exact_only=TRIM_EXACT_ONLY,
+                strict_and=STRICT_AND,
+                stopword_threshold=STOPWORD_THRESHOLD,
+                token_min_len=TOKEN_MIN_LEN,
             )
             if len(results) == 0:
-                st.warning("No CADS rows matched your inputs. Try relaxing Trim exact-only or Model exact.")
+                st.warning("No CADS rows matched inputs. Try lowering stopword threshold, turning off 'Model exact when full', or relaxing Trim exact-only.")
             else:
                 st.success(f"Found {len(results)} CADS row(s) for current inputs.")
                 selectable = results.copy()
@@ -913,11 +852,10 @@ with b3:
                 st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state["model_code_candidates_inputs"] else None
         except FileNotFoundError as fnf:
             st.error(str(fnf))
-            st.info(f"Ensure CADS exists at `{CADS_PATH}` in `{GH_OWNER}/{GH_REPO}` @ `{GH_BRANCH}`.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# --------------------- Results: MAPPED VEHICLE ------------------------
+# --------------------- Results tables: Mapped Vehicle -----------------
 if "results_df_mapped" in st.session_state:
     st.subheader("Select vehicles from CADS results — Mapped Vehicle")
     df_show = st.session_state["results_df_mapped"]
@@ -937,7 +875,7 @@ if "results_df_mapped" in st.session_state:
         key="model_code_column_select_mapped",
     )
 
-    front_cols = [c for c in ["Select","Similarity"] if c in df_show.columns]
+    front_cols = [c for c in ["Select","Similarity","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
@@ -950,15 +888,13 @@ if "results_df_mapped" in st.session_state:
             df_tmp = df_show.copy(); df_tmp["Select"] = False
             st.session_state["results_df_mapped"] = df_tmp; df_show = df_tmp
 
-    edited = st.data_editor(
-        df_show, key="results_editor_mapped", use_container_width=True,
-        num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT
-    )
+    edited = st.data_editor(df_show, key="results_editor_mapped", use_container_width=True,
+                            num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT)
     st.session_state["results_df_mapped"] = edited
     selected_rows = edited[edited["Select"] == True]
     st.caption(f"(Mapped) Selected {len(selected_rows)} vehicle(s).")
 
-    if st.button("➕ Add selected (mapped results) to mappings", key="add_selected_to_mappings_mapped"):
+    if st.button("➕ Add selected (mapped) to mappings", key="add_selected_to_mappings_mapped"):
         if selected_rows.empty:
             st.warning("No rows selected (mapped).")
         else:
@@ -983,17 +919,14 @@ if "results_df_mapped" in st.session_state:
                 code_val       = (str(row.get(code_col, "")) if code_col else "").strip()
                 model_code_val = (str(row.get(model_code_col, "")) if model_code_col else "").strip()
 
-                existing = st.session_state.mappings.get(key)
-                if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
-                    st.warning(f"[Mapped] Key '{key}' exists with different Code/Model Code. Overwriting.")
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val, "model_code": model_code_val,
                 }
                 added += 1
-            st.success(f"[Mapped] Added/updated {added} mapping(s). Commit them in the sidebar.")
+            st.success(f"[Mapped] Added/updated {added} mapping(s).")
 
-# --------------------- Results: DIRECT INPUT SEARCH -------------------
+# --------------------- Results tables: Direct Input -------------------
 if "results_df_inputs" in st.session_state:
     st.subheader("Select vehicles from CADS results — Direct Input Search")
     df_show = st.session_state["results_df_inputs"]
@@ -1013,7 +946,7 @@ if "results_df_inputs" in st.session_state:
         key="model_code_column_select_inputs",
     )
 
-    front_cols = [c for c in ["Select","Similarity"] if c in df_show.columns]
+    front_cols = [c for c in ["Select","Similarity","__effective_model__"] if c in df_show.columns]
     col_order = front_cols + [c for c in df_show.columns if c not in front_cols]
 
     csel1, csel2 = st.columns(2)
@@ -1026,15 +959,13 @@ if "results_df_inputs" in st.session_state:
             df_tmp = df_show.copy(); df_tmp["Select"] = False
             st.session_state["results_df_inputs"] = df_tmp; df_show = df_tmp
 
-    edited = st.data_editor(
-        df_show, key="results_editor_inputs", use_container_width=True,
-        num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT
-    )
+    edited = st.data_editor(df_show, key="results_editor_inputs", use_container_width=True,
+                            num_rows="dynamic", column_order=col_order, height=TABLE_HEIGHT)
     st.session_state["results_df_inputs"] = edited
     selected_rows = edited[edited["Select"] == True]
     st.caption(f"(Inputs) Selected {len(selected_rows)} vehicle(s).")
 
-    if st.button("➕ Add selected (input results) to mappings", key="add_selected_to_mappings_inputs"):
+    if st.button("➕ Add selected (inputs) to mappings", key="add_selected_to_mappings_inputs"):
         if selected_rows.empty:
             st.warning("No rows selected (inputs).")
         else:
@@ -1059,17 +990,14 @@ if "results_df_inputs" in st.session_state:
                 code_val       = (str(row.get(code_col, "")) if code_col else "").strip()
                 model_code_val = (str(row.get(model_code_col, "")) if model_code_col else "").strip()
 
-                existing = st.session_state.mappings.get(key)
-                if existing and (existing.get("code") != code_val or existing.get("model_code") != model_code_val):
-                    st.warning(f"[Inputs] Key '{key}' exists with different Code/Model Code. Overwriting.")
                 st.session_state.mappings[key] = {
                     "year": yv, "make": mkv, "model": mdv, "trim": trv,
                     "vehicle": vhv, "code": code_val, "model_code": model_code_val,
                 }
                 added += 1
-            st.success(f"[Inputs] Added/updated {added} mapping(s). Commit them in the sidebar.")
+            st.success(f"[Inputs] Added/updated {added} mapping(s).")
 
-# --------------------- Current mappings table -------------------------
+# --------------------- Current Mappings table -------------------------
 st.subheader("Current Mappings (session)")
 if st.session_state.mappings:
     rows = []
