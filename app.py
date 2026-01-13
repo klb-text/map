@@ -194,7 +194,10 @@ def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     cols = list(df.columns)
     model_cols  = [c for c in cols if MODEL_LIKE_REGEX.search(c)]
     series_cols = [c for c in cols if SERIES_LIKE_REGEX.search(c) and c not in model_cols]
-    return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols]))
+
+    return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
+#                                                                 ^^ correct: two ')'
+
 
 
 def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
