@@ -810,6 +810,117 @@ if "results_df_unmapped" in st.session_state:
             added += 1
         st.success(f"Added {added} mapping(s).")
 
+
+# ---- Search CADS for Unmapped Vehicle (NEW) ----
+st.header("Search CADS for Unmapped Vehicle")
+unmapped_vehicle = st.text_input(
+    "Vehicle (search in CADS)",
+    key="unmapped_vehicle_input",
+    placeholder="e.g., Q3 S line 45 TFSI quattro Premium"
+)
+
+if st.button("🔍 Search CADS for Unmapped Vehicle"):
+    veh_txt = canon_text(unmapped_vehicle)
+    if not veh_txt:
+        st.warning("Enter a vehicle string first.")
+    else:
+        try:
+            # Load CADS using the same helper the rest of the app uses
+            df_cads = _load_cads_df()
+            df_cads = _strip_object_columns(df_cads)
+
+            # Search across vehicle-like columns
+            hits = []
+            for col in VEHICLE_LIKE_CANDS:
+                if col in df_cads.columns:
+                    ser = df_cads[col].astype(str).str.lower()
+                    mask = ser.str.contains(veh_txt, na=False)
+                    if mask.any():
+                        hits.append(df_cads[mask])
+
+            if hits:
+                df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
+                st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
+                # Prepare a selectable table
+                if "Select" not in df_union.columns:
+                    df_union.insert(0, "Select", False)
+                st.session_state["results_df_unmapped"] = df_union
+                st.session_state["code_candidates_unmapped"] = get_cads_code_candidates(df_union)
+                st.session_state["model_code_candidates_unmapped"] = get_model_code_candidates(df_union)
+                st.session_state["code_column_unmapped"] = (
+                    st.session_state["code_candidates_unmapped"][0]
+                    if st.session_state.get("code_candidates_unmapped")
+                    else None
+                )
+                st.session_state["model_code_column_unmapped"] = (
+                    st.session_state["model_code_candidates_unmapped"][0]
+                    if st.session_state.get("model_code_candidates_unmapped")
+                    else None
+                )
+            else:
+                st.warning("No CADS rows matched that vehicle text.")
+        except Exception as e:
+            st.error(f"CADS search failed: {e}")
+
+# ---- Results Table for Unmapped Vehicle ----
+if "results_df_unmapped" in st.session_state:
+    st.subheader("Select CADS rows to map this vehicle")
+    cUA, cUB = st.columns(2)
+    with cUA:
+        st.session_state["code_column_unmapped"] = st.selectbox(
+            "Code column (unmapped results)",
+            options=st.session_state.get("code_candidates_unmapped", []),
+            index=0 if st.session_state.get("code_candidates_unmapped") else None,
+        )
+    with cUB:
+        st.session_state["model_code_column_unmapped"] = st.selectbox(
+            "Model Code column (unmapped results)",
+            options=st.session_state.get("model_code_candidates_unmapped", []),
+            index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
+        )
+
+    st.data_editor(
+        st.session_state["results_df_unmapped"],
+        use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
+    )
+
+    if st.button("➕ Add selected (unmapped) to mappings"):
+        selected = st.session_state["results_df_unmapped"][
+            st.session_state["results_df_unmapped"]["Select"] == True
+        ]
+        if len(selected) == 0:
+            st.warning("Select at least one row.")
+        else:
+            added = 0
+            st.session_state.setdefault("mappings", {})
+            # Use current YMMT input fields for the mapping keys
+            y_val = (st.session_state.get("year_input", "") or "").strip()
+            mk_val = (st.session_state.get("make_input", "") or "").strip()
+            md_val = (st.session_state.get("model_input", "") or "").strip()
+            tr_val = (st.session_state.get("trim_input", "") or "").strip()
+
+            for _, row in selected.iterrows():
+                key = f"{canon_text(mk_val)}|{canon_text(md_val)}|{canon_text(tr_val, True)}|{y_val}"
+                st.session_state.mappings[key] = {
+                    "year": y_val,
+                    "make": mk_val,
+                    "model": md_val,
+                    "trim": tr_val,
+                    "vehicle": (unmapped_vehicle or row.get("Vehicle", "")),
+                    "code": row.get(st.session_state.get("code_column_unmapped"), ""),
+                    "model_code": row.get(st.session_state.get("model_code_column_unmapped"), ""),
+                    "ymmt": f"{y_val}|{mk_val}|{md_val}|{tr_val}",
+                }
+                added += 1
+
+            st.success(f"Added {added} mapping(s).")
+            if not st.session_state.get("code_column_unmapped"):
+                st.warning("No Code column selected; consider selecting one to improve mapped-vehicle search.")
+            if not st.session_state.get("model_code_column_unmapped"):
+                st.warning("No Model Code column selected; consider selecting one to improve mapped-vehicle search.")
+
+
 # ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
