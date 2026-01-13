@@ -158,7 +158,7 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
         df.columns = [str(c).strip() for c in df.columns]
         return _strip_object_columns(df.dropna(how="all"))
     if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text})
+    raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
 
 @st.cache_data(ttl=600)
 def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
