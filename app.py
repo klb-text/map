@@ -70,11 +70,11 @@ def _extract_years_from_text(s: str) -> set:
     return years
 
 def year_token_matches(mapping_year: str, user_year: str) -> bool:
-    uy_set = _extract_years_from_text(user_year)
-    my_set = _extract_years_from_text(mapping_year)
-    if not uy_set: return True
-    if not my_set: return False
-    return bool(uy_set.intersection(my_set))
+    uy = _extract_years_from_text(user_year)
+    if not uy:
+        return True
+    my = _extract_years_from_text(mapping_year)
+    return bool(my) and bool(uy.intersection(my))
 
 def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> Tuple[bool, float]:
     row = canon_text(row_trim, True)
@@ -413,10 +413,12 @@ def filter_cads_generic(
         df2["__trim_match_type__"] = "none"
         df2["__trim_match_score__"] = 0.0
 
-    # Year gate
+    # STRICT Year gate (mandatory if provided)
+    year_mask = None
     if year_col and y:
         s_year = df2[year_col].astype(str)
-        masks.append(s_year.apply(lambda vy: year_token_matches(vy, y)))
+        year_mask = s_year.apply(lambda vy: year_token_matches(vy, y))
+        masks.append(year_mask)
 
     # Combine masks
     if not masks:
