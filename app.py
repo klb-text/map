@@ -1,191 +1,114 @@
 
-# app.py
-# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
-# Full-Length Patched Build (2026-01-13)
-# Includes: Trim-as-hint, Vehicle-only lookup (mapped), Unmapped-vehicle CADS search, YMMT persistence,
-#           robust year gate, lenient trim matching, expanded UI
+# ---- Effective Model & Stopwords ----
+MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
+SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
 
-import base64, json, time, io, re, difflib
-from typing import Optional, List, Dict, Tuple, Set
-import requests, pandas as pd, streamlit as st
-from requests.adapters import HTTPAdapter, Retry
+def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+    cols = list(df.columns)
+    model_cols  = [c for c in cols if MODEL_LIKE_REGEX.search(c)]
+    series_cols = [c for c in cols if SERIES_LIKE_REGEX.search(c) and c not in model_cols]
+    return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
 
-# ---- Page Config ----
-st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
+    parts = []
+    for c in model_cols + series_cols:
+        if c in row.index:
+            v = str(row.get(c, "") or "").strip()
+            if v:
+                parts.append(v)
+    return canon_text(" ".join(parts))
 
-# ---- Secrets / Config ----
-gh_cfg = st.secrets.get("github", {})
-GH_TOKEN  = gh_cfg.get("token")
-GH_OWNER  = gh_cfg.get("owner")
-GH_REPO   = gh_cfg.get("repo")
-GH_BRANCH = gh_cfg.get("branch", "main")
+def add_effective_model_column(df: pd.DataFrame, override_cols: Optional[List[str]] = None) -> Tuple[pd.DataFrame, List[str], List[str]]:
+    auto_model_cols, auto_series_cols = detect_model_like_columns(df)
+    if override_cols:
+        model_cols  = [c for c in override_cols if c in df.columns]
+        series_cols = []
+    else:
+        model_cols, series_cols = auto_model_cols, auto_series_cols
+    always_add = ["AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]
+    for c in always_add:
+        if c in df.columns and c not in model_cols and c not in series_cols:
+            model_cols.append(c)
+    if not model_cols and not series_cols:
+        df["__effective_model__"] = ""
+        return df, model_cols, series_cols
+    df["__effective_model__"] = df.apply(lambda r: effective_model_row(r, model_cols, series_cols), axis=1)
+    return df, model_cols, series_cols
 
-MAPPINGS_PATH   = "data/mappings.json"
-AUDIT_LOG_PATH  = "data/mappings_log.jsonl"
-CADS_PATH       = "CADS.csv"
-CADS_IS_EXCEL   = False
-CADS_SHEET_NAME_DEFAULT = "0"
+def compute_per_make_stopwords(df_make_slice: pd.DataFrame, stopword_threshold: float = 0.40, token_min_len: int = 2) -> Set[str]:
+    if "__effective_model__" not in df_make_slice.columns:
+        df_make_slice, _, _ = add_effective_model_column(df_make_slice)
+    total = len(df_make_slice)
+    if total == 0: return set()
+    freq: Dict[str,int] = {}
+    for _, row in df_make_slice.iterrows():
+        toks = set(tokens(row["__effective_model__"], min_len=token_min_len))
+        for t in toks:
+            freq[t] = freq.get(t, 0) + 1
+    return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
 
-CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
-CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
+# ---- GitHub Persistence Helpers ----
+def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
+                        author_name=None, author_email=None, use_feature_branch=False, feature_branch_name="aff-mapping-app"):
+    content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
+    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+    target_branch = branch
+    if use_feature_branch:
+        r_feat = _session.get(gh_ref_heads(owner, repo, feature_branch_name), headers=gh_headers(token), timeout=15)
+        if r_feat.status_code != 200:
+            r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
+            if r_base.status_code == 200:
+                base_sha = r_base.json()["object"]["sha"]
+                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
+                              headers=gh_headers(token),
+                              json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
+        target_branch = feature_branch_name
+    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
+    sha = r.json().get("sha") if r.status_code == 200 else None
+    data = {"message": commit_message, "content": content_b64, "branch": target_branch}
+    if sha: data["sha"] = sha
+    if author_name and author_email:
+        data["committer"] = {"name": author_name, "email": author_email}
+    r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
+    if r2.status_code in (200, 201): return r2.json()
+    if r2.status_code == 409:
+        r3 = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
+        latest_sha = r3.json().get("sha") if r3.status_code == 200 else None
+        if latest_sha:
+            data["sha"] = latest_sha
+            r4 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
+            if r4.status_code in (200, 201): return r4.json()
+    raise RuntimeError(f"Failed to save file ({r2.status_code}): {r2.text}")
 
-# ---- Canonicalization / Helpers ----
-def canon_text(val: str, for_trim: bool=False) -> str:
-    s = (val or "").strip().lower()
-    s = re.sub(r"^[\s\.,;:!]+", "", s)
-    s = re.sub(r"[\s\.,;:!]+$", "", s)
-    s = re.sub(r"\s+", " ", s)
-    if for_trim:
-        repl = {
-            "all wheel drive":"awd","all-wheel drive":"awd","4wd":"awd","4x4":"awd",
-            "front wheel drive":"fwd","front-wheel drive":"fwd",
-            "rear wheel drive":"rwd","rear-wheel drive":"rwd",
-            "two wheel drive":"2wd","two-wheel drive":"2wd",
-            "plug-in hybrid":"phev","electric":"ev","bev":"ev",
-        }
-        for k, v in repl.items():
-            s = s.replace(k, v)
-    return s
-
-def tokens(s: str, min_len: int = 2) -> List[str]:
-    s = canon_text(s)
-    tks = re.split(r"[^\w]+", s)
-    return [t for t in tks if t and len(t) >= min_len]
-
-def _trim_tokens(s: str) -> Set[str]:
-    return set(tokens(canon_text(s, True)))
-
-def _extract_years_from_text(s: str) -> set:
-    s = (s or "").strip().lower()
-    years = set()
-    for m in re.finditer(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s):
-        years.add(int(m.group(0)))
-    for m in re.finditer(r"\bmy\s*([0-9]{2})\b", s):
-        years.add(2000 + int(m.group(1)))
-    if not years:
-        for m in re.finditer(r"\b([0-9]{2})\b", s):
-            years.add(2000 + int(m.group(1)))
-    return years
-
-def extract_primary_year(val: str) -> Optional[int]:
-    ys = _extract_years_from_text(str(val))
-    if not ys:
-        return None
-    return max(ys)
-
-def year_token_matches(mapping_year: str, user_year: str) -> bool:
-    uy_set = _extract_years_from_text(user_year)
-    my_set = _extract_years_from_text(mapping_year)
-    if not uy_set: return True
-    if not my_set: return False
-    return bool(uy_set.intersection(my_set))
-
-def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> Tuple[bool, float]:
-    row = canon_text(row_trim, True)
-    usr = canon_text(user_trim, True)
-    if not usr: return (True, 0.5)
-    if row == usr: return (True, 1.0)
-    if exact_only: return (False, 0.0)
-    if _trim_tokens(usr).issubset(_trim_tokens(row)): return (True, 0.8)
-    return (False, 0.0)
-
-def trim_match_type_and_score(row_trim: str, user_trim: str) -> Tuple[str, float]:
-    ok, score = trim_matches(row_trim, user_trim, exact_only=False)
-    if not (user_trim or "").strip():
-        return ("none", 0.0)
-    if not ok:
-        return ("none", 0.0)
-    row = canon_text(row_trim, True)
-    usr = canon_text(user_trim, True)
-    if row == usr:
-        return ("exact", 1.0)
-    return ("subset", 0.8)
-
-def model_similarity(a: str, b: str) -> float:
-    a = canon_text(a); b = canon_text(b)
-    if not a and not b: return 0.0
-    if a == b: return 1.0
-    if a in b or b in a: return 0.9
-    return difflib.SequenceMatcher(None, a, b).ratio()
-
-# ---- Resilient HTTP Session ----
-_session = requests.Session()
-_retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])
-_adapter = HTTPAdapter(max_retries=_retries)
-_session.mount("https://", _adapter)
-_session.mount("http://", _adapter)
-
-def gh_headers(token: str): return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-def gh_contents_url(owner, repo, path): return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-def gh_ref_heads(owner, repo, branch): return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
-
-# ---- CADS Loaders ----
-def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
-    obj_cols = df.select_dtypes(include=["object"]).columns
-    if len(obj_cols) > 0:
-        df[obj_cols] = df[obj_cols].apply(lambda s: s.str.strip())
-    return df
-
-@st.cache_data(ttl=600)
-def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
-    if not raw or raw.strip() == b"": return ("", "empty")
-    encoding = "utf-8"
-    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"): encoding = "utf-16"
-    elif raw.startswith(b"\xef\xbb\xbf"): encoding = "utf-8-sig"
-    text = raw.decode(encoding, errors="replace")
-    return (text, encoding)
-
-@st.cache_data(ttl=600)
-def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
-    import csv
-    params = {"ref": ref} if ref else {}
-    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params, timeout=15)
+def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_message,
+                           use_feature_branch=False, feature_branch_name="aff-mapping-app"):
+    target_branch = branch
+    if use_feature_branch:
+        r_feat = _session.get(gh_ref_heads(owner, repo, feature_branch_name), headers=gh_headers(token), timeout=15)
+        if r_feat.status_code != 200:
+            r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
+            if r_base.status_code == 200:
+                base_sha = r_base.json()["object"]["sha"]
+                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
+                              headers=gh_headers(token),
+                              json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
+        target_branch = feature_branch_name
+    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
+    lines, sha = "", None
     if r.status_code == 200:
-        j = r.json()
-        raw = None
-        if "content" in j and j["content"]:
-            try: raw = base64.b64decode(j["content"])
-            except Exception: raw = None
-        if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _session.get(j["download_url"], timeout=15)
-            if r2.status_code == 200: raw = r2.content
-        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
-        text, _ = _decode_bytes_to_text(raw)
-        sample = text[:4096]
-        delimiter = None
-        try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=[",","\t",";","|"])
-            delimiter = dialect.delimiter
-        except Exception:
-            for cand in [",","\t",";","|"]:
-                if cand in sample: delimiter = cand; break
-        if delimiter is None:
-            df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
-        else:
-            df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
-        df.columns = [str(c).strip() for c in df.columns]
-        return _strip_object_columns(df.dropna(how="all"))
-    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
+        sha = r.json()["sha"]
+        existing = base64.b64decode(r.json()["content"]).decode("utf-8")
+        lines = existing if existing.endswith("\n") else (existing + "\n")
+    elif r.status_code != 404:
+        raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
+    lines += json.dumps(record, ensure_ascii=False) + "\n"
+    content_b64 = base64.b64encode(lines.encode("utf-8")).decode("utf-8")
+    data = {"message": commit_message, "content": content_b64, "branch": target_branch}
+    if sha: data["sha"] = sha
+    r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
+    if r2.status_code in (200, 201): return r2.json()
+    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
 
-@st.cache_data(ttl=600)
-def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
-    params = {"ref": ref} if ref else {}
-    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params, timeout=15)
-    if r.status_code == 200:
-        j = r.json()
-        raw = None
-        if "content" in j and j["content"]:
-            try: raw = base64.b64decode(j["content"])
-            except Exception: raw = None
-        if (raw is None or raw.strip() == b"") and j.get("download_url"):
-            r2 = _session.get(j["download_url"], timeout=15)
-            if r2.status_code == 200: raw = r2.content
-        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
-        df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
-        return _strip_object_columns(df)
-    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---- Effective Model & Stopwords ----
 MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
@@ -296,6 +219,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
     if r2.status_code in (200, 201): return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
+
 
 # ---- Matching pickers (lenient Trim) ----
 def pick_best_mapping(
@@ -668,7 +592,8 @@ TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=Tru
 TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
 MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True,
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox(
+    "Require exact year match", value=True,
     help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated.")
 STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
 TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
@@ -698,7 +623,7 @@ def _load_cads_df():
 # ---- Vehicle-Only Quick Lookup (already mapped) ----
 st.header("Vehicle-Only Quick Lookup (mapped)")
 quick_vehicle = st.text_input("Vehicle (exact text as mapped)", key="quick_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
-if st.button("🔎 Quick Search by Vehicle (mapped only)"):
+if st.button("🔎 Quick Search by Vehicle (mapped only)", key="btn_quick_vehicle_v1"):
     veh_txt = (quick_vehicle or "").strip()
     if not veh_txt:
         st.warning("Enter a vehicle string first.")
@@ -738,98 +663,21 @@ if st.button("🔎 Quick Search by Vehicle (mapped only)"):
             except Exception as e:
                 st.error(f"Quick vehicle search failed: {e}")
 
-# ---- Search CADS for Unmapped Vehicle (NEW) ----
-st.header("Search CADS for Unmapped Vehicle")
-unmapped_vehicle = st.text_input("Vehicle (search in CADS)", key="unmapped_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
-if st.button("🔍 Search CADS for Unmapped Vehicle"):
-    veh_txt = canon_text(unmapped_vehicle)
-    if not veh_txt:
-        st.warning("Enter a vehicle string first.")
-    else:
-        try:
-            df_cads = _load_cads_df()
-            df_cads = _strip_object_columns(df_cads)
-            hits = []
-            for col in VEHICLE_LIKE_CANDS:
-                if col in df_cads.columns:
-                    ser = df_cads[col].astype(str).str.lower()
-                    mask = ser.str.contains(veh_txt, na=False)
-                    if mask.any():
-                        hits.append(df_cads[mask])
-            if hits:
-                df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
-                st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
-                if "Select" not in df_union.columns:
-                    df_union.insert(0, "Select", False)
-                st.session_state["results_df_unmapped"] = df_union
-                st.session_state["code_candidates_unmapped"] = get_cads_code_candidates(df_union)
-                st.session_state["model_code_candidates_unmapped"] = get_model_code_candidates(df_union)
-                st.session_state["code_column_unmapped"] = st.session_state["code_candidates_unmapped"][0] if st.session_state["code_candidates_unmapped"] else None
-                st.session_state["model_code_column_unmapped"] = st.session_state["model_code_candidates_unmapped"][0] if st.session_state["model_code_candidates_unmapped"] else None
-            else:
-                st.warning("No CADS rows matched that vehicle text.")
-        except Exception as e:
-            st.error(f"CADS search failed: {e}")
-
-if "results_df_unmapped" in st.session_state:
-    st.subheader("Select CADS rows to map this vehicle")
-    cUA, cUB = st.columns(2)
-    with cUA:
-        st.session_state["code_column_unmapped"] = st.selectbox(
-            "Code column (unmapped results)",
-            options=st.session_state.get("code_candidates_unmapped", []),
-            index=0 if st.session_state.get("code_candidates_unmapped") else None,
-        )
-    with cUB:
-        st.session_state["model_code_column_unmapped"] = st.selectbox(
-            "Model Code column (unmapped results)",
-            options=st.session_state.get("model_code_candidates_unmapped", []),
-            index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
-        )
-    st.data_editor(
-        st.session_state["results_df_unmapped"],
-        use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
-    )
-    if st.button("➕ Add selected (unmapped) to mappings"):
-        selected = st.session_state["results_df_unmapped"][st.session_state["results_df_unmapped"]["Select"] == True]
-        added = 0
-        st.session_state.setdefault("mappings", {})
-        for _, row in selected.iterrows():
-            key = f"{canon_text(st.session_state.get('year_input',''))}|{canon_text(st.session_state.get('make_input',''))}|{canon_text(st.session_state.get('model_input',''))}|{canon_text(st.session_state.get('trim_input',''), True)}"
-            st.session_state.mappings[key] = {
-                "year": (st.session_state.get('year_input','') or "").strip(),
-                "make": (st.session_state.get('make_input','') or "").strip(),
-                "model": (st.session_state.get('model_input','') or "").strip(),
-                "trim": (st.session_state.get('trim_input','') or "").strip(),
-                "vehicle": (unmapped_vehicle or row.get("Vehicle","")),
-                "code": row.get(st.session_state.get("code_column_unmapped"), ""),
-                "model_code": row.get(st.session_state.get("model_code_column_unmapped"), ""),
-                "ymmt": f"{st.session_state.get('year_input','')}|{st.session_state.get('make_input','')}|{st.session_state.get('model_input','')}|{st.session_state.get('trim_input','')}",
-            }
-            added += 1
-        st.success(f"Added {added} mapping(s).")
-
-
-# ---- Search CADS for Unmapped Vehicle (NEW) ----
+# ---- Search CADS for Unmapped Vehicle (NEW with unique keys) ----
 st.header("Search CADS for Unmapped Vehicle")
 unmapped_vehicle = st.text_input(
     "Vehicle (search in CADS)",
-    key="unmapped_vehicle_input",
+    key="unmapped_vehicle_input_v1",
     placeholder="e.g., Q3 S line 45 TFSI quattro Premium"
 )
-
-if st.button("🔍 Search CADS for Unmapped Vehicle"):
+if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
     veh_txt = canon_text(unmapped_vehicle)
     if not veh_txt:
         st.warning("Enter a vehicle string first.")
     else:
         try:
-            # Load CADS using the same helper the rest of the app uses
             df_cads = _load_cads_df()
             df_cads = _strip_object_columns(df_cads)
-
-            # Search across vehicle-like columns
             hits = []
             for col in VEHICLE_LIKE_CANDS:
                 if col in df_cads.columns:
@@ -837,11 +685,9 @@ if st.button("🔍 Search CADS for Unmapped Vehicle"):
                     mask = ser.str.contains(veh_txt, na=False)
                     if mask.any():
                         hits.append(df_cads[mask])
-
             if hits:
                 df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
                 st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
-                # Prepare a selectable table
                 if "Select" not in df_union.columns:
                     df_union.insert(0, "Select", False)
                 st.session_state["results_df_unmapped"] = df_union
@@ -862,7 +708,6 @@ if st.button("🔍 Search CADS for Unmapped Vehicle"):
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Results Table for Unmapped Vehicle ----
 if "results_df_unmapped" in st.session_state:
     st.subheader("Select CADS rows to map this vehicle")
     cUA, cUB = st.columns(2)
@@ -885,7 +730,7 @@ if "results_df_unmapped" in st.session_state:
         column_config={"Select": st.column_config.CheckboxColumn(required=False)}
     )
 
-    if st.button("➕ Add selected (unmapped) to mappings"):
+    if st.button("➕ Add selected (unmapped) to mappings", key="btn_unmapped_add_v1"):
         selected = st.session_state["results_df_unmapped"][
             st.session_state["results_df_unmapped"]["Select"] == True
         ]
@@ -894,12 +739,10 @@ if "results_df_unmapped" in st.session_state:
         else:
             added = 0
             st.session_state.setdefault("mappings", {})
-            # Use current YMMT input fields for the mapping keys
             y_val = (st.session_state.get("year_input", "") or "").strip()
             mk_val = (st.session_state.get("make_input", "") or "").strip()
             md_val = (st.session_state.get("model_input", "") or "").strip()
             tr_val = (st.session_state.get("trim_input", "") or "").strip()
-
             for _, row in selected.iterrows():
                 key = f"{canon_text(mk_val)}|{canon_text(md_val)}|{canon_text(tr_val, True)}|{y_val}"
                 st.session_state.mappings[key] = {
@@ -913,13 +756,11 @@ if "results_df_unmapped" in st.session_state:
                     "ymmt": f"{y_val}|{mk_val}|{md_val}|{tr_val}",
                 }
                 added += 1
-
             st.success(f"Added {added} mapping(s).")
             if not st.session_state.get("code_column_unmapped"):
                 st.warning("No Code column selected; consider selecting one to improve mapped-vehicle search.")
             if not st.session_state.get("model_code_column_unmapped"):
                 st.warning("No Model Code column selected; consider selecting one to improve mapped-vehicle search.")
-
 
 # ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
 st.subheader("Edit / Add Mapping")
