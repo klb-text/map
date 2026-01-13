@@ -69,6 +69,13 @@ def _extract_years_from_text(s: str) -> set:
             years.add(2000 + int(m.group(1)))
     return years
 
+def extract_primary_year(val: str) -> Optional[int]:
+    ys = _extract_years_from_text(str(val))
+    if not ys:
+        return None
+    # You can choose min/max; we'll use the max in case of ranges like '2024/2025'
+    return max(ys)
+
 def year_token_matches(mapping_year: str, user_year: str) -> bool:
     uy_set = _extract_years_from_text(user_year)
     my_set = _extract_years_from_text(mapping_year)
@@ -413,9 +420,18 @@ def filter_cads_generic(
         df2["__trim_match_type__"] = "none"
         df2["__trim_match_score__"] = 0.0
 
-    # Year gate
-    if year_col and y:
-        s_year = df2[year_col].astype(str)
+
+# Year gate (exact token match when YEAR_REQUIRE_EXACT is True)
+if year_col and y:
+    s_year = df2[year_col].astype(str)
+    if YEAR_REQUIRE_EXACT:
+        uy = extract_primary_year(y)
+        if uy:
+            masks.append(s_year.apply(lambda vy: uy in _extract_years_from_text(vy)))
+        else:
+            # If we couldn't parse a numeric year from input, fall back to the old behavior
+            masks.append(s_year.apply(lambda vy: year_token_matches(vy, y)))
+    else:
         masks.append(s_year.apply(lambda vy: year_token_matches(vy, y)))
 
     # Combine masks
@@ -973,6 +989,12 @@ if st.session_state.get("mappings"):
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
+
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox(
+    "Require exact year match",
+    value=True,
+    help="Only include rows where the user-entered year appears among the CADS row's year tokens."
+)
 
 # --------------------- Commit to GitHub ------------------------------
 _miss = []
