@@ -1075,19 +1075,35 @@ if "results_df_mapped" in st.session_state:
                 year, make, model, trim, vehicle
             )
 
+
 # --- Direct input results table ---
 if "results_df_inputs" in st.session_state:
     st.subheader("Select vehicles from CADS results — Direct Input Search")
+
     cA, cB, cC = st.columns([1, 1, 2])
     with cA:
-        if st.button("Select All (inputs)"): _select_all("results_df_inputs")
+        if st.button("Select All (inputs)"):
+            df = st.session_state["results_df_inputs"].copy()
+            if "Select" in df.columns:
+                df["Select"] = True
+            st.session_state["results_df_inputs"] = df
     with cB:
-        if st.button("Clear Selection (inputs)"): _clear_selection("results_df_inputs")
-    st.data_editor(
+        if st.button("Clear Selection (inputs)"):
+            df = st.session_state["results_df_inputs"].copy()
+            if "Select" in df.columns:
+                df["Select"] = False
+            st.session_state["results_df_inputs"] = df
+
+    # IMPORTANT: capture the edited dataframe
+    edited_inputs_df = st.data_editor(
         st.session_state["results_df_inputs"],
-        use_container_width=True, height=TABLE_HEIGHT, key="editor_inputs",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
+        use_container_width=True,
+        height=TABLE_HEIGHT,
+        key="editor_inputs",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)},
     )
+
+    # Column pickers
     cX, cY, cZ = st.columns(3)
     with cX:
         st.session_state["code_column_inputs"] = st.selectbox(
@@ -1101,12 +1117,27 @@ if "results_df_inputs" in st.session_state:
             options=st.session_state.get("model_code_candidates_inputs", []),
             index=0 if st.session_state.get("model_code_candidates_inputs") else None,
         )
+
     with cZ:
-        if st.button("➕ Add selected (inputs) to mappings"):
-            _add_selected_rows_to_mappings(
-                "results_df_inputs", "code_column_inputs", "model_code_column_inputs",
-                year, make, model, trim, vehicle
-            )
+        if st.button("➕ Add selected (inputs) to mappings", key="btn_inputs_add_v1"):
+            # Use the edited dataframe (fallback to original if None)
+            df_to_use = edited_inputs_df if edited_inputs_df is not None else st.session_state["results_df_inputs"]
+            # In case the checkbox column got cast to non-bool types, coerce:
+            if "Select" in df_to_use.columns:
+                selected = df_to_use[df_to_use["Select"].astype(bool) == True]
+            else:
+                selected = df_to_use.iloc[0:0]
+
+            if len(selected) == 0:
+                st.warning("Select at least one row.")
+            else:
+                _add_selected_rows_to_mappings(
+                    df_key=None,  # we pass rows directly, not by key
+                    code_col_key="code_column_inputs",
+                    model_code_col_key="model_code_column_inputs",
+                    year_val=year, make_val=make, model_val=model, trim_val=trim, vehicle_val=vehicle,
+                    rows_override=selected,  # << new param (see helper patch below)
+                )
 
 # ---- Diagnostics ----
 st.subheader("Diagnostics")
