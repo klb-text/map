@@ -8,5 +8,15 @@
     "code": "455539",
     "model_code": "4MQAC1",
     "ymmt": "2025|audi|q7|45 tfsi quattro premium"
+  },
+  "audi|q3|s line 45 tfsi quattro premium|2025": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q3",
+    "trim": "S line 45 TFSI quattro  Premium",
+    "vehicle": "2025 Audi Q3 S line 45 TFSI quattro  Premium",
+    "code": "459276",
+    "model_code": "F3BCEA",
+    "ymmt": "2025|audi|q3|s line 45 tfsi quattro premium"
   }
 }
