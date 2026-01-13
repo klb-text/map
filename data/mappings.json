@@ -18,5 +18,15 @@
     "code": "459276",
     "model_code": "F3BCEA",
     "ymmt": "2025|audi|q3|s line 45 tfsi quattro premium"
+  },
+  "audi|q5|2025 audi q5|2025": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q5",
+    "trim": "2025 Audi Q5",
+    "vehicle": "new q5 q5 sportback prestige 2.0 tfsi quattro 4dr all-wheel drive quattro sportback",
+    "code": "472567",
+    "model_code": "GUNAAY",
+    "ymmt": "2025|audi|q5|2025 audi q5"
   }
 }
