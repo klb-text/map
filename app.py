@@ -487,8 +487,9 @@ if year_col and y:
         "tier_used": tier_used,
         "rows_after_tier": len(result),
         "trim_as_hint": trim_as_hint,
-    }
     return result, diag
+    }
+
 
 # ---------------------------------------------------------------------
 # CADS matching for a single mapping: Code → Model Code → generic fallback
