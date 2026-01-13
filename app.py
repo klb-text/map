@@ -187,6 +187,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
     raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
+
 # ---- Effective Model & Stopwords ----
 MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
 SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
@@ -559,11 +560,9 @@ def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
     # Prefer typical ID columns; fall back to all columns for flexibility
     return [c for c in CADS_CODE_PREFS if c in df.columns] or list(df.columns)
 
-
 def get_model_code_candidates(df: pd.DataFrame) -> List[str]:
     # Prefer typical model-code columns; fall back to all columns
     return [c for c in CADS_MODEL_CODE_PREFS if c in df.columns] or list(df.columns)
-
 
 def match_cads_rows_for_mapping(
     df: pd.DataFrame,
@@ -784,6 +783,92 @@ if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
+# ---- Selection helpers & add-to-mappings (supports rows_override) ----
+def _select_all(df_key: str):
+    if df_key in st.session_state:
+        df = st.session_state[df_key].copy()
+        if "Select" in df.columns:
+            df["Select"] = True
+        st.session_state[df_key] = df
+
+def _clear_selection(df_key: str):
+    if df_key in st.session_state:
+        df = st.session_state[df_key].copy()
+        if "Select" in df.columns:
+            df["Select"] = False
+        st.session_state[df_key] = df
+
+def _effective_vehicle_text(row: pd.Series) -> str:
+    for col in ["Vehicle", "__effective_model__", "AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]:
+        if col in row.index:
+            val = str(row.get(col, "") or "").strip()
+            if val:
+                return val
+    return ""
+
+def _add_selected_rows_to_mappings(
+    df_key,                      # str or None
+    code_col_key: str,
+    model_code_col_key: str,
+    year_val: str,
+    make_val: str,
+    model_val: str,
+    trim_val: str,
+    vehicle_val: str,
+    rows_override=None          # <= edited DataFrame can be passed directly
+):
+    """
+    Add selected rows to mappings.
+    If rows_override is provided (a pandas DataFrame of already-selected rows),
+    the function uses that. Otherwise it reads st.session_state[df_key] and
+    filters on Select == True.
+    """
+    import pandas as pd
+
+    # Decide where the rows come from
+    if rows_override is not None:
+        selected = rows_override.copy()
+    else:
+        df = st.session_state.get(df_key)
+        if df is None or len(df) == 0:
+            st.warning("No rows to add.")
+            return
+        if "Select" not in df.columns:
+            st.warning("Selection column is missing.")
+            return
+        selected = df[df["Select"].astype(bool) == True]
+
+    if len(selected) == 0:
+        st.warning("Select at least one row.")
+        return
+
+    code_col = st.session_state.get(code_col_key)
+    model_code_col = st.session_state.get(model_code_col_key)
+
+    added = 0
+    st.session_state.setdefault("mappings", {})
+
+    for _, row in selected.iterrows():
+        ymmt = f"{(year_val or '').strip()}|{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}"
+        vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
+        code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
+        model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
+        key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}"
+        st.session_state.mappings[key] = {
+            "year": (year_val or "").strip(),
+            "make": (make_val or "").strip(),
+            "model": (model_val or "").strip(),
+            "trim": (trim_val or "").strip(),
+            "vehicle": vehicle_text,
+            "code": code_val,
+            "model_code": model_code_val,
+            "ymmt": ymmt,
+        }
+        added += 1
+
+    st.success(f"Added {added} mapping(s).")
+
+# ---- Results Table for Unmapped Vehicle (with edited DataFrame) ----
 if "results_df_unmapped" in st.session_state:
     st.subheader("Select CADS rows to map this vehicle")
     cUA, cUB = st.columns(2)
@@ -800,43 +885,33 @@ if "results_df_unmapped" in st.session_state:
             index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
         )
 
-    st.data_editor(
+    edited_unmapped_df = st.data_editor(
         st.session_state["results_df_unmapped"],
         use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
         column_config={"Select": st.column_config.CheckboxColumn(required=False)}
     )
 
     if st.button("➕ Add selected (unmapped) to mappings", key="btn_unmapped_add_v1"):
-        selected = st.session_state["results_df_unmapped"][
-            st.session_state["results_df_unmapped"]["Select"] == True
-        ]
+        df_to_use = edited_unmapped_df if edited_unmapped_df is not None else st.session_state["results_df_unmapped"]
+        if "Select" in df_to_use.columns:
+            selected = df_to_use[df_to_use["Select"].astype(bool) == True]
+        else:
+            selected = df_to_use.iloc[0:0]
         if len(selected) == 0:
             st.warning("Select at least one row.")
         else:
-            added = 0
-            st.session_state.setdefault("mappings", {})
             y_val = (st.session_state.get("year_input", "") or "").strip()
             mk_val = (st.session_state.get("make_input", "") or "").strip()
             md_val = (st.session_state.get("model_input", "") or "").strip()
             tr_val = (st.session_state.get("trim_input", "") or "").strip()
-            for _, row in selected.iterrows():
-                key = f"{canon_text(mk_val)}|{canon_text(md_val)}|{canon_text(tr_val, True)}|{y_val}"
-                st.session_state.mappings[key] = {
-                    "year": y_val,
-                    "make": mk_val,
-                    "model": md_val,
-                    "trim": tr_val,
-                    "vehicle": (unmapped_vehicle or row.get("Vehicle", "")),
-                    "code": row.get(st.session_state.get("code_column_unmapped"), ""),
-                    "model_code": row.get(st.session_state.get("model_code_column_unmapped"), ""),
-                    "ymmt": f"{y_val}|{mk_val}|{md_val}|{tr_val}",
-                }
-                added += 1
-            st.success(f"Added {added} mapping(s).")
-            if not st.session_state.get("code_column_unmapped"):
-                st.warning("No Code column selected; consider selecting one to improve mapped-vehicle search.")
-            if not st.session_state.get("model_code_column_unmapped"):
-                st.warning("No Model Code column selected; consider selecting one to improve mapped-vehicle search.")
+            _add_selected_rows_to_mappings(
+                df_key=None,
+                code_col_key="code_column_unmapped",
+                model_code_col_key="model_code_column_unmapped",
+                year_val=y_val, make_val=mk_val, model_val=md_val, trim_val=tr_val,
+                vehicle_val=st.session_state.get("unmapped_vehicle_input_v1", ""),
+                rows_override=selected,
+            )
 
 # ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
 st.subheader("Edit / Add Mapping")
@@ -980,69 +1055,14 @@ with b3:
                 if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                 st.session_state["results_df_inputs"] = selectable
                 st.session_state["code_candidates_inputs"] = get_cads_code_candidates(selectable)
-                st.session_state["model_code_candidates_inputs"] = get_model_code_candidates(selectable)
+                st.session_state["model_code_candidates_inputs"] = get_cads_code_candidates(selectable) if False else get_model_code_candidates(selectable)
                 st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state.get("code_candidates_inputs") else None
                 st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state.get("model_code_candidates_inputs") else None
                 st.success(f"Found {len(selectable)} CADS row(s).")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Results tables & Add to mappings ----
-def _select_all(df_key: str):
-    if df_key in st.session_state:
-        df = st.session_state[df_key].copy()
-        if "Select" in df.columns: df["Select"] = True
-        st.session_state[df_key] = df
-
-def _clear_selection(df_key: str):
-    if df_key in st.session_state:
-        df = st.session_state[df_key].copy()
-        if "Select" in df.columns: df["Select"] = False
-        st.session_state[df_key] = df
-
-def _effective_vehicle_text(row: pd.Series) -> str:
-    for col in ["Vehicle", "__effective_model__", "AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]:
-        if col in row.index:
-            val = str(row.get(col, "") or "").strip()
-            if val:
-                return val
-    return ""
-
-def _add_selected_rows_to_mappings(df_key: str, code_col_key: str, model_code_col_key: str,
-                                   year_val: str, make_val: str, model_val: str, trim_val: str, vehicle_val: str):
-    df = st.session_state.get(df_key)
-    if df is None or len(df) == 0:
-        st.warning("No rows to add.")
-        return
-    selected = df[df["Select"] == True]
-    if len(selected) == 0:
-        st.warning("Select at least one row.")
-        return
-    code_col = st.session_state.get(code_col_key)
-    model_code_col = st.session_state.get(model_code_col_key)
-    added = 0
-    st.session_state.setdefault("mappings", {})
-    for _, row in selected.iterrows():
-        ymmt = f"{(year_val or '').strip()}|{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}"
-        vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
-        code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
-        model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
-        key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}"
-        st.session_state.mappings[key] = {
-            "year": (year_val or "").strip(),
-            "make": (make_val or "").strip(),
-            "model": (model_val or "").strip(),
-            "trim": (trim_val or "").strip(),
-            "vehicle": vehicle_text,
-            "code": code_val,
-            "model_code": model_code_val,
-            "ymmt": ymmt,
-        }
-        added += 1
-    if added > 0:
-        st.success(f"Added {added} mapping(s).")
-
-# --- Mapped results table ---
+# --- Mapped results table (edited DataFrame) ---
 if "results_df_mapped" in st.session_state:
     st.subheader("Select vehicles from CADS results — Mapped Vehicle")
     cA, cB, cC = st.columns([1, 1, 2])
@@ -1050,7 +1070,7 @@ if "results_df_mapped" in st.session_state:
         if st.button("Select All (mapped)"): _select_all("results_df_mapped")
     with cB:
         if st.button("Clear Selection (mapped)"): _clear_selection("results_df_mapped")
-    st.data_editor(
+    edited_mapped_df = st.data_editor(
         st.session_state["results_df_mapped"],
         use_container_width=True, height=TABLE_HEIGHT, key="editor_mapped",
         column_config={"Select": st.column_config.CheckboxColumn(required=False)}
@@ -1069,41 +1089,36 @@ if "results_df_mapped" in st.session_state:
             index=0 if st.session_state.get("model_code_candidates_mapped") else None,
         )
     with cZ:
-        if st.button("➕ Add selected (mapped) to mappings"):
-            _add_selected_rows_to_mappings(
-                "results_df_mapped", "code_column_mapped", "model_code_column_mapped",
-                year, make, model, trim, vehicle
-            )
+        if st.button("➕ Add selected (mapped) to mappings", key="btn_mapped_add_v1"):
+            df_to_use = edited_mapped_df if edited_mapped_df is not None else st.session_state["results_df_mapped"]
+            if "Select" in df_to_use.columns:
+                selected = df_to_use[df_to_use["Select"].astype(bool) == True]
+            else:
+                selected = df_to_use.iloc[0:0]
+            if len(selected) == 0:
+                st.warning("Select at least one row.")
+            else:
+                _add_selected_rows_to_mappings(
+                    df_key=None,
+                    code_col_key="code_column_mapped",
+                    model_code_col_key="model_code_column_mapped",
+                    year_val=year, make_val=make, model_val=model, trim_val=trim, vehicle_val=vehicle,
+                    rows_override=selected,
+                )
 
-
-# --- Direct input results table ---
+# --- Direct input results table (edited DataFrame) ---
 if "results_df_inputs" in st.session_state:
     st.subheader("Select vehicles from CADS results — Direct Input Search")
-
     cA, cB, cC = st.columns([1, 1, 2])
     with cA:
-        if st.button("Select All (inputs)"):
-            df = st.session_state["results_df_inputs"].copy()
-            if "Select" in df.columns:
-                df["Select"] = True
-            st.session_state["results_df_inputs"] = df
+        if st.button("Select All (inputs)"): _select_all("results_df_inputs")
     with cB:
-        if st.button("Clear Selection (inputs)"):
-            df = st.session_state["results_df_inputs"].copy()
-            if "Select" in df.columns:
-                df["Select"] = False
-            st.session_state["results_df_inputs"] = df
-
-    # IMPORTANT: capture the edited dataframe
+        if st.button("Clear Selection (inputs)"): _clear_selection("results_df_inputs")
     edited_inputs_df = st.data_editor(
         st.session_state["results_df_inputs"],
-        use_container_width=True,
-        height=TABLE_HEIGHT,
-        key="editor_inputs",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)},
+        use_container_width=True, height=TABLE_HEIGHT, key="editor_inputs",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
     )
-
-    # Column pickers
     cX, cY, cZ = st.columns(3)
     with cX:
         st.session_state["code_column_inputs"] = st.selectbox(
@@ -1117,26 +1132,22 @@ if "results_df_inputs" in st.session_state:
             options=st.session_state.get("model_code_candidates_inputs", []),
             index=0 if st.session_state.get("model_code_candidates_inputs") else None,
         )
-
     with cZ:
         if st.button("➕ Add selected (inputs) to mappings", key="btn_inputs_add_v1"):
-            # Use the edited dataframe (fallback to original if None)
             df_to_use = edited_inputs_df if edited_inputs_df is not None else st.session_state["results_df_inputs"]
-            # In case the checkbox column got cast to non-bool types, coerce:
             if "Select" in df_to_use.columns:
                 selected = df_to_use[df_to_use["Select"].astype(bool) == True]
             else:
                 selected = df_to_use.iloc[0:0]
-
             if len(selected) == 0:
                 st.warning("Select at least one row.")
             else:
                 _add_selected_rows_to_mappings(
-                    df_key=None,  # we pass rows directly, not by key
+                    df_key=None,
                     code_col_key="code_column_inputs",
                     model_code_col_key="model_code_column_inputs",
                     year_val=year, make_val=make, model_val=model, trim_val=trim, vehicle_val=vehicle,
-                    rows_override=selected,  # << new param (see helper patch below)
+                    rows_override=selected,
                 )
 
 # ---- Diagnostics ----
