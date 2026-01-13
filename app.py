@@ -2,7 +2,8 @@
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Full-Length Patched Build (2026-01-13)
-# Includes: Trim-as-hint, Vehicle-only lookup, YMMT persistence, robust year gate, lenient trim matching, full UI
+# Includes: Trim-as-hint, Vehicle-only lookup (mapped), Unmapped-vehicle CADS search, YMMT persistence,
+#           robust year gate, lenient trim matching, expanded UI
 
 import base64, json, time, io, re, difflib
 from typing import Optional, List, Dict, Tuple, Set
@@ -194,11 +195,7 @@ def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     cols = list(df.columns)
     model_cols  = [c for c in cols if MODEL_LIKE_REGEX.search(c)]
     series_cols = [c for c in cols if SERIES_LIKE_REGEX.search(c) and c not in model_cols]
-
     return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
-#                                                                 ^^ correct: two ')'
-
-
 
 def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
     parts = []
@@ -639,12 +636,54 @@ def match_cads_rows_for_mapping(
 # ===================== UI =====================
 st.title("AFF Vehicle Mapping")
 
-# ---- Vehicle-Only Quick Lookup (NEW) ----
-st.header("Vehicle-Only Quick Lookup (mapped)")
-quick_vehicle = st.text_input("Vehicle (exact text as mapped)", key="quick_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
-do_quick = st.button("🔎 Quick Search by Vehicle (mapped only)", key="btn_quick_vehicle")
+# ---- Sidebar: CADS Settings ----
+st.sidebar.subheader("CADS Settings")
+CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
+CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
+CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT)
+cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
 
-def _quick_load_cads_df():
+# ---- Sidebar: Actions & Matching ----
+st.sidebar.header("Actions")
+if st.sidebar.button("🔄 Reload mappings from GitHub"):
+    try:
+        r_load = _session.get(
+            gh_contents_url(GH_OWNER, GH_REPO, MAPPINGS_PATH),
+            headers=gh_headers(GH_TOKEN), params={"ref": GH_BRANCH}, timeout=15,
+        )
+        if r_load.status_code == 200:
+            decoded = base64.b64decode(r_load.json()["content"]).decode("utf-8")
+            st.session_state.mappings = json.loads(decoded)
+        else:
+            st.session_state.mappings = {}
+        st.sidebar.success("Reloaded.")
+    except Exception as e:
+        st.sidebar.error(f"Reload failed: {e}")
+
+commit_msg = st.sidebar.text_input("Commit message", value="chore(app): update AFF vehicle mappings via Streamlit")
+use_feature_branch = st.sidebar.checkbox("Use feature branch (aff-mapping-app)", value=False)
+
+st.sidebar.subheader("Matching Controls")
+TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=True)
+TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
+MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
+STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True,
+    help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated.")
+STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
+TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
+
+st.sidebar.subheader("Effective Model (override)")
+EFFECTIVE_MODEL_COLS_OVERRIDE = st.sidebar.text_input(
+    "Comma-separated CADS columns to use (optional)",
+    value="AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES",
+    help="If blank, auto-detect model-like and series-like columns.")
+OVERRIDE_COLS = [c.strip() for c in EFFECTIVE_MODEL_COLS_OVERRIDE.split(",") if c.strip()] or None
+
+TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", 400, 1200, 700, 50)
+
+# ---- Common CADS loader helper ----
+def _load_cads_df():
     if cads_upload is not None:
         if cads_upload.name.lower().endswith(".xlsx"):
             return pd.read_excel(cads_upload, engine="openpyxl")
@@ -656,7 +695,10 @@ def _quick_load_cads_df():
         return load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
     return load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-if do_quick:
+# ---- Vehicle-Only Quick Lookup (already mapped) ----
+st.header("Vehicle-Only Quick Lookup (mapped)")
+quick_vehicle = st.text_input("Vehicle (exact text as mapped)", key="quick_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
+if st.button("🔎 Quick Search by Vehicle (mapped only)"):
     veh_txt = (quick_vehicle or "").strip()
     if not veh_txt:
         st.warning("Enter a vehicle string first.")
@@ -667,7 +709,7 @@ if do_quick:
             st.error("❌ Not mapped. Map this vehicle below (enter YMMT + Vehicle, add to mappings), commit, then retry.")
         else:
             try:
-                df_cads = _quick_load_cads_df()
+                df_cads = _load_cads_df()
                 df_cads = _strip_object_columns(df_cads)
                 hits = []
                 for _, mp in vm_list:
@@ -696,46 +738,79 @@ if do_quick:
             except Exception as e:
                 st.error(f"Quick vehicle search failed: {e}")
 
-# ---- Sidebar: CADS Settings ----
-st.sidebar.subheader("CADS Settings")
-CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
-CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
-CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT)
-cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
+# ---- Search CADS for Unmapped Vehicle (NEW) ----
+st.header("Search CADS for Unmapped Vehicle")
+unmapped_vehicle = st.text_input("Vehicle (search in CADS)", key="unmapped_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
+if st.button("🔍 Search CADS for Unmapped Vehicle"):
+    veh_txt = canon_text(unmapped_vehicle)
+    if not veh_txt:
+        st.warning("Enter a vehicle string first.")
+    else:
+        try:
+            df_cads = _load_cads_df()
+            df_cads = _strip_object_columns(df_cads)
+            hits = []
+            for col in VEHICLE_LIKE_CANDS:
+                if col in df_cads.columns:
+                    ser = df_cads[col].astype(str).str.lower()
+                    mask = ser.str.contains(veh_txt, na=False)
+                    if mask.any():
+                        hits.append(df_cads[mask])
+            if hits:
+                df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
+                st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
+                if "Select" not in df_union.columns:
+                    df_union.insert(0, "Select", False)
+                st.session_state["results_df_unmapped"] = df_union
+                st.session_state["code_candidates_unmapped"] = get_cads_code_candidates(df_union)
+                st.session_state["model_code_candidates_unmapped"] = get_model_code_candidates(df_union)
+                st.session_state["code_column_unmapped"] = st.session_state["code_candidates_unmapped"][0] if st.session_state["code_candidates_unmapped"] else None
+                st.session_state["model_code_column_unmapped"] = st.session_state["model_code_candidates_unmapped"][0] if st.session_state["model_code_candidates_unmapped"] else None
+            else:
+                st.warning("No CADS rows matched that vehicle text.")
+        except Exception as e:
+            st.error(f"CADS search failed: {e}")
 
-# ---- Sidebar: Actions & Matching ----
-st.sidebar.header("Actions")
-if st.sidebar.button("🔄 Reload mappings from GitHub"):
-    try:
-        r_load = _session.get(gh_contents_url(GH_OWNER, GH_REPO, MAPPINGS_PATH), headers=gh_headers(GH_TOKEN), params={"ref": GH_BRANCH}, timeout=15)
-        if r_load.status_code == 200:
-            decoded = base64.b64decode(r_load.json()["content"]).decode("utf-8")
-            st.session_state.mappings = json.loads(decoded)
-        else:
-            st.session_state.mappings = {}
-        st.sidebar.success("Reloaded.")
-    except Exception as e:
-        st.sidebar.error(f"Reload failed: {e}")
+if "results_df_unmapped" in st.session_state:
+    st.subheader("Select CADS rows to map this vehicle")
+    cUA, cUB = st.columns(2)
+    with cUA:
+        st.session_state["code_column_unmapped"] = st.selectbox(
+            "Code column (unmapped results)",
+            options=st.session_state.get("code_candidates_unmapped", []),
+            index=0 if st.session_state.get("code_candidates_unmapped") else None,
+        )
+    with cUB:
+        st.session_state["model_code_column_unmapped"] = st.selectbox(
+            "Model Code column (unmapped results)",
+            options=st.session_state.get("model_code_candidates_unmapped", []),
+            index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
+        )
+    st.data_editor(
+        st.session_state["results_df_unmapped"],
+        use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
+    )
+    if st.button("➕ Add selected (unmapped) to mappings"):
+        selected = st.session_state["results_df_unmapped"][st.session_state["results_df_unmapped"]["Select"] == True]
+        added = 0
+        st.session_state.setdefault("mappings", {})
+        for _, row in selected.iterrows():
+            key = f"{canon_text(st.session_state.get('year_input',''))}|{canon_text(st.session_state.get('make_input',''))}|{canon_text(st.session_state.get('model_input',''))}|{canon_text(st.session_state.get('trim_input',''), True)}"
+            st.session_state.mappings[key] = {
+                "year": (st.session_state.get('year_input','') or "").strip(),
+                "make": (st.session_state.get('make_input','') or "").strip(),
+                "model": (st.session_state.get('model_input','') or "").strip(),
+                "trim": (st.session_state.get('trim_input','') or "").strip(),
+                "vehicle": (unmapped_vehicle or row.get("Vehicle","")),
+                "code": row.get(st.session_state.get("code_column_unmapped"), ""),
+                "model_code": row.get(st.session_state.get("model_code_column_unmapped"), ""),
+                "ymmt": f"{st.session_state.get('year_input','')}|{st.session_state.get('make_input','')}|{st.session_state.get('model_input','')}|{st.session_state.get('trim_input','')}",
+            }
+            added += 1
+        st.success(f"Added {added} mapping(s).")
 
-commit_msg = st.sidebar.text_input("Commit message", value="chore(app): update AFF vehicle mappings via Streamlit")
-use_feature_branch = st.sidebar.checkbox("Use feature branch (aff-mapping-app)", value=False)
-
-st.sidebar.subheader("Matching Controls")
-TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=True)
-TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
-MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
-STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True)
-STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
-TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
-
-st.sidebar.subheader("Effective Model (override)")
-EFFECTIVE_MODEL_COLS_OVERRIDE = st.sidebar.text_input("Comma-separated CADS columns to use (optional)", value="AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES")
-OVERRIDE_COLS = [c.strip() for c in EFFECTIVE_MODEL_COLS_OVERRIDE.split(",") if c.strip()] or None
-
-TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", 400, 1200, 700, 50)
-
-# ---- Inputs for Mapping ----
+# ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
@@ -743,10 +818,19 @@ with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Audi"
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Q3")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., S line 45 TFSI quattro Premium")
 with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
-with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional")
+with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
-# ---- Existing Mapping ----
+st.caption(
+    f"🔎 Inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' "
+    f"Model='{canon_text(model)}' Trim='{canon_text(trim, True)}' | "
+    f"TRIM_AS_HINT={TRIM_AS_HINT}, TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, "
+    f"MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, STRICT_AND={STRICT_AND}, "
+    f"YEAR_REQUIRE_EXACT={YEAR_REQUIRE_EXACT}, STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, "
+    f"TOKEN_MIN_LEN={TOKEN_MIN_LEN}, OverrideCols={OVERRIDE_COLS or '(auto)'}"
+)
+
+# ---- Existing Mapping (for current inputs) ----
 st.subheader("Existing Mapping (for current inputs)")
 existing_rows = []
 vehicle_first = False
@@ -755,36 +839,45 @@ if canon_text(vehicle) and not (canon_text(year) or canon_text(make) or canon_te
     vehicle_first = True
     if vm:
         k, v = vm
-        existing_rows.append({"Match Level": "by_vehicle", "Score": 1.0, "Key": k, "Year": v.get("year",""), "Make": v.get("make",""), "Model": v.get("model",""), "Trim": v.get("trim",""), "Vehicle": v.get("vehicle",""), "Code": v.get("code",""), "Model Code": v.get("model_code","")})
+        existing_rows.append({
+            "Match Level": "by_vehicle",
+            "Score": 1.0,
+            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
+            "Model": v.get("model",""), "Trim": v.get("trim",""),
+            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
+            "Model Code": v.get("model_code",""),
+        })
 
 if not existing_rows:
-    best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, trim, trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
+    best = pick_best_mapping(
+        st.session_state.get("mappings", {}), year, make, model, trim,
+        trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
+    )
     if not best and (year or make or model):
-        best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, "", trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
+        best = pick_best_mapping(
+            st.session_state.get("mappings", {}), year, make, model, "",
+            trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
+        )
     if best:
         k, v, score = best
-        existing_rows.append({"Match Level": "generic_best_trim_model_year" if canon_text(trim, True) else "generic_best_by_ymm", "Score": round(score,3), "Key": k, "Year": v.get("year",""), "Make": v.get("make",""), "Model": v.get("model",""), "Trim": v.get("trim",""), "Vehicle": v.get("vehicle",""), "Code": v.get("code",""), "Model Code": v.get("model_code","")})
+        existing_rows.append({
+            "Match Level": "generic_best_trim_model_year" if canon_text(trim, True) else "generic_best_by_ymm",
+            "Score": round(score,3),
+            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
+            "Model": v.get("model",""), "Trim": v.get("trim",""),
+            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
+            "Model Code": v.get("model_code",""),
+        })
 
 if existing_rows:
     st.dataframe(pd.DataFrame(existing_rows), use_container_width=True)
 else:
     st.info("No existing mapping detected for current inputs.")
 
-# ---- CADS Search Buttons ----
+# ---- CADS Search Buttons (mapped + inputs) ----
 b1, b2, b3, b4 = st.columns(4)
-def _load_cads_df():
-    if cads_upload is not None:
-        if cads_upload.name.lower().endswith(".xlsx"):
-            return pd.read_excel(cads_upload, engine="openpyxl")
-        return pd.read_csv(cads_upload)
-    if CADS_IS_EXCEL:
-        sheet_arg = CADS_SHEET_NAME
-        try: sheet_arg = int(sheet_arg)
-        except Exception: pass
-        return load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
-    return load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
 
-# (1) Search CADS using mapped vehicle
+# (Mapped vehicle)
 with b2:
     if st.button("🔎 Search CADS (mapped vehicle)"):
         try:
@@ -795,55 +888,262 @@ with b2:
             if canon_text(vehicle) and vm:
                 mapping_to_use = vm[1]
             else:
-                best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, trim, trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
+                best = pick_best_mapping(
+                    st.session_state.get("mappings", {}), year, make, model, trim,
+                    trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
+                )
                 if not best and (year or make or model):
-                    best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, "", trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
+                    best = pick_best_mapping(
+                        st.session_state.get("mappings", {}), year, make, model, "",
+                        trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
+                    )
                 if best:
                     mapping_to_use = best[1]
             if not mapping_to_use:
                 st.warning("No mapped vehicle detected.")
             else:
-                df_match, diag = match_cads_rows_for_mapping(df_cads, mapping_to_use, exact_model_when_full=MODEL_EXACT_WHEN_FULL, trim_exact_only=TRIM_EXACT_ONLY, strict_and=STRICT_AND, stopword_threshold=STOPWORD_THRESHOLD, token_min_len=TOKEN_MIN_LEN, effective_model_cols_override=OVERRIDE_COLS, trim_as_hint=True, year_require_exact=YEAR_REQUIRE_EXACT)
+                df_match, diag = match_cads_rows_for_mapping(
+                    df_cads, mapping_to_use,
+                    exact_model_when_full=MODEL_EXACT_WHEN_FULL,
+                    trim_exact_only=TRIM_EXACT_ONLY, strict_and=STRICT_AND,
+                    stopword_threshold=STOPWORD_THRESHOLD, token_min_len=TOKEN_MIN_LEN,
+                    effective_model_cols_override=OVERRIDE_COLS,
+                    trim_as_hint=True, year_require_exact=YEAR_REQUIRE_EXACT,
+                )
+                st.session_state["last_diag_mapped"] = diag
+                st.caption(f"Tier used (mapped): {diag.get('tier_used')}")
                 if len(df_match) > 0:
-                    st.success(f"Found {len(df_match)} CADS row(s).")
                     selectable = df_match.copy()
                     if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                     st.session_state["results_df_mapped"] = selectable
                     st.session_state["code_candidates_mapped"] = get_cads_code_candidates(selectable)
                     st.session_state["model_code_candidates_mapped"] = get_model_code_candidates(selectable)
+                    st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state.get("code_candidates_mapped") else None
+                    st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state.get("model_code_candidates_mapped") else None
+                    st.success(f"Found {len(selectable)} CADS row(s).")
                 else:
                     st.warning("No CADS rows found.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Results Table for Mapped ----
+# (Use current inputs)
+with b3:
+    if st.button("🔎 Search CADS (use current inputs)"):
+        try:
+            df_cads = _load_cads_df()
+            df_cads = _strip_object_columns(df_cads)
+            results, diag = filter_cads_generic(
+                df_cads, year, make, model, trim,
+                exact_model_when_full=MODEL_EXACT_WHEN_FULL,
+                trim_exact_only=TRIM_EXACT_ONLY,
+                strict_and=STRICT_AND,
+                stopword_threshold=STOPWORD_THRESHOLD,
+                token_min_len=TOKEN_MIN_LEN,
+                effective_model_cols_override=OVERRIDE_COLS,
+                trim_as_hint=TRIM_AS_HINT,
+                year_require_exact=YEAR_REQUIRE_EXACT,
+            )
+            st.session_state["last_diag_inputs"] = diag
+            st.caption(f"Tier used (inputs): {diag.get('tier_used')}")
+            if len(results) == 0:
+                st.warning("No CADS rows matched inputs. Try adjusting controls.")
+            else:
+                selectable = results.copy()
+                if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
+                st.session_state["results_df_inputs"] = selectable
+                st.session_state["code_candidates_inputs"] = get_cads_code_candidates(selectable)
+                st.session_state["model_code_candidates_inputs"] = get_model_code_candidates(selectable)
+                st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state.get("code_candidates_inputs") else None
+                st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state.get("model_code_candidates_inputs") else None
+                st.success(f"Found {len(selectable)} CADS row(s).")
+        except Exception as e:
+            st.error(f"CADS search failed: {e}")
+
+# ---- Results tables & Add to mappings ----
+def _select_all(df_key: str):
+    if df_key in st.session_state:
+        df = st.session_state[df_key].copy()
+        if "Select" in df.columns: df["Select"] = True
+        st.session_state[df_key] = df
+
+def _clear_selection(df_key: str):
+    if df_key in st.session_state:
+        df = st.session_state[df_key].copy()
+        if "Select" in df.columns: df["Select"] = False
+        st.session_state[df_key] = df
+
+def _effective_vehicle_text(row: pd.Series) -> str:
+    for col in ["Vehicle", "__effective_model__", "AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]:
+        if col in row.index:
+            val = str(row.get(col, "") or "").strip()
+            if val:
+                return val
+    return ""
+
+def _add_selected_rows_to_mappings(df_key: str, code_col_key: str, model_code_col_key: str,
+                                   year_val: str, make_val: str, model_val: str, trim_val: str, vehicle_val: str):
+    df = st.session_state.get(df_key)
+    if df is None or len(df) == 0:
+        st.warning("No rows to add.")
+        return
+    selected = df[df["Select"] == True]
+    if len(selected) == 0:
+        st.warning("Select at least one row.")
+        return
+    code_col = st.session_state.get(code_col_key)
+    model_code_col = st.session_state.get(model_code_col_key)
+    added = 0
+    st.session_state.setdefault("mappings", {})
+    for _, row in selected.iterrows():
+        ymmt = f"{(year_val or '').strip()}|{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}"
+        vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
+        code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
+        model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
+        key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}"
+        st.session_state.mappings[key] = {
+            "year": (year_val or "").strip(),
+            "make": (make_val or "").strip(),
+            "model": (model_val or "").strip(),
+            "trim": (trim_val or "").strip(),
+            "vehicle": vehicle_text,
+            "code": code_val,
+            "model_code": model_code_val,
+            "ymmt": ymmt,
+        }
+        added += 1
+    if added > 0:
+        st.success(f"Added {added} mapping(s).")
+
+# --- Mapped results table ---
 if "results_df_mapped" in st.session_state:
     st.subheader("Select vehicles from CADS results — Mapped Vehicle")
-    st.data_editor(st.session_state["results_df_mapped"], use_container_width=True, height=TABLE_HEIGHT, key="editor_mapped")
-    if st.button("➕ Add selected (mapped) to mappings"):
-        selected = st.session_state["results_df_mapped"][st.session_state["results_df_mapped"]["Select"] == True]
-        for _, row in selected.iterrows():
-            key = f"{canon_text(make)}|{canon_text(model)}|{canon_text(trim, True)}|{(year or '').strip()}"
-            st.session_state.mappings[key] = {
-                "year": year, "make": make, "model": model, "trim": trim,
-                "vehicle": vehicle or row.get("Vehicle",""),
-                "code": row.get(st.session_state.get("code_candidates_mapped",[None])[0],""),
-                "model_code": row.get(st.session_state.get("model_code_candidates_mapped",[None])[0],""),
-                "ymmt": f"{year}|{make}|{model}|{trim}"
-            }
-        st.success(f"Added {len(selected)} mapping(s).")
+    cA, cB, cC = st.columns([1, 1, 2])
+    with cA:
+        if st.button("Select All (mapped)"): _select_all("results_df_mapped")
+    with cB:
+        if st.button("Clear Selection (mapped)"): _clear_selection("results_df_mapped")
+    st.data_editor(
+        st.session_state["results_df_mapped"],
+        use_container_width=True, height=TABLE_HEIGHT, key="editor_mapped",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
+    )
+    cX, cY, cZ = st.columns(3)
+    with cX:
+        st.session_state["code_column_mapped"] = st.selectbox(
+            "Code column (mapped results)",
+            options=st.session_state.get("code_candidates_mapped", []),
+            index=0 if st.session_state.get("code_candidates_mapped") else None,
+        )
+    with cY:
+        st.session_state["model_code_column_mapped"] = st.selectbox(
+            "Model Code column (mapped results)",
+            options=st.session_state.get("model_code_candidates_mapped", []),
+            index=0 if st.session_state.get("model_code_candidates_mapped") else None,
+        )
+    with cZ:
+        if st.button("➕ Add selected (mapped) to mappings"):
+            _add_selected_rows_to_mappings(
+                "results_df_mapped", "code_column_mapped", "model_code_column_mapped",
+                year, make, model, trim, vehicle
+            )
+
+# --- Direct input results table ---
+if "results_df_inputs" in st.session_state:
+    st.subheader("Select vehicles from CADS results — Direct Input Search")
+    cA, cB, cC = st.columns([1, 1, 2])
+    with cA:
+        if st.button("Select All (inputs)"): _select_all("results_df_inputs")
+    with cB:
+        if st.button("Clear Selection (inputs)"): _clear_selection("results_df_inputs")
+    st.data_editor(
+        st.session_state["results_df_inputs"],
+        use_container_width=True, height=TABLE_HEIGHT, key="editor_inputs",
+        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
+    )
+    cX, cY, cZ = st.columns(3)
+    with cX:
+        st.session_state["code_column_inputs"] = st.selectbox(
+            "Code column (input results)",
+            options=st.session_state.get("code_candidates_inputs", []),
+            index=0 if st.session_state.get("code_candidates_inputs") else None,
+        )
+    with cY:
+        st.session_state["model_code_column_inputs"] = st.selectbox(
+            "Model Code column (input results)",
+            options=st.session_state.get("model_code_candidates_inputs", []),
+            index=0 if st.session_state.get("model_code_candidates_inputs") else None,
+        )
+    with cZ:
+        if st.button("➕ Add selected (inputs) to mappings"):
+            _add_selected_rows_to_mappings(
+                "results_df_inputs", "code_column_inputs", "model_code_column_inputs",
+                year, make, model, trim, vehicle
+            )
+
+# ---- Diagnostics ----
+st.subheader("Diagnostics")
+exp = st.expander("Mapped Search Diagnostics", expanded=False)
+with exp:
+    st.write("Last mapped search diagnostics:")
+    st.json(st.session_state.get("last_diag_mapped", {}))
+exp2 = st.expander("Inputs Search Diagnostics", expanded=False)
+with exp2:
+    st.write("Last inputs search diagnostics:")
+    st.json(st.session_state.get("last_diag_inputs", {}))
 
 # ---- Current Mappings ----
 st.subheader("Current Mappings (session)")
 if st.session_state.get("mappings"):
-    st.dataframe(pd.DataFrame.from_dict(st.session_state.mappings, orient="index"), use_container_width=True)
+    rows = []
+    for k, v in st.session_state.mappings.items():
+        rows.append({
+            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
+            "Model": v.get("model",""), "Trim": v.get("trim",""),
+            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
+            "Model Code": v.get("model_code",""), "YMMT": v.get("ymmt",""),
+        })
+    st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
-    st.info("No mappings yet.")
+    st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
 # ---- Commit to GitHub ----
+missing_secrets = []
+if not GH_TOKEN:  missing_secrets.append("github.token")
+if not GH_OWNER:  missing_secrets.append("github.owner")
+if not GH_REPO:   missing_secrets.append("github.repo")
+if not GH_BRANCH: missing_secrets.append("github.branch")
+if missing_secrets:
+    st.sidebar.warning("Missing secrets: " + ", ".join(missing_secrets))
+
 if st.sidebar.button("💾 Commit mappings to GitHub"):
-    try:
-        resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email="aff-mapping@app.local", use_feature_branch=use_feature_branch)
-        st.sidebar.success("Committed ✅")
-    except Exception as e:
-        st.sidebar.error(f"Commit failed: {e}")
+    if missing_secrets:
+        st.sidebar.error("Cannot commit: fix missing secrets first.")
+    else:
+        try:
+            resp = save_json_to_github(
+                GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH,
+                st.session_state.get("mappings", {}), commit_msg,
+                author_name="AFF Mapping App", author_email="aff-mapping@app.local",
+                use_feature_branch=use_feature_branch
+            )
+            st.sidebar.success("Committed ✅")
+            st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
+            try:
+                append_jsonl_to_github(
+                    GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH,
+                    {
+                        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "user":"streamlit-app","action":"commit",
+                        "count": len(st.session_state.get("mappings", {})), "path": MAPPINGS_PATH,
+                        "branch": GH_BRANCH if not use_feature_branch else "aff-mapping-app"
+                    },
+                    commit_message="chore(app): append audit commit entry",
+                    use_feature_branch=use_feature_branch
+                )
+            except Exception as log_err:
+                st.sidebar.warning(f"Audit log append failed (non-blocking): {log_err}")
+        except Exception as e:
+            st.sidebar.error(f"Commit failed: {e}")
+            st.sidebar.info("If main is protected, enable feature branch and merge via PR.")
+
+# --- EOF ---
