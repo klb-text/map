@@ -1,4 +1,192 @@
 
+# app.py
+# AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
+# Full-Length Patched Build (2026-01-13)
+# Includes: Trim-as-hint, Vehicle-only lookup (mapped), Unmapped-vehicle CADS search, YMMT persistence,
+#           robust year gate, lenient trim matching, expanded UI
+
+import base64, json, time, io, re, difflib
+from typing import Optional, List, Dict, Tuple, Set
+import requests, pandas as pd, streamlit as st
+from requests.adapters import HTTPAdapter, Retry
+
+# ---- Page Config ----
+st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+
+# ---- Secrets / Config ----
+gh_cfg = st.secrets.get("github", {})
+GH_TOKEN  = gh_cfg.get("token")
+GH_OWNER  = gh_cfg.get("owner")
+GH_REPO   = gh_cfg.get("repo")
+GH_BRANCH = gh_cfg.get("branch", "main")
+
+MAPPINGS_PATH   = "data/mappings.json"
+AUDIT_LOG_PATH  = "data/mappings_log.jsonl"
+CADS_PATH       = "CADS.csv"
+CADS_IS_EXCEL   = False
+CADS_SHEET_NAME_DEFAULT = "0"
+
+CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
+CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
+
+# ---- Canonicalization / Helpers ----
+def canon_text(val: str, for_trim: bool=False) -> str:
+    s = (val or "").strip().lower()
+    s = re.sub(r"^[\s\.,;:!]+", "", s)
+    s = re.sub(r"[\s\.,;:!]+$", "", s)
+    s = re.sub(r"\s+", " ", s)
+    if for_trim:
+        repl = {
+            "all wheel drive":"awd","all-wheel drive":"awd","4wd":"awd","4x4":"awd",
+            "front wheel drive":"fwd","front-wheel drive":"fwd",
+            "rear wheel drive":"rwd","rear-wheel drive":"rwd",
+            "two wheel drive":"2wd","two-wheel drive":"2wd",
+            "plug-in hybrid":"phev","electric":"ev","bev":"ev",
+        }
+        for k, v in repl.items():
+            s = s.replace(k, v)
+    return s
+
+def tokens(s: str, min_len: int = 2) -> List[str]:
+    s = canon_text(s)
+    tks = re.split(r"[^\w]+", s)
+    return [t for t in tks if t and len(t) >= min_len]
+
+def _trim_tokens(s: str) -> Set[str]:
+    return set(tokens(canon_text(s, True)))
+
+def _extract_years_from_text(s: str) -> set:
+    s = (s or "").strip().lower()
+    years = set()
+    for m in re.finditer(r"\b(19[5-9]\d|20[0-4]\d|2050)\b", s):
+        years.add(int(m.group(0)))
+    for m in re.finditer(r"\bmy\s*([0-9]{2})\b", s):
+        years.add(2000 + int(m.group(1)))
+    if not years:
+        for m in re.finditer(r"\b([0-9]{2})\b", s):
+            years.add(2000 + int(m.group(1)))
+    return years
+
+def extract_primary_year(val: str) -> Optional[int]:
+    ys = _extract_years_from_text(str(val))
+    if not ys:
+        return None
+    return max(ys)
+
+def year_token_matches(mapping_year: str, user_year: str) -> bool:
+    uy_set = _extract_years_from_text(user_year)
+    my_set = _extract_years_from_text(mapping_year)
+    if not uy_set: return True
+    if not my_set: return False
+    return bool(uy_set.intersection(my_set))
+
+def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> Tuple[bool, float]:
+    row = canon_text(row_trim, True)
+    usr = canon_text(user_trim, True)
+    if not usr: return (True, 0.5)
+    if row == usr: return (True, 1.0)
+    if exact_only: return (False, 0.0)
+    if _trim_tokens(usr).issubset(_trim_tokens(row)): return (True, 0.8)
+    return (False, 0.0)
+
+def trim_match_type_and_score(row_trim: str, user_trim: str) -> Tuple[str, float]:
+    ok, score = trim_matches(row_trim, user_trim, exact_only=False)
+    if not (user_trim or "").strip():
+        return ("none", 0.0)
+    if not ok:
+        return ("none", 0.0)
+    row = canon_text(row_trim, True)
+    usr = canon_text(user_trim, True)
+    if row == usr:
+        return ("exact", 1.0)
+    return ("subset", 0.8)
+
+def model_similarity(a: str, b: str) -> float:
+    a = canon_text(a); b = canon_text(b)
+    if not a and not b: return 0.0
+    if a == b: return 1.0
+    if a in b or b in a: return 0.9
+    return difflib.SequenceMatcher(None, a, b).ratio()
+
+# ---- Resilient HTTP Session ----
+_session = requests.Session()
+_retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])
+_adapter = HTTPAdapter(max_retries=_retries)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
+
+def gh_headers(token: str): return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+def gh_contents_url(owner, repo, path): return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+def gh_ref_heads(owner, repo, branch): return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
+
+# ---- CADS Loaders ----
+def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
+    obj_cols = df.select_dtypes(include=["object"]).columns
+    if len(obj_cols) > 0:
+        df[obj_cols] = df[obj_cols].apply(lambda s: s.str.strip())
+    return df
+
+@st.cache_data(ttl=600)
+def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
+    if not raw or raw.strip() == b"": return ("", "empty")
+    encoding = "utf-8"
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"): encoding = "utf-16"
+    elif raw.startswith(b"\xef\xbb\xbf"): encoding = "utf-8-sig"
+    text = raw.decode(encoding, errors="replace")
+    return (text, encoding)
+
+@st.cache_data(ttl=600)
+def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
+    import csv
+    params = {"ref": ref} if ref else {}
+    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params, timeout=15)
+    if r.status_code == 200:
+        j = r.json()
+        raw = None
+        if "content" in j and j["content"]:
+            try: raw = base64.b64decode(j["content"])
+            except Exception: raw = None
+        if (raw is None or raw.strip() == b"") and j.get("download_url"):
+            r2 = _session.get(j["download_url"], timeout=15)
+            if r2.status_code == 200: raw = r2.content
+        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
+        text, _ = _decode_bytes_to_text(raw)
+        sample = text[:4096]
+        delimiter = None
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=[",","\t",";","|"])
+            delimiter = dialect.delimiter
+        except Exception:
+            for cand in [",","\t",";","|"]:
+                if cand in sample: delimiter = cand; break
+        if delimiter is None:
+            df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
+        else:
+            df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
+        df.columns = [str(c).strip() for c in df.columns]
+        return _strip_object_columns(df.dropna(how="all"))
+    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
+    raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
+
+@st.cache_data(ttl=600)
+def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0) -> pd.DataFrame:
+    params = {"ref": ref} if ref else {}
+    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params=params, timeout=15)
+    if r.status_code == 200:
+        j = r.json()
+        raw = None
+        if "content" in j and j["content"]:
+            try: raw = base64.b64decode(j["content"])
+            except Exception: raw = None
+        if (raw is None or raw.strip() == b"") and j.get("download_url"):
+            r2 = _session.get(j["download_url"], timeout=15)
+            if r2.status_code == 200: raw = r2.content
+        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
+        df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
+        return _strip_object_columns(df)
+    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
+    raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
+
 # ---- Effective Model & Stopwords ----
 MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
 SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
@@ -108,118 +296,6 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
     if r2.status_code in (200, 201): return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
-
-
-# ---- Effective Model & Stopwords ----
-MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
-SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
-
-def detect_model_like_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
-    cols = list(df.columns)
-    model_cols  = [c for c in cols if MODEL_LIKE_REGEX.search(c)]
-    series_cols = [c for c in cols if SERIES_LIKE_REGEX.search(c) and c not in model_cols]
-    return (list(dict.fromkeys(model_cols)), list(dict.fromkeys(series_cols)))
-
-def effective_model_row(row: pd.Series, model_cols: List[str], series_cols: List[str]) -> str:
-    parts = []
-    for c in model_cols + series_cols:
-        if c in row.index:
-            v = str(row.get(c, "") or "").strip()
-            if v:
-                parts.append(v)
-    return canon_text(" ".join(parts))
-
-def add_effective_model_column(df: pd.DataFrame, override_cols: Optional[List[str]] = None) -> Tuple[pd.DataFrame, List[str], List[str]]:
-    auto_model_cols, auto_series_cols = detect_model_like_columns(df)
-    if override_cols:
-        model_cols  = [c for c in override_cols if c in df.columns]
-        series_cols = []
-    else:
-        model_cols, series_cols = auto_model_cols, auto_series_cols
-    always_add = ["AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]
-    for c in always_add:
-        if c in df.columns and c not in model_cols and c not in series_cols:
-            model_cols.append(c)
-    if not model_cols and not series_cols:
-        df["__effective_model__"] = ""
-        return df, model_cols, series_cols
-    df["__effective_model__"] = df.apply(lambda r: effective_model_row(r, model_cols, series_cols), axis=1)
-    return df, model_cols, series_cols
-
-def compute_per_make_stopwords(df_make_slice: pd.DataFrame, stopword_threshold: float = 0.40, token_min_len: int = 2) -> Set[str]:
-    if "__effective_model__" not in df_make_slice.columns:
-        df_make_slice, _, _ = add_effective_model_column(df_make_slice)
-    total = len(df_make_slice)
-    if total == 0: return set()
-    freq: Dict[str,int] = {}
-    for _, row in df_make_slice.iterrows():
-        toks = set(tokens(row["__effective_model__"], min_len=token_min_len))
-        for t in toks:
-            freq[t] = freq.get(t, 0) + 1
-    return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
-
-# ---- GitHub Persistence Helpers ----
-def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
-                        author_name=None, author_email=None, use_feature_branch=False, feature_branch_name="aff-mapping-app"):
-    content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
-    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-    target_branch = branch
-    if use_feature_branch:
-        r_feat = _session.get(gh_ref_heads(owner, repo, feature_branch_name), headers=gh_headers(token), timeout=15)
-        if r_feat.status_code != 200:
-            r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
-            if r_base.status_code == 200:
-                base_sha = r_base.json()["object"]["sha"]
-                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
-                              headers=gh_headers(token),
-                              json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
-        target_branch = feature_branch_name
-    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
-    sha = r.json().get("sha") if r.status_code == 200 else None
-    data = {"message": commit_message, "content": content_b64, "branch": target_branch}
-    if sha: data["sha"] = sha
-    if author_name and author_email:
-        data["committer"] = {"name": author_name, "email": author_email}
-    r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
-    if r2.status_code in (200, 201): return r2.json()
-    if r2.status_code == 409:
-        r3 = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
-        latest_sha = r3.json().get("sha") if r3.status_code == 200 else None
-        if latest_sha:
-            data["sha"] = latest_sha
-            r4 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
-            if r4.status_code in (200, 201): return r4.json()
-    raise RuntimeError(f"Failed to save file ({r2.status_code}): {r2.text}")
-
-def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_message,
-                           use_feature_branch=False, feature_branch_name="aff-mapping-app"):
-    target_branch = branch
-    if use_feature_branch:
-        r_feat = _session.get(gh_ref_heads(owner, repo, feature_branch_name), headers=gh_headers(token), timeout=15)
-        if r_feat.status_code != 200:
-            r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
-            if r_base.status_code == 200:
-                base_sha = r_base.json()["object"]["sha"]
-                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
-                              headers=gh_headers(token),
-                              json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
-        target_branch = feature_branch_name
-    r = _session.get(gh_contents_url(owner, repo, path), headers=gh_headers(token), params={"ref": target_branch}, timeout=15)
-    lines, sha = "", None
-    if r.status_code == 200:
-        sha = r.json()["sha"]
-        existing = base64.b64decode(r.json()["content"]).decode("utf-8")
-        lines = existing if existing.endswith("\n") else (existing + "\n")
-    elif r.status_code != 404:
-        raise RuntimeError(f"Failed to read log file ({r.status_code}): {r.text}")
-    lines += json.dumps(record, ensure_ascii=False) + "\n"
-    content_b64 = base64.b64encode(lines.encode("utf-8")).decode("utf-8")
-    data = {"message": commit_message, "content": content_b64, "branch": target_branch}
-    if sha: data["sha"] = sha
-    r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
-    if r2.status_code in (200, 201): return r2.json()
-    raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
-
 
 # ---- Matching pickers (lenient Trim) ----
 def pick_best_mapping(
