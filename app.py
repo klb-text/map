@@ -177,7 +177,7 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
         df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet_name, engine="openpyxl")
         return _strip_object_columns(df)
     if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
-    raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text})
+    raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
 # ---------------------------------------------------------------------
 # Detect model-like columns & build "effective model"
