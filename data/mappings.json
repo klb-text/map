@@ -110,5 +110,15 @@
     "vehicle": "All-Wheel Drive",
     "code": "458675",
     "model_code": "HM551/551BL"
+  },
+  "2025-Audi-Q3-45 S line Premium": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "Q3",
+    "trim": "45 S line Premium",
+    "vehicle": "4dr All-Wheel Drive quattro Sport Utility",
+    "code": "459276",
+    "model_code": "F3BCEA",
+    "ymmt": "2025 Audi Q3 45 S line Premium"
   }
 }
