@@ -187,7 +187,6 @@ def load_cads_from_github_excel(owner, repo, path, token, ref=None, sheet_name=0
     if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
     raise RuntimeError(f"Failed to load CADS Excel ({r.status_code}): {r.text}")
 
-
 # ---- Effective Model & Stopwords ----
 MODEL_LIKE_REGEX  = re.compile(r"(?:^|_|\s)(model(name)?|car\s*line|carline|line|series)(?:$|_|\s)", re.I)
 SERIES_LIKE_REGEX = re.compile(r"(?:^|_|\s)(series(name)?|sub(?:_|-)?model|body(?:_|-)?style|body|trim|grade|variant|description|modeltrim|name)(?:$|_|\s)", re.I)
@@ -298,6 +297,31 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     if r2.status_code in (200, 201): return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
 
+# ---- GitHub loader (always fetch mappings on startup / reload) ----
+@st.cache_data(ttl=60)
+def fetch_mappings_from_github(owner, repo, path, token, ref) -> Dict[str, Dict[str, str]]:
+    """
+    Return mappings dict from GitHub at the given ref (branch or sha).
+    If file not found, returns {}. Unexpected HTTP errors raise.
+    """
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        try:
+            data = json.loads(decoded)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    elif r.status_code == 404:
+        return {}
+    else:
+        raise RuntimeError(f"Failed to load mappings ({r.status_code}): {r.text}")
+
 # ---- Matching pickers (lenient Trim) ----
 def pick_best_mapping(
     mappings: Dict[str, Dict[str, str]],
@@ -324,21 +348,18 @@ def pick_best_mapping(
         vtr = v.get("trim", "")
         vmd = v.get("model", "")
 
-        # Must match make and year (token-aware)
         if canon_text(vmk) != cmk:
             continue
         if not year_token_matches(vy, cy):
             continue
 
-        # Trim matching (lenient): if user provided Trim but it doesn't match, keep candidate with lower score
         tmatch, tscore = trim_matches(vtr, ctr, exact_only=trim_exact_only)
         if not tmatch:
             if ctr:
-                tscore = 0.3  # penalize but keep
+                tscore = 0.3  # penalize but keep candidate
             else:
                 continue
 
-        # Model similarity with optional exact bias when multi-word input
         ms = model_similarity(vmd, cmd)
         if force_exact_model and canon_text(vmd) != cmd:
             ms *= 0.5
@@ -362,7 +383,6 @@ def pick_mapping_by_vehicle(mappings: Dict[str, Dict[str, str]], vehicle: str) -
             return (k, v)
     return None
 
-
 def find_mappings_by_vehicle_all(mappings: Dict[str, Dict[str, str]], vehicle: str) -> List[Tuple[str, Dict[str, str]]]:
     """Return all mappings whose stored 'vehicle' equals the provided vehicle text (canonicalized)."""
     cv = canon_text(vehicle)
@@ -373,7 +393,6 @@ def find_mappings_by_vehicle_all(mappings: Dict[str, Dict[str, str]], vehicle: s
         if canon_text(v.get("vehicle", "")) == cv:
             out.append((k, v))
     return out
-
 
 # ---- CADS filtering (Trim-as-hint, tiers) ----
 def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
@@ -388,19 +407,15 @@ def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tupl
     full_mask = eff.str.contains(md, na=False)
     return and_mask, or_mask, ns_mask, full_mask
 
-
 # Vehicle-like columns & helper for vehicle-text tier
 VEHICLE_LIKE_CANDS = [
-    "Vehicle", "Description", "ModelTrim", "ModelName",
-    "AD_SERIES", "Series", "STYLE_NAME", "AD_MODEL", "MODEL_NAME"
+    "Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series","STYLE_NAME","AD_MODEL","MODEL_NAME"
 ]
-
 
 def find_rows_by_vehicle_text(df: pd.DataFrame, vehicle: str) -> Optional[pd.DataFrame]:
     cv = canon_text(vehicle)
     if not cv:
         return None
-
     hits = []
     for col in VEHICLE_LIKE_CANDS:
         if col in df.columns:
@@ -408,11 +423,9 @@ def find_rows_by_vehicle_text(df: pd.DataFrame, vehicle: str) -> Optional[pd.Dat
             mask = ser.str.contains(cv, na=False)
             if mask.any():
                 hits.append(df[mask])
-
     if hits:
         return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True)
     return None
-
 
 def filter_cads_generic(
     df: pd.DataFrame,
@@ -432,9 +445,9 @@ def filter_cads_generic(
     df2 = _strip_object_columns(df.copy())
     df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
 
-    YEAR_CANDS  = ["AD_YEAR", "Year", "MY", "ModelYear", "Model Year"]
-    MAKE_CANDS  = ["AD_MAKE", "Make", "MakeName", "Manufacturer"]
-    TRIM_CANDS  = ["AD_TRIM", "Trim", "Grade", "Variant", "Submodel"]
+    YEAR_CANDS  = ["AD_YEAR","Year","MY","ModelYear","Model Year"]
+    MAKE_CANDS  = ["AD_MAKE","Make","MakeName","Manufacturer"]
+    TRIM_CANDS  = ["AD_TRIM","Trim","Grade","Variant","Submodel"]
 
     year_col = next((c for c in YEAR_CANDS if c in df2.columns), None)
     make_col = next((c for c in MAKE_CANDS if c in df2.columns), None)
@@ -446,8 +459,6 @@ def filter_cads_generic(
     tr = canon_text(trim, True)
 
     masks = []
-
-    # Make gate
     if make_col and mk:
         s_make = df2[make_col].astype(str).str.lower()
         masks.append(s_make == mk)
@@ -455,7 +466,6 @@ def filter_cads_generic(
     else:
         df_make_slice = df2
 
-    # Model gate (tiered discriminant tokens)
     eff = df2["__effective_model__"]
     user_tokens = tokens(md, min_len=token_min_len)
     make_stopwords = compute_per_make_stopwords(df_make_slice, stopword_threshold, token_min_len)
@@ -487,11 +497,7 @@ def filter_cads_generic(
         if year_require_exact:
             uy = extract_primary_year(y)
             if uy is not None:
-                masks.append(
-                    s_year.apply(
-                        lambda vy: (uy in _extract_years_from_text(vy)) if _extract_years_from_text(vy) else True
-                    )
-                )
+                masks.append(s_year.apply(lambda vy: (uy in _extract_years_from_text(vy)) if _extract_years_from_text(vy) else True))
             else:
                 masks.append(s_year.apply(lambda vy: year_token_matches(vy, y)))
         else:
@@ -506,7 +512,7 @@ def filter_cads_generic(
             m = (m & mm) if strict_and else (m | mm)
         result = df2[m]
 
-    # Fallback tiers (OR → ns_contains → full_contains)
+    # Fallback tiers
     tier_used = "AND"
     if md and len(result) == 0:
         tier_used = "OR"
@@ -514,14 +520,12 @@ def filter_cads_generic(
         for mm in masks[1:]:
             m2 = (m2 & mm) if strict_and else (m2 | mm)
         result = df2[m2]
-
         if len(result) == 0:
             tier_used = "NS_CONTAINS"
             m3 = ns_mask
             for mm in masks[1:]:
                 m3 = (m3 & mm) if strict_and else (m3 | mm)
             result = df2[m3]
-
             if len(result) == 0:
                 tier_used = "FULL_CONTAINS"
                 m4 = full_mask
@@ -554,14 +558,11 @@ def filter_cads_generic(
     }
     return result, diag
 
-
 # ---- CADS matching for a single mapping ----
 def get_cads_code_candidates(df: pd.DataFrame) -> List[str]:
-    # Prefer typical ID columns; fall back to all columns for flexibility
     return [c for c in CADS_CODE_PREFS if c in df.columns] or list(df.columns)
 
 def get_model_code_candidates(df: pd.DataFrame) -> List[str]:
-    # Prefer typical model-code columns; fall back to all columns
     return [c for c in CADS_MODEL_CODE_PREFS if c in df.columns] or list(df.columns)
 
 def match_cads_rows_for_mapping(
@@ -579,8 +580,8 @@ def match_cads_rows_for_mapping(
     df2 = _strip_object_columns(df.copy())
     df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
 
-    # 1) Code union
-    code_val = (mapping.get("code", "") or "").strip()
+    # Code tier
+    code_val = (mapping.get("code","") or "").strip()
     if code_val:
         hits = []
         for col in get_cads_code_candidates(df2):
@@ -592,8 +593,8 @@ def match_cads_rows_for_mapping(
         if hits:
             return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True), {"tier_used": "CODE"}
 
-    # 2) Model Code union
-    model_code_val = (mapping.get("model_code", "") or "").strip()
+    # Model Code tier
+    model_code_val = (mapping.get("model_code","") or "").strip()
     if model_code_val:
         hits = []
         for col in get_model_code_candidates(df2):
@@ -605,20 +606,18 @@ def match_cads_rows_for_mapping(
         if hits:
             return pd.concat(hits, axis=0).drop_duplicates().reset_index(drop=True), {"tier_used": "MODEL_CODE"}
 
-    # 2.5) Vehicle-text tier
-    veh_val = (mapping.get("vehicle", "") or "").strip()
+    # Vehicle-text tier
+    veh_val = (mapping.get("vehicle","") or "").strip()
     if veh_val:
         veh_hits = find_rows_by_vehicle_text(df2, veh_val)
         if veh_hits is not None and len(veh_hits) > 0:
             return veh_hits, {"tier_used": "VEHICLE_TEXT"}
 
-    # 3) Generic fallback (tiered model, trim-as-hint optional, robust year gate)
+    # Generic fallback
     res, diag = filter_cads_generic(
         df2,
-        mapping.get("year", ""),
-        mapping.get("make", ""),
-        mapping.get("model", ""),
-        mapping.get("trim", ""),
+        mapping.get("year",""), mapping.get("make",""),
+        mapping.get("model",""), mapping.get("trim",""),
         exact_model_when_full=exact_model_when_full,
         trim_exact_only=trim_exact_only,
         strict_and=strict_and,
@@ -628,7 +627,6 @@ def match_cads_rows_for_mapping(
         trim_as_hint=trim_as_hint,
         year_require_exact=year_require_exact,
     )
-
     diag.update({"used_model_cols": used_model_cols, "used_series_cols": used_series_cols})
     return res, diag
 
@@ -644,18 +642,21 @@ cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type
 
 # ---- Sidebar: Actions & Matching ----
 st.sidebar.header("Actions")
+# Branch selector to LOAD mappings from
+st.sidebar.subheader("Mappings Source")
+load_branch = st.sidebar.text_input(
+    "Branch to load mappings from",
+    value=st.session_state.get("load_branch", GH_BRANCH),
+    help="This is the branch we read mappings.json from on startup and on Reload."
+)
+st.session_state["load_branch"] = load_branch
+
 if st.sidebar.button("🔄 Reload mappings from GitHub"):
     try:
-        r_load = _session.get(
-            gh_contents_url(GH_OWNER, GH_REPO, MAPPINGS_PATH),
-            headers=gh_headers(GH_TOKEN), params={"ref": GH_BRANCH}, timeout=15,
-        )
-        if r_load.status_code == 200:
-            decoded = base64.b64decode(r_load.json()["content"]).decode("utf-8")
-            st.session_state.mappings = json.loads(decoded)
-        else:
-            st.session_state.mappings = {}
-        st.sidebar.success("Reloaded.")
+        fetched = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, st.session_state["load_branch"])
+        st.session_state["mappings"] = fetched
+        st.session_state["local_mappings_modified"] = False
+        st.sidebar.success(f"Reloaded {len(fetched)} mapping(s) from {st.session_state['load_branch']}.")
     except Exception as e:
         st.sidebar.error(f"Reload failed: {e}")
 
@@ -667,8 +668,7 @@ TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=Tru
 TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
 MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox(
-    "Require exact year match", value=True,
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True,
     help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated.")
 STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
 TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
@@ -692,8 +692,20 @@ def _load_cads_df():
         sheet_arg = CADS_SHEET_NAME
         try: sheet_arg = int(sheet_arg)
         except Exception: pass
-        return load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH, sheet_name=sheet_arg)
-    return load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=GH_BRANCH)
+        return load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=st.session_state["load_branch"], sheet_name=sheet_arg)
+    return load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=st.session_state["load_branch"])
+
+# ---- Always refresh mappings from GitHub on each run, unless modified locally
+local_mod_flag = st.session_state.get("local_mappings_modified", False)
+try:
+    fetched = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, st.session_state["load_branch"])
+    if not local_mod_flag:
+        st.session_state["mappings"] = fetched
+        st.caption(f"🔁 Loaded {len(fetched)} mapping(s) from GitHub @ {st.session_state['load_branch']}/{MAPPINGS_PATH}")
+    else:
+        st.caption("⚠️ Using locally modified mappings (not reloaded from GitHub).")
+except Exception as e:
+    st.warning(f"Could not load mappings from GitHub: {e}")
 
 # ---- Vehicle-Only Quick Lookup (already mapped) ----
 st.header("Vehicle-Only Quick Lookup (mapped)")
@@ -866,6 +878,7 @@ def _add_selected_rows_to_mappings(
         }
         added += 1
 
+    st.session_state["local_mappings_modified"] = True
     st.success(f"Added {added} mapping(s).")
 
 # ---- Results Table for Unmapped Vehicle (with edited DataFrame) ----
@@ -1055,7 +1068,7 @@ with b3:
                 if "Select" not in selectable.columns: selectable.insert(0, "Select", False)
                 st.session_state["results_df_inputs"] = selectable
                 st.session_state["code_candidates_inputs"] = get_cads_code_candidates(selectable)
-                st.session_state["model_code_candidates_inputs"] = get_cads_code_candidates(selectable) if False else get_model_code_candidates(selectable)
+                st.session_state["model_code_candidates_inputs"] = get_model_code_candidates(selectable)
                 st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state.get("code_candidates_inputs") else None
                 st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state.get("model_code_candidates_inputs") else None
                 st.success(f"Found {len(selectable)} CADS row(s).")
@@ -1191,13 +1204,24 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
     else:
         try:
             resp = save_json_to_github(
-                GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH,
-                st.session_state.get("mappings", {}), commit_msg,
+                GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN,
+                GH_BRANCH, st.session_state.get("mappings", {}),
+                commit_msg,
                 author_name="AFF Mapping App", author_email="aff-mapping@app.local",
                 use_feature_branch=use_feature_branch
             )
             st.sidebar.success("Committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
+            # After successful commit, re-fetch from the branch we actually wrote to
+            try:
+                wrote_branch = st.session_state["load_branch"] if not use_feature_branch else "aff-mapping-app"
+                fetched_after = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, wrote_branch)
+                st.session_state["mappings"] = fetched_after
+                st.session_state["local_mappings_modified"] = False
+                st.sidebar.info(f"Reloaded {len(fetched_after)} mapping(s) from GitHub @{wrote_branch} after commit.")
+            except Exception as e2:
+                st.sidebar.warning(f"Post-commit reload failed: {e2}")
+            # Append audit log (non-blocking)
             try:
                 append_jsonl_to_github(
                     GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH,
@@ -1205,7 +1229,7 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
                         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "user":"streamlit-app","action":"commit",
                         "count": len(st.session_state.get("mappings", {})), "path": MAPPINGS_PATH,
-                        "branch": GH_BRANCH if not use_feature_branch else "aff-mapping-app"
+                        "branch": wrote_branch
                     },
                     commit_message="chore(app): append audit commit entry",
                     use_feature_branch=use_feature_branch
