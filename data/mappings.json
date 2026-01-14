@@ -28,5 +28,15 @@
     "code": "472567",
     "model_code": "GUNAAY",
     "ymmt": "2025|audi|q5|2025 audi q5"
+  },
+  "audi|q3||2025": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "Q3",
+    "trim": "",
+    "vehicle": "2025 Audi Q3",
+    "code": "459277",
+    "model_code": "F3BCEA",
+    "ymmt": "2025|audi|q3|"
   }
 }
