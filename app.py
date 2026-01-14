@@ -766,6 +766,7 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
             st.error(f"Quick YMM(/T) search failed: {e}")
 
 
+
 # ---- Vehicle-Only Quick Lookup (mapped) ----
 st.header("Vehicle-Only Quick Lookup (mapped)")
 quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
@@ -790,14 +791,21 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
             
             mappings = st.session_state.get("mappings", {})
             
-            # ✅ Find all mappings for YMM(/T)
-            all_mps = find_mappings_by_ymm_all(
-                mappings,
-                str(year_val) if year_val else "",
-                make_val,
-                model_val,
-                trim_val if trim_val else None
-            )
+            # ✅ Stricter logic: If Trim provided → exact match; else → only YMM mappings (trim empty)
+            all_mps = []
+            for k, v in mappings.items():
+                if canon_text(v.get("make", "")) != canon_text(make_val): continue
+                if not year_token_matches(v.get("year", ""), str(year_val)): continue
+                if canon_text(v.get("model", "")) != canon_text(model_val): continue
+                
+                if trim_val:
+                    # Require exact trim match
+                    if canon_text(v.get("trim", ""), True) != canon_text(trim_val, True): continue
+                else:
+                    # Only include mappings with empty trim
+                    if v.get("trim", "").strip(): continue
+                
+                all_mps.append((k, v))
             
             if not all_mps:
                 st.error("❌ No mapped entries for this vehicle. If expected, add mappings below and commit, then retry.")
@@ -819,13 +827,14 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
                     )
                     if len(df_hit) > 0:
                         df_hit = df_hit.copy()
-                        df_hit.insert(0, "__mapped_vehicle__", mp.get("vehicle", ""))  # ✅ Add mapped vehicle column
+                        df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle", ""))  # ✅ Rename column for clarity
                         df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
                         df_hit["__tier__"] = diag.get("tier_used")
                         hits.append(df_hit)
                 
                 if hits:
-                    df_all = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
+                    df_all = pd.concat(hits, ignore_index=True)
+                    df_all = df_all.drop_duplicates(subset=["STYLE_ID", "AD_VEH_ID"]).reset_index(drop=True)  # ✅ Deduplicate
                     st.success(f"Found {len(df_all)} CADS row(s) for '{veh_txt}'.")
                     st.dataframe(df_all, use_container_width=True, height=TABLE_HEIGHT)
                 else:
