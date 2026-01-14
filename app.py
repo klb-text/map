@@ -637,6 +637,8 @@ def match_cads_rows_for_mapping(
     diag.update({"used_model_cols": used_model_cols, "used_series_cols": used_series_cols})
     return res, diag
 
+
+
 # ===================== UI =====================
 st.title("AFF Vehicle Mapping")
 
@@ -674,7 +676,8 @@ TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=Tru
 TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
 MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True,
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox(
+    "Require exact year match", value=True,
     help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated.")
 STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
 TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
@@ -830,39 +833,51 @@ if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
             if hits:
                 df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
                 st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
-                if "Select" not in df_union.columns: df_union.insert(0, "Select", False)
+                if "Select" not in df_union.columns:
+                    df_union.insert(0, "Select", False)
                 st.session_state["results_df_unmapped"] = df_union
                 st.session_state["code_candidates_unmapped"] = get_cads_code_candidates(df_union)
                 st.session_state["model_code_candidates_unmapped"] = get_model_code_candidates(df_union)
-                st.session_state["code_column_unmapped"] = st.session_state["code_candidates_unmapped"][0] if st.session_state.get("code_candidates_unmapped") else None
-                st.session_state["model_code_column_unmapped"] = st.session_state["model_code_candidates_unmapped"][0] if st.session_state.get("model_code_candidates_unmapped") else None
+                st.session_state["code_column_unmapped"] = (
+                    st.session_state["code_candidates_unmapped"][0]
+                    if st.session_state.get("code_candidates_unmapped")
+                    else None
+                )
+                st.session_state["model_code_column_unmapped"] = (
+                    st.session_state["model_code_candidates_unmapped"][0]
+                    if st.session_state.get("model_code_candidates_unmapped")
+                    else None
+                )
             else:
                 st.warning("No CADS rows matched that vehicle text.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Selection helpers & add-to-mappings (supports rows_override) ----
+# ---- Selection helpers & add-to-mappings (unique key fix) ----
 def _select_all(df_key: str):
     if df_key in st.session_state:
         df = st.session_state[df_key].copy()
-        if "Select" in df.columns: df["Select"] = True
+        if "Select" in df.columns:
+            df["Select"] = True
         st.session_state[df_key] = df
 
 def _clear_selection(df_key: str):
     if df_key in st.session_state:
         df = st.session_state[df_key].copy()
-        if "Select" in df.columns: df["Select"] = False
+        if "Select" in df.columns:
+            df["Select"] = False
         st.session_state[df_key] = df
 
 def _effective_vehicle_text(row: pd.Series) -> str:
     for col in ["Vehicle", "__effective_model__", "AD_MODEL", "MODEL_NAME", "STYLE_NAME", "AD_SERIES"]:
         if col in row.index:
             val = str(row.get(col, "") or "").strip()
-            if val: return val
+            if val:
+                return val
     return ""
 
 def _add_selected_rows_to_mappings(
-    df_key,                      # str or None
+    df_key,
     code_col_key: str,
     model_code_col_key: str,
     year_val: str,
@@ -882,13 +897,16 @@ def _add_selected_rows_to_mappings(
     else:
         df = st.session_state.get(df_key)
         if df is None or len(df) == 0:
-            st.warning("No rows to add."); return
+            st.warning("No rows to add.")
+            return
         if "Select" not in df.columns:
-            st.warning("Selection column is missing."); return
+            st.warning("Selection column is missing.")
+            return
         selected = df[df["Select"].astype(bool) == True]
 
     if len(selected) == 0:
-        st.warning("Select at least one row."); return
+        st.warning("Select at least one row.")
+        return
 
     code_col = st.session_state.get(code_col_key)
     model_code_col = st.session_state.get(model_code_col_key)
@@ -901,7 +919,9 @@ def _add_selected_rows_to_mappings(
         vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
         code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
         model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
-        key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}"
+        # ✅ Unique key fix
+        unique_id = str(row.get("STYLE_ID") or row.get("AD_VEH_ID") or "")
+        key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}|{unique_id}"
         st.session_state.mappings[key] = {
             "year": (year_val or "").strip(),
             "make": (make_val or "").strip(),
@@ -916,7 +936,7 @@ def _add_selected_rows_to_mappings(
     st.session_state["local_mappings_modified"] = True
     st.success(f"Added {added} mapping(s).")
 
-# ---- Results Table for Unmapped Vehicle ----
+# ---- Results Table for Unmapped Vehicle (with edited DataFrame) ----
 if "results_df_unmapped" in st.session_state:
     st.subheader("Select CADS rows to map this vehicle")
     cUA, cUB = st.columns(2)
@@ -932,11 +952,13 @@ if "results_df_unmapped" in st.session_state:
             options=st.session_state.get("model_code_candidates_unmapped", []),
             index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
         )
+
     edited_unmapped_df = st.data_editor(
         st.session_state["results_df_unmapped"],
         use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
         column_config={"Select": st.column_config.CheckboxColumn(required=False)}
     )
+
     if st.button("➕ Add selected (unmapped) to mappings", key="btn_unmapped_add_v1"):
         df_to_use = edited_unmapped_df if edited_unmapped_df is not None else st.session_state["results_df_unmapped"]
         selected = df_to_use[df_to_use["Select"].astype(bool) == True] if "Select" in df_to_use.columns else df_to_use.iloc[0:0]
@@ -956,7 +978,7 @@ if "results_df_unmapped" in st.session_state:
                 rows_override=selected,
             )
 
-# ---- Inputs (YMMT + Vehicle) ----
+# ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
@@ -1020,7 +1042,7 @@ if existing_rows:
 else:
     st.info("No existing mapping detected for current inputs.")
 
-# ---- CADS Search Buttons ----
+# ---- CADS Search Buttons (mapped + inputs) ----
 b1, b2, b3, b4 = st.columns(4)
 
 # (Mapped vehicle) — includes YMM multi-mapping fallback
