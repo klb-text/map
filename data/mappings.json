@@ -38,5 +38,35 @@
     "code": "459277",
     "model_code": "F3BCEA",
     "ymmt": "2025|audi|q3|"
+  },
+  "audi|sq5||2025|472165": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "SQ5",
+    "trim": "",
+    "vehicle": "new sq5 sq5 premium 3.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472165",
+    "model_code": "GUBS5Y",
+    "ymmt": "2025|audi|sq5|"
+  },
+  "audi|sq5||2025|472166": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "SQ5",
+    "trim": "",
+    "vehicle": "new sq5 sq5 premium plus 3.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472166",
+    "model_code": "GUBS5Y",
+    "ymmt": "2025|audi|sq5|"
+  },
+  "audi|sq5||2025|472167": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "SQ5",
+    "trim": "",
+    "vehicle": "new sq5 sq5 prestige 3.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472167",
+    "model_code": "GUBS5Y",
+    "ymmt": "2025|audi|sq5|"
   }
 }
