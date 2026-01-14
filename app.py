@@ -765,24 +765,47 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
         except Exception as e:
             st.error(f"Quick YMM(/T) search failed: {e}")
 
+
 # ---- Vehicle-Only Quick Lookup (mapped) ----
 st.header("Vehicle-Only Quick Lookup (mapped)")
-quick_vehicle = st.text_input("Vehicle (exact text as mapped)", key="quick_vehicle_input", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
-if st.button("🔎 Quick Search by Vehicle (mapped only)", key="btn_quick_vehicle_v1"):
+quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
+
+if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"):
     veh_txt = (quick_vehicle or "").strip()
     if not veh_txt:
         st.warning("Enter a vehicle string first.")
     else:
-        mappings = st.session_state.get("mappings", {})
-        vm_list = find_mappings_by_vehicle_all(mappings, veh_txt)
-        if not vm_list:
-            st.error("❌ Not mapped. Map this vehicle below (enter YMMT + Vehicle, add to mappings), commit, then retry.")
-        else:
-            try:
+        try:
+            # ✅ Parse input into Year, Make, Model, Trim
+            year_val = extract_primary_year(veh_txt)
+            tokens_list = tokens(veh_txt)
+            make_val, model_val, trim_val = "", "", ""
+            
+            if len(tokens_list) >= 2:
+                make_val = tokens_list[1]  # Assume second token is Make
+            if len(tokens_list) >= 3:
+                model_val = tokens_list[2]  # Assume third token is Model
+            if len(tokens_list) > 3:
+                trim_val = " ".join(tokens_list[3:])  # Remaining tokens = Trim
+            
+            mappings = st.session_state.get("mappings", {})
+            
+            # ✅ Find all mappings for YMM(/T)
+            all_mps = find_mappings_by_ymm_all(
+                mappings,
+                str(year_val) if year_val else "",
+                make_val,
+                model_val,
+                trim_val if trim_val else None
+            )
+            
+            if not all_mps:
+                st.error("❌ No mapped entries for this vehicle. If expected, add mappings below and commit, then retry.")
+            else:
                 df_cads = _load_cads_df()
                 df_cads = _strip_object_columns(df_cads)
                 hits = []
-                for _, mp in vm_list:
+                for _, mp in all_mps:
                     df_hit, diag = match_cads_rows_for_mapping(
                         df_cads, mp,
                         exact_model_when_full=MODEL_EXACT_WHEN_FULL,
@@ -796,17 +819,20 @@ if st.button("🔎 Quick Search by Vehicle (mapped only)", key="btn_quick_vehicl
                     )
                     if len(df_hit) > 0:
                         df_hit = df_hit.copy()
-                        df_hit["__mapped_vehicle__"] = mp.get("vehicle", "")
+                        df_hit.insert(0, "__mapped_vehicle__", mp.get("vehicle", ""))  # ✅ Add mapped vehicle column
+                        df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
                         df_hit["__tier__"] = diag.get("tier_used")
                         hits.append(df_hit)
+                
                 if hits:
                     df_all = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
-                    st.success(f"Found {len(df_all)} CADS row(s) for mapped vehicle '{veh_txt}'.")
+                    st.success(f"Found {len(df_all)} CADS row(s) for '{veh_txt}'.")
                     st.dataframe(df_all, use_container_width=True, height=TABLE_HEIGHT)
                 else:
                     st.warning("No CADS rows matched for the mapped vehicle(s). Check Code/Model Code/Vehicle text.")
-            except Exception as e:
-                st.error(f"Quick vehicle search failed: {e}")
+        except Exception as e:
+            st.error(f"Quick vehicle search failed: {e}")
+
 
 # ---- Search CADS for Unmapped Vehicle (unique keys) ----
 st.header("Search CADS for Unmapped Vehicle")
@@ -1256,20 +1282,31 @@ with exp2:
     st.write("Last inputs search diagnostics:")
     st.json(st.session_state.get("last_diag_inputs", {}))
 
+
 # ---- Current Mappings ----
 st.subheader("Current Mappings (session)")
 if st.session_state.get("mappings"):
     rows = []
     for k, v in st.session_state.mappings.items():
+        mapped_vehicle_display = f"{v.get('year','')} {v.get('make','')} {v.get('model','')}"
+        if v.get("trim"):
+            mapped_vehicle_display += f" {v.get('trim','')}"
         rows.append({
-            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
-            "Model": v.get("model",""), "Trim": v.get("trim",""),
-            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
-            "Model Code": v.get("model_code",""), "YMMT": v.get("ymmt",""),
+            "Mapped Vehicle": mapped_vehicle_display,  # ✅ New column
+            "Key": k,
+            "Year": v.get("year",""),
+            "Make": v.get("make",""),
+            "Model": v.get("model",""),
+            "Trim": v.get("trim",""),
+            "Vehicle": v.get("vehicle",""),
+            "Code": v.get("code",""),
+            "Model Code": v.get("model_code",""),
+            "YMMT": v.get("ymmt",""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
+
 
 # ---- Commit to GitHub ----
 missing_secrets = []
