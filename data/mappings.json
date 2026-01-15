@@ -78,5 +78,15 @@
     "code": "472166",
     "model_code": "GUBS5Y",
     "ymmt": "2025|audi|sq5|premium plus"
+  },
+  "audi|q8|55 tfsi quattro|2025|455539": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q8",
+    "trim": "55 TFSI quattro",
+    "vehicle": "2025 Audi Q8 55 TFSI quattro",
+    "code": "455539",
+    "model_code": "4MQAC1",
+    "ymmt": "2025|audi|q8|55 tfsi quattro"
   }
 }
