@@ -98,5 +98,15 @@
     "code": "459276",
     "model_code": "F3BCEA",
     "ymmt": "2025|audi|q3|s line 45 tfsi quattro premium"
+  },
+  "audi|q3|s line 45 tfsi premium|2025|459276": {
+    "year": "2025",
+    "make": "Audi",
+    "model": "Q3",
+    "trim": "S line 45 TFSI Premium",
+    "vehicle": "2025 Audi Q 3 2025 Audi Q3 S line 45 TFSI quattro  Premium",
+    "code": "459276",
+    "model_code": "F3BCEA",
+    "ymmt": "2025|audi|q3|s line 45 tfsi premium"
   }
 }
