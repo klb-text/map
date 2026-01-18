@@ -278,12 +278,30 @@ if st.sidebar.button("Test GitHub Connection"):
         except Exception as e:
             st.sidebar.error(f"Fetch failed: {e}")
 
-# ========================== UI Inputs ==========================
-vehicle_input = st.text_input("Enter Vehicle (e.g., 2025 Audi SQ5 Premium Plus)", key="veh_input", placeholder="Year Make Model [Trim]")
+# ========================== Inputs + Search Button ==========================
+with st.form("vehicle_search_form", clear_on_submit=False):
+    vehicle_input = st.text_input(
+        "Enter Vehicle (e.g., 2025 Audi SQ5 Premium Plus)",
+        key="veh_input",
+        placeholder="Year Make Model [Trim]"
+    )
+    submitted = st.form_submit_button("Search")
 
 st.sidebar.header("Options")
-HARVEST_ONLY = st.sidebar.checkbox("Harvest Mode (table-only)", value=("1" == st.experimental_get_query_params().get("harvest", ["0"])[0]))
-PLAIN = st.sidebar.checkbox("Plain (no CSS)", value=("1" == st.experimental_get_query_params().get("plain", ["0"])[0]))
+HARVEST_ONLY = st.sidebar.checkbox(
+    "Harvest Mode (table-only)",
+    value=("1" == st.experimental_get_query_params().get("harvest", ["0"])[0])
+)
+PLAIN = st.sidebar.checkbox(
+    "Plain (no CSS)",
+    value=("1" == st.experimental_get_query_params().get("plain", ["0"])[0])
+)
+
+# Initialize session storage for results so they persist across reruns
+if "last_rows_out" not in st.session_state:
+    st.session_state["last_rows_out"] = []
+if "last_by_source" not in st.session_state:
+    st.session_state["last_by_source"] = ""
 
 # ========================== Fetch mappings ==========================
 rows_out: List[Dict[str, str]] = []
@@ -306,13 +324,18 @@ else:
         st.error(f"Failed to load mappings: {e}")
         mappings = {}
 
-# ========================== Lookup & Render ==========================
-if vehicle_input.strip() and mappings:
+# ========================== Lookup (only when Search clicked) ==========================
+def compute_rows(vehicle_text: str, mappings: Dict[str, Dict[str, str]]) -> Tuple[List[Dict[str, str]], str]:
+    out_rows: List[Dict[str, str]] = []
+    src = ""
+    if not (vehicle_text and mappings):
+        return out_rows, src
+
     # 1) Try exact vehicle match
-    direct_hits = pick_mapping_by_vehicle(mappings, vehicle_input)
+    direct_hits = pick_mapping_by_vehicle(mappings, vehicle_text)
     if direct_hits:
         for k, v in direct_hits:
-            rows_out.append({
+            out_rows.append({
                 "Key": k,
                 "Year": v.get("year",""),
                 "Make": v.get("make",""),
@@ -324,14 +347,14 @@ if vehicle_input.strip() and mappings:
                 "YMMT": v.get("ymmt",""),
                 "__source": "by_vehicle"
             })
-        by_source = "by_vehicle"
+        src = "by_vehicle"
 
     # 2) If no direct vehicle hit, try Y/M/M/T
-    if not rows_out:
-        y, mk, md, tr = parse_vehicle_freeform(vehicle_input)
+    if not out_rows:
+        y, mk, md, tr = parse_vehicle_freeform(vehicle_text)
         ymmt_hits = find_mappings_by_ymmt(mappings, str(y or ""), mk, md, tr or None)
         for k, v in ymmt_hits:
-            rows_out.append({
+            out_rows.append({
                 "Key": k,
                 "Year": v.get("year",""),
                 "Make": v.get("make",""),
@@ -344,18 +367,26 @@ if vehicle_input.strip() and mappings:
                 "__source": "by_ymmt"
             })
         if ymmt_hits:
-            by_source = "by_ymmt"
+            src = "by_ymmt"
 
-# Render
+    return out_rows, src
+
+if submitted:
+    rows_out, by_source = compute_rows(vehicle_input.strip(), mappings)
+    st.session_state["last_rows_out"] = rows_out
+    st.session_state["last_by_source"] = by_source
+
+# If not submitted, reuse last results (keeps table on screen after captures or reruns)
+rows_out = st.session_state.get("last_rows_out", [])
+by_source = st.session_state.get("last_by_source", "")
+
+# ========================== Render ==========================
 if rows_out:
     if not HARVEST_ONLY:
         st.success(f"Found {len(rows_out)} mapped entr{'y' if len(rows_out)==1 else 'ies'} ({by_source}).")
     render_harvest_table(rows_out, table_id="mapped_harvest", caption="Mapped Vehicles", plain=PLAIN)
 else:
-    if vehicle_input.strip():
-        st.info("No mapped entries found for the provided vehicle.")
-    else:
-        st.info("Enter a vehicle to look up mapped entries.")
+    st.info("Enter a vehicle above and click Search.")
 
 # Quick XPath tips (visible only in non-harvest mode)
 if not HARVEST_ONLY:
@@ -370,6 +401,7 @@ if not HARVEST_ONLY:
 # Harvest-only via URL param (optional)
 params = st.experimental_get_query_params()
 if params.get("harvest", ["0"])[0] == "1":
+    # Only stop in harvest mode to keep the DOM minimal for Mozenda
     st.stop()
 
 # --- EOF ---
