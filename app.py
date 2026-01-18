@@ -430,7 +430,7 @@ def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tupl
     and_mask  = eff.apply(lambda s: all(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
     or_mask   = eff.apply(lambda s: any(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
     ns_text   = " ".join(discriminant).strip()
-    ns_mask   = eff.str.contains(ns_text, na=False) if ns_text else eff.str.contains(md, na=False)
+    ns_mask   = eff.str_contains(ns_text, na=False) if ns_text else eff.str.contains(md, na=False)
     full_mask = eff.str.contains(md, na=False)
     return and_mask, or_mask, ns_mask, full_mask
 
@@ -640,9 +640,116 @@ def match_cads_rows_for_mapping(
     return res, diag
 
 
+# ===================== Mozenda Harvest Helpers =====================
+def _html_escape(s: str) -> str:
+    return (
+        str(s)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+def _first_nonempty(*vals) -> str:
+    for v in vals:
+        if v is not None:
+            sv = str(v).strip()
+            if sv:
+                return sv
+    return ""
+
+HARVEST_PREF_ORDER = ["AD_YEAR","AD_MAKE","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM",
+                      "STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"]
+
+def render_harvest_table(
+    df: pd.DataFrame,
+    table_id: str = "cads_harvest_table",
+    preferred_order: Optional[List[str]] = None,
+    visible_only_cols: Optional[List[str]] = None,
+    include_attr_cols: Optional[List[str]] = None,
+    extra_row_attrs_from: Optional[List[str]] = None,
+    caption: Optional[str] = None,
+):
+    """
+    Emit a Mozenda-friendly semantic HTML table (no Streamlit widgets).
+    Adds:
+      - <th data-col-key="Exact_Column_Name">
+      - each <td data-col-key="...">value</td>
+      - <tr data-row-key="STYLE_ID or AD_VEH_ID"> and data-* attrs (year/make/model/trim/ids)
+    """
+    if df is None or len(df) == 0:
+        st.markdown("<p id='harvest-empty'>No rows</p>", unsafe_allow_html=True)
+        return
+
+    cols = list(df.columns)
+    if visible_only_cols:
+        cols = [c for c in cols if c in visible_only_cols]
+    if preferred_order:
+        front = [c for c in preferred_order if c in cols]
+        back = [c for c in cols if c not in front]
+        cols = front + back
+
+    style_key = "STYLE_ID" if "STYLE_ID" in df.columns else None
+    veh_key   = "AD_VEH_ID" if "AD_VEH_ID" in df.columns else None
+
+    attr_cols = include_attr_cols or []
+    auto_extra = [c for c in ["AD_YEAR","Year","MY","AD_MAKE","Make","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM","AD_MFGCODE","MODEL_CODE"] if c in df.columns]
+    extra_cols = list(dict.fromkeys((extra_row_attrs_from or []) + auto_extra))
+
+    parts = []
+    parts.append(f"<table id='{_html_escape(table_id)}' class='cads-harvest' data-source='mapped'>")
+    if caption:
+        parts.append(f"<caption>{_html_escape(caption)}</caption>")
+    parts.append("<thead><tr>")
+    for c in cols:
+        parts.append(f"<th scope='col' data-col-key='{_html_escape(c)}'>{_html_escape(c)}</th>")
+    parts.append("</tr></thead>")
+    parts.append("<tbody>")
+    for idx, row in df.iterrows():
+        row_key = _first_nonempty(row.get(style_key), row.get(veh_key), idx)
+        tr_attrs = []
+        if row_key != "":
+            tr_attrs.append(f"data-row-key='{_html_escape(row_key)}'")
+        for c in attr_cols + extra_cols:
+            if c in df.columns:
+                val = _first_nonempty(row.get(c))
+                if val:
+                    tr_attrs.append(f"data-{_html_escape(c).lower().replace(' ','_').replace('/','-') }='{_html_escape(val)}'")
+        parts.append(f"<tr {' '.join(tr_attrs)}>")
+        for c in cols:
+            val = row.get(c, "")
+            parts.append(f"<td data-col-key='{_html_escape(c)}'>{_html_escape(val)}</td>")
+        parts.append("</tr>")
+    parts.append("</tbody></table>")
+
+    css = """
+    <style>
+      table.cads-harvest { border-collapse: collapse; width: 100%; font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+      table.cads-harvest th, table.cads-harvest td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
+      table.cads-harvest thead th { position: sticky; top: 0; background: #f8f8f8; z-index: 2; }
+      table.cads-harvest caption { text-align:left; font-weight:600; margin: 6px 0; }
+      .harvest-note { margin: 6px 0 14px; color: #444; font-size: 12px; }
+    </style>
+    """
+    st.markdown(css + "\n" + "\n".join(parts), unsafe_allow_html=True)
+
 
 # ===================== UI =====================
 st.title("AFF Vehicle Mapping")
+
+# ---- Harvester Mode (URL-param + optional sidebar toggles) ----
+params = st.experimental_get_query_params()
+HARVEST_MODE = (params.get("harvest", ["0"])[0] == "1")
+HARVEST_SOURCE = (params.get("source", ["mapped"])[0])  # mapped | inputs | quick_ymmt | quick_vehicle | unmapped
+
+# Sidebar toggle for convenience (does not override URL if already set)
+st.sidebar.subheader("Mozenda Harvest")
+HARVEST_MODE = st.sidebar.checkbox("Show Mozenda Harvest Table (minimal)", value=HARVEST_MODE)
+HARVEST_SOURCE = st.sidebar.selectbox(
+    "Harvest source", ["mapped","inputs","quick_ymmt","quick_vehicle","unmapped"],
+    index=["mapped","inputs","quick_ymmt","quick_vehicle","unmapped"].index(HARVEST_SOURCE)
+)
 
 # ---- Sidebar: CADS Settings ----
 st.sidebar.subheader("CADS Settings")
@@ -762,6 +869,16 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
                     df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
                     st.success(f"Found {len(df_union)} CADS row(s) for YMM(/T) '{q_year} {q_make} {q_model} {q_trim or ''}'.")
                     st.dataframe(df_union, use_container_width=True, height=TABLE_HEIGHT)
+
+                    # Store & Render Mozenda-friendly harvest table
+                    st.session_state["df_quick_ymmt"] = df_union
+                    render_harvest_table(
+                        df_union,
+                        table_id="cads_mapped_quick_ymmt",
+                        preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+                        include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+                        caption="CADS – Quick YMM(/T) mapped results"
+                    )
                 else:
                     st.warning("No CADS rows matched for the mapped YMM(/T). Check Code/Model Code/Vehicle text or adjust Matching Controls.")
         except Exception as e:
@@ -793,7 +910,7 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
 
             mappings = st.session_state.get("mappings", {})
 
-            # ✅ Stricter logic previously required exact trim equality; switch to tolerant matching
+            # ✅ Tolerant trim
             all_mps = []
             for k, v in mappings.items():
                 if canon_text(v.get("make", "")) != canon_text(make_val): 
@@ -804,11 +921,10 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
                     continue
 
                 if trim_val:
-                    ok, _ = trim_matches(v.get("trim",""), trim_val, exact_only=False)  # PATCH: tolerant trim
+                    ok, _ = trim_matches(v.get("trim",""), trim_val, exact_only=False)
                     if not ok:
                         continue
                 else:
-                    # Only include mappings with empty trim when no trim provided
                     if v.get("trim", "").strip():
                         continue
 
@@ -844,6 +960,16 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
                     df_all = df_all.drop_duplicates(subset=["STYLE_ID", "AD_VEH_ID"]).reset_index(drop=True)
                     st.success(f"Found {len(df_all)} CADS row(s) for '{veh_txt}'.")
                     st.dataframe(df_all, use_container_width=True, height=TABLE_HEIGHT)
+
+                    # Store & Render Mozenda-friendly harvest table
+                    st.session_state["df_quick_vehicle"] = df_all
+                    render_harvest_table(
+                        df_all,
+                        table_id="cads_mapped_quick_vehicle",
+                        preferred_order=["Mapped Vehicle"] + HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+                        include_attr_cols=["Mapped Vehicle","AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+                        caption="CADS – Quick Vehicle mapped results"
+                    )
                 else:
                     st.warning("No CADS rows matched for the mapped vehicle(s). Check Code/Model Code/Vehicle text.")
         except Exception as e:
@@ -888,6 +1014,15 @@ if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
                     st.session_state["model_code_candidates_unmapped"][0]
                     if st.session_state.get("model_code_candidates_unmapped")
                     else None
+                )
+
+                # Render Mozenda-friendly harvest table
+                render_harvest_table(
+                    df_union,
+                    table_id="cads_unmapped_results",
+                    preferred_order=HARVEST_PREF_ORDER,
+                    include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+                    caption="CADS – Unmapped search results"
                 )
             else:
                 st.warning("No CADS rows matched that vehicle text.")
@@ -1131,6 +1266,15 @@ with b2:
                         st.session_state["model_code_candidates_mapped"] = get_model_code_candidates(df_union)
                         st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state.get("code_candidates_mapped") else None
                         st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state.get("model_code_candidates_mapped") else None
+
+                        # Render Mozenda-friendly harvest table
+                        render_harvest_table(
+                            df_union,
+                            table_id="cads_mapped_results",
+                            preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+                            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+                            caption="CADS – Mapped search results (YMM multi-map)"
+                        )
                         st.stop()  # short-circuit single-mapping flow
                 # Else fall back to best single mapping
                 best = pick_best_mapping(
@@ -1166,6 +1310,15 @@ with b2:
                     st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state.get("code_candidates_mapped") else None
                     st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state.get("model_code_candidates_mapped") else None
                     st.success(f"Found {len(selectable)} CADS row(s).")
+
+                    # Render Mozenda-friendly harvest table
+                    render_harvest_table(
+                        selectable,
+                        table_id="cads_mapped_results",
+                        preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+                        include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+                        caption="CADS – Mapped search results"
+                    )
                 else:
                     st.warning("No CADS rows found.")
         except Exception as e:
@@ -1201,6 +1354,15 @@ with b3:
                 st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state.get("code_candidates_inputs") else None
                 st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state.get("model_code_candidates_inputs") else None
                 st.success(f"Found {len(selectable)} CADS row(s).")
+
+                # Render Mozenda-friendly harvest table
+                render_harvest_table(
+                    selectable,
+                    table_id="cads_inputs_results",
+                    preferred_order=HARVEST_PREF_ORDER,
+                    include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+                    caption="CADS – Input-driven results"
+                )
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
@@ -1320,6 +1482,32 @@ if st.session_state.get("mappings"):
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
+
+# ---- Minimal Mozenda Harvester Mode (single table view)
+if HARVEST_MODE:
+    # Decide which result to show
+    source_map = {
+        "mapped":        ("results_df_mapped", "cads_mapped_results", "CADS – Mapped search results"),
+        "inputs":        ("results_df_inputs", "cads_inputs_results", "CADS – Input-driven results"),
+        "quick_ymmt":    ("df_quick_ymmt", "cads_mapped_quick_ymmt", "CADS – Quick YMM(/T) mapped results"),
+        "quick_vehicle": ("df_quick_vehicle", "cads_mapped_quick_vehicle", "CADS – Quick Vehicle mapped results"),
+        "unmapped":      ("results_df_unmapped", "cads_unmapped_results", "CADS – Unmapped search results"),
+    }
+    key, table_id, cap = source_map.get(HARVEST_SOURCE, source_map["mapped"])
+    df_h = st.session_state.get(key)
+
+    st.markdown("<p class='harvest-note'>Harvester Mode: minimal DOM for Mozenda (no editors/widgets).</p>", unsafe_allow_html=True)
+    if df_h is not None and len(df_h) > 0:
+        render_harvest_table(
+            df_h,
+            table_id=table_id,
+            preferred_order=HARVEST_PREF_ORDER + (["__mapped_key__","__tier__"] if "__mapped_key__" in df_h.columns else []),
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"] + (["__mapped_key__","__tier__"] if "__mapped_key__" in (df_h.columns) else []),
+            caption=cap
+        )
+    else:
+        st.markdown("<p id='harvest-empty'>No rows (run a search first or pick another source).</p>", unsafe_allow_html=True)
+    st.stop()
 
 # ---- Commit to GitHub
 missing_secrets = []
