@@ -301,6 +301,14 @@ if "last_by_source" not in st.session_state:
 if "veh_input" not in st.session_state:
     st.session_state["veh_input"] = ""
 
+# --------------------- CLEAR CALLBACK (fixes APIException) ---------------------
+def _clear_veh_input():
+    """Safe callback used by the Clear submit button."""
+    st.session_state["veh_input"] = ""
+    st.session_state["last_rows_out"] = []
+    st.session_state["last_by_source"] = ""
+# ------------------------------------------------------------------------------
+
 # ========================== Inputs + Search/Clear Buttons ==========================
 with st.form("vehicle_search_form", clear_on_submit=False):
     vehicle_input = st.text_input(
@@ -312,14 +320,8 @@ with st.form("vehicle_search_form", clear_on_submit=False):
     with c1:
         submitted = st.form_submit_button("Search")
     with c2:
-        cleared = st.form_submit_button("Clear")
-
-# Clear handler: empties the textbox and last results
-if cleared:
-    st.session_state["veh_input"] = ""
-    st.session_state["last_rows_out"] = []
-    st.session_state["last_by_source"] = ""
-    st.rerun()
+        # ✅ Use callback instead of manual assignment to avoid StreamlitAPIException
+        cleared = st.form_submit_button("Clear", on_click=_clear_veh_input)
 
 # ========================== Fetch mappings ==========================
 rows_out: List[Dict[str, str]] = []
@@ -394,10 +396,10 @@ if submitted:
     st.session_state["last_rows_out"] = rows_out
     st.session_state["last_by_source"] = by_source
 
-    # Optional auto-clear after successful search
+    # Optional auto-clear after successful search (textbox only)
     if AUTO_CLEAR and rows_out:
+        # Use the same safe pattern as callback to avoid mutation errors
         st.session_state["veh_input"] = ""
-        # Keep results visible; no rerun, so Mozenda can still capture
 
 # Use last results if present (keeps table visible across reruns)
 rows_out = st.session_state.get("last_rows_out", [])
