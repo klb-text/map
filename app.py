@@ -1,7 +1,8 @@
 
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
-# Full-Length Patched Build (2026-01-18)
+# Harvester Mode: server-executed, stateless; Mozenda-friendly semantic table
+# Full-Length Build (2026-01-18)
 
 import base64, json, time, io, re, difflib
 from typing import Optional, List, Dict, Tuple, Set
@@ -29,8 +30,7 @@ CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "M
 
 # ---- Canonicalization / Helpers ----
 def canon_text(val: str, for_trim: bool=False) -> str:
-    # PATCH: normalize NBSP to regular space to avoid invisible mismatches
-    s = (val or "").replace("\u00A0", " ")
+    s = (val or "").replace("\u00A0", " ")  # normalize NBSP
     s = s.strip().lower()
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
@@ -298,10 +298,6 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
 # ---- GitHub loader (always fetch mappings on startup / reload) ----
 @st.cache_data(ttl=60)
 def fetch_mappings_from_github(owner, repo, path, token, ref) -> Dict[str, Dict[str, str]]:
-    """
-    Return mappings dict from GitHub at the given ref (branch or sha).
-    If file not found, returns {}. Unexpected HTTP errors raise.
-    """
     r = _session.get(
         gh_contents_url(owner, repo, path),
         headers=gh_headers(token),
@@ -320,15 +316,11 @@ def fetch_mappings_from_github(owner, repo, path, token, ref) -> Dict[str, Dict[
     else:
         raise RuntimeError(f"Failed to load mappings ({r.status_code}): {r.text}")
 
-# ---- Matching pickers (lenient Trim) ----
+# ---- Mapping pickers ----
 def pick_best_mapping(
     mappings: Dict[str, Dict[str, str]],
-    year: str,
-    make: str,
-    model: str,
-    trim: str,
-    trim_exact_only: bool = False,
-    model_exact_when_full: bool = True
+    year: str, make: str, model: str, trim: str,
+    trim_exact_only: bool = False, model_exact_when_full: bool = True
 ) -> Optional[Tuple[str, Dict[str, str], float]]:
     cmk = canon_text(make)
     ctr = canon_text(trim, True)
@@ -341,33 +333,21 @@ def pick_best_mapping(
     candidates: List[Tuple[str, Dict[str, str], float]] = []
 
     for k, v in mappings.items():
-        vmk = v.get("make", "")
-        vy  = v.get("year", "")
-        vtr = v.get("trim", "")
-        vmd = v.get("model", "")
-
-        if canon_text(vmk) != cmk:
-            continue
-        if not year_token_matches(vy, cy):
-            continue
+        vmk = v.get("make", ""); vy = v.get("year", ""); vtr = v.get("trim", ""); vmd = v.get("model", "")
+        if canon_text(vmk) != cmk: continue
+        if not year_token_matches(vy, cy): continue
 
         tmatch, tscore = trim_matches(vtr, ctr, exact_only=trim_exact_only)
         if not tmatch:
-            if ctr:
-                tscore = 0.3  # penalize but keep candidate
-            else:
-                continue
+            if ctr: tscore = 0.3
+            else:   continue
 
         ms = model_similarity(vmd, cmd)
-        if force_exact_model and canon_text(vmd) != cmd:
-            ms *= 0.5
-
+        if force_exact_model and canon_text(vmd) != cmd: ms *= 0.5
         score = tscore * 0.6 + ms * 0.4
         candidates.append((k, v, score))
 
-    if not candidates:
-        return None
-
+    if not candidates: return None
     candidates.sort(key=lambda t: t[2], reverse=True)
     return candidates[0]
 
@@ -379,50 +359,24 @@ def pick_mapping_by_vehicle(mappings: Dict[str, Dict[str, str]], vehicle: str) -
             return (k, v)
     return None
 
-def find_mappings_by_vehicle_all(mappings: Dict[str, Dict[str, str]], vehicle: str) -> List[Tuple[str, Dict[str, str]]]:
-    cv = canon_text(vehicle)
-    if not cv: return []
-    out: List[Tuple[str, Dict[str, str]]] = []
-    for k, v in mappings.items():
-        if canon_text(v.get("vehicle", "")) == cv:
-            out.append((k, v))
-    return out
-
-def find_mappings_by_ymm_all(
-    mappings: Dict[str, Dict[str, str]],
-    year: str,
-    make: str,
-    model: str,
-    trim: Optional[str] = None
-) -> List[Tuple[str, Dict[str, str]]]:
-    """
-    Return all mappings whose (year, make, model[, trim]) match the provided inputs.
-    Year: token-aware (year_token_matches); Make/Model: canonical exact; Trim: exact or token-subset if provided.
-    """
+def find_mappings_by_ymm_all(mappings: Dict[str, Dict[str, str]], year: str, make: str, model: str, trim: Optional[str] = None) -> List[Tuple[str, Dict[str, str]]]:
     cy  = (year or "")
     cmk = canon_text(make)
     cmd = canon_text(model)
     ctr = canon_text(trim or "", True)
     out: List[Tuple[str, Dict[str, str]]] = []
     for k, v in mappings.items():
-        vy  = v.get("year", "")
-        vmk = v.get("make", "")
-        vmd = v.get("model", "")
-        vtr = v.get("trim", "")
-
-        if canon_text(vmk) != cmk:
-            continue
-        if not year_token_matches(vy, cy):
-            continue
-        if canon_text(vmd) != cmd:
-            continue
+        vy, vmk, vmd, vtr = v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")
+        if canon_text(vmk) != cmk: continue
+        if not year_token_matches(vy, cy): continue
+        if canon_text(vmd) != cmd: continue
         if ctr:
             ok, _ = trim_matches(vtr, ctr, exact_only=False)
             if not ok: continue
         out.append((k, v))
     return out
 
-# ---- CADS filtering (Trim-as-hint, tiers) ----
+# ---- CADS filtering ----
 def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
     if not md:
         true_mask = pd.Series([True]*len(eff), index=eff.index)
@@ -430,7 +384,7 @@ def _tiered_model_mask(eff: pd.Series, md: str, discriminant: List[str]) -> Tupl
     and_mask  = eff.apply(lambda s: all(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
     or_mask   = eff.apply(lambda s: any(t in s for t in discriminant)) if discriminant else eff.str.contains(md, na=False)
     ns_text   = " ".join(discriminant).strip()
-    ns_mask   = eff.str_contains(ns_text, na=False) if ns_text else eff.str.contains(md, na=False)
+    ns_mask   = eff.str.contains(ns_text, na=False) if ns_text else eff.str.contains(md, na=False)  # FIX: str.contains
     full_mask = eff.str.contains(md, na=False)
     return and_mask, or_mask, ns_mask, full_mask
 
@@ -454,18 +408,11 @@ def find_rows_by_vehicle_text(df: pd.DataFrame, vehicle: str) -> Optional[pd.Dat
 
 def filter_cads_generic(
     df: pd.DataFrame,
-    year: str,
-    make: str,
-    model: str,
-    trim: str,
-    exact_model_when_full: bool,
-    trim_exact_only: bool,
-    strict_and: bool,
-    stopword_threshold: float,
-    token_min_len: int,
+    year: str, make: str, model: str, trim: str,
+    exact_model_when_full: bool, trim_exact_only: bool, strict_and: bool,
+    stopword_threshold: float, token_min_len: int,
     effective_model_cols_override: Optional[List[str]] = None,
-    trim_as_hint: bool = False,
-    year_require_exact: bool = False
+    trim_as_hint: bool = False, year_require_exact: bool = False
 ) -> Tuple[pd.DataFrame, Dict[str, any]]:
     df2 = _strip_object_columns(df.copy())
     df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
@@ -514,7 +461,7 @@ def filter_cads_generic(
         df2["__trim_match_type__"]  = "none"
         df2["__trim_match_score__"] = 0.0
 
-    # Year gate (robust exact)
+    # Year gate
     if year_col and y:
         s_year = df2[year_col].astype(str)
         if year_require_exact:
@@ -577,16 +524,11 @@ def get_model_code_candidates(df: pd.DataFrame) -> List[str]:
     return [c for c in CADS_MODEL_CODE_PREFS if c in df.columns] or list(df.columns)
 
 def match_cads_rows_for_mapping(
-    df: pd.DataFrame,
-    mapping: Dict[str, str],
-    exact_model_when_full: bool,
-    trim_exact_only: bool,
-    strict_and: bool,
-    stopword_threshold: float,
-    token_min_len: int,
+    df: pd.DataFrame, mapping: Dict[str, str],
+    exact_model_when_full: bool, trim_exact_only: bool, strict_and: bool,
+    stopword_threshold: float, token_min_len: int,
     effective_model_cols_override: Optional[List[str]] = None,
-    trim_as_hint: bool = False,
-    year_require_exact: bool = False
+    trim_as_hint: bool = False, year_require_exact: bool = False
 ) -> Tuple[pd.DataFrame, Dict[str, any]]:
     df2 = _strip_object_columns(df.copy())
     df2, used_model_cols, used_series_cols = add_effective_model_column(df2, override_cols=effective_model_cols_override)
@@ -625,20 +567,15 @@ def match_cads_rows_for_mapping(
     # Generic fallback
     res, diag = filter_cads_generic(
         df2,
-        mapping.get("year",""), mapping.get("make",""),
-        mapping.get("model",""), mapping.get("trim",""),
+        mapping.get("year",""), mapping.get("make",""), mapping.get("model",""), mapping.get("trim",""),
         exact_model_when_full=exact_model_when_full,
-        trim_exact_only=trim_exact_only,
-        strict_and=strict_and,
-        stopword_threshold=stopword_threshold,
-        token_min_len=token_min_len,
+        trim_exact_only=trim_exact_only, strict_and=strict_and,
+        stopword_threshold=stopword_threshold, token_min_len=token_min_len,
         effective_model_cols_override=effective_model_cols_override,
-        trim_as_hint=trim_as_hint,
-        year_require_exact=year_require_exact,
+        trim_as_hint=trim_as_hint, year_require_exact=year_require_exact,
     )
     diag.update({"used_model_cols": used_model_cols, "used_series_cols": used_series_cols})
     return res, diag
-
 
 # ===================== Mozenda Harvest Helpers =====================
 def _html_escape(s: str) -> str:
@@ -659,8 +596,7 @@ def _first_nonempty(*vals) -> str:
                 return sv
     return ""
 
-HARVEST_PREF_ORDER = ["AD_YEAR","AD_MAKE","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM",
-                      "STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"]
+HARVEST_PREF_ORDER = ["AD_YEAR","AD_MAKE","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"]
 
 def render_harvest_table(
     df: pd.DataFrame,
@@ -668,16 +604,9 @@ def render_harvest_table(
     preferred_order: Optional[List[str]] = None,
     visible_only_cols: Optional[List[str]] = None,
     include_attr_cols: Optional[List[str]] = None,
-    extra_row_attrs_from: Optional[List[str]] = None,
     caption: Optional[str] = None,
+    plain: bool = False,
 ):
-    """
-    Emit a Mozenda-friendly semantic HTML table (no Streamlit widgets).
-    Adds:
-      - <th data-col-key="Exact_Column_Name">
-      - each <td data-col-key="...">value</td>
-      - <tr data-row-key="STYLE_ID or AD_VEH_ID"> and data-* attrs (year/make/model/trim/ids)
-    """
     if df is None or len(df) == 0:
         st.markdown("<p id='harvest-empty'>No rows</p>", unsafe_allow_html=True)
         return
@@ -692,13 +621,10 @@ def render_harvest_table(
 
     style_key = "STYLE_ID" if "STYLE_ID" in df.columns else None
     veh_key   = "AD_VEH_ID" if "AD_VEH_ID" in df.columns else None
-
     attr_cols = include_attr_cols or []
-    auto_extra = [c for c in ["AD_YEAR","Year","MY","AD_MAKE","Make","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM","AD_MFGCODE","MODEL_CODE"] if c in df.columns]
-    extra_cols = list(dict.fromkeys((extra_row_attrs_from or []) + auto_extra))
 
     parts = []
-    parts.append(f"<table id='{_html_escape(table_id)}' class='cads-harvest' data-source='mapped'>")
+    parts.append(f"<table id='{_html_escape(table_id)}' class='cads-harvest' data-source='harvest'>")
     if caption:
         parts.append(f"<caption>{_html_escape(caption)}</caption>")
     parts.append("<thead><tr>")
@@ -711,7 +637,7 @@ def render_harvest_table(
         tr_attrs = []
         if row_key != "":
             tr_attrs.append(f"data-row-key='{_html_escape(row_key)}'")
-        for c in attr_cols + extra_cols:
+        for c in attr_cols:
             if c in df.columns:
                 val = _first_nonempty(row.get(c))
                 if val:
@@ -723,42 +649,246 @@ def render_harvest_table(
         parts.append("</tr>")
     parts.append("</tbody></table>")
 
-    css = """
-    <style>
-      table.cads-harvest { border-collapse: collapse; width: 100%; font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-      table.cads-harvest th, table.cads-harvest td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
-      table.cads-harvest thead th { position: sticky; top: 0; background: #f8f8f8; z-index: 2; }
-      table.cads-harvest caption { text-align:left; font-weight:600; margin: 6px 0; }
-      .harvest-note { margin: 6px 0 14px; color: #444; font-size: 12px; }
-    </style>
-    """
-    st.markdown(css + "\n" + "\n".join(parts), unsafe_allow_html=True)
+    if not plain:
+        css = """
+        <style>
+          table.cads-harvest { border-collapse: collapse; width: 100%; font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+          table.cads-harvest th, table.cads-harvest td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
+          table.cads-harvest thead th { position: sticky; top: 0; background: #f8f8f8; z-index: 2; }
+          table.cads-harvest caption { text-align:left; font-weight:600; margin: 6px 0; }
+          .harvest-note { margin: 6px 0 14px; color: #444; font-size: 12px; }
+        </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    st.markdown("\n".join(parts), unsafe_allow_html=True)
 
-
-# ===================== UI =====================
+# ===================== UI (normal mode) =====================
 st.title("AFF Vehicle Mapping")
 
-# ---- Harvester Mode (URL-param + optional sidebar toggles) ----
+# Parse URL params early (used by both modes)
 params = st.experimental_get_query_params()
-HARVEST_MODE = (params.get("harvest", ["0"])[0] == "1")
+HARVEST_MODE   = (params.get("harvest", ["0"])[0] == "1")
 HARVEST_SOURCE = (params.get("source", ["mapped"])[0])  # mapped | inputs | quick_ymmt | quick_vehicle | unmapped
 
-# Sidebar toggle for convenience (does not override URL if already set)
-st.sidebar.subheader("Mozenda Harvest")
-HARVEST_MODE = st.sidebar.checkbox("Show Mozenda Harvest Table (minimal)", value=HARVEST_MODE)
-HARVEST_SOURCE = st.sidebar.selectbox(
-    "Harvest source", ["mapped","inputs","quick_ymmt","quick_vehicle","unmapped"],
-    index=["mapped","inputs","quick_ymmt","quick_vehicle","unmapped"].index(HARVEST_SOURCE)
-)
+# Helpers to parse bool/float/int params
+def _get_bool(name: str, default: bool) -> bool:
+    v = params.get(name, [None])[0]
+    if v is None: return default
+    return str(v).strip() in ("1","true","True","yes","on")
 
-# ---- Sidebar: CADS Settings ----
+def _get_float(name: str, default: float) -> float:
+    v = params.get(name, [None])[0]
+    try:
+        return float(v) if v is not None else default
+    except:
+        return default
+
+def _get_int(name: str, default: int) -> int:
+    v = params.get(name, [None])[0]
+    try:
+        return int(v) if v is not None else default
+    except:
+        return default
+
+def _get_str(name: str, default: str = "") -> str:
+    v = params.get(name, [None])[0]
+    return v if v is not None else default
+
+# Loaders usable in both modes
+def _load_cads_df(cads_path: Optional[str] = None, cads_is_excel: Optional[bool] = None, sheet_name: Optional[str] = None, ref: Optional[str] = None):
+    path = cads_path if cads_path is not None else CADS_PATH
+    is_xlsx = cads_is_excel if cads_is_excel is not None else CADS_IS_EXCEL
+    ref = ref or GH_BRANCH
+    if is_xlsx:
+        sn = sheet_name if sheet_name is not None else CADS_SHEET_NAME_DEFAULT
+        try:
+            sn = int(sn)  # allow numeric index
+        except Exception:
+            pass
+        return load_cads_from_github_excel(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref, sheet_name=sn)
+    return load_cads_from_github_csv(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref)
+
+# ===================== SERVER-EXECUTED HARVEST MODE =====================
+def _run_harvest():
+    """
+    Stateless, server-executed harvest. No buttons, no prior session.
+    Use URL params to compute results and immediately emit a semantic table.
+    """
+    # Read common matching controls from params (with safe defaults)
+    trim_as_hint         = _get_bool("trim_as_hint", True)
+    trim_exact_only      = _get_bool("trim_exact_only", False)
+    strict_and           = _get_bool("strict_and", True)
+    model_exact_when_full= _get_bool("model_exact_when_full", False)
+    year_require_exact   = _get_bool("year_require_exact", True)
+    stopword_threshold   = _get_float("stopword_threshold", 0.60)
+    token_min_len        = _get_int("token_min_len", 2)
+    plain                = _get_bool("plain", False)
+
+    # CADS source override via params (optional)
+    cads_path     = _get_str("cads_path", CADS_PATH)
+    cads_is_excel = _get_bool("cads_is_excel", CADS_IS_EXCEL)
+    cads_sheet    = _get_str("cads_sheet", CADS_SHEET_NAME_DEFAULT)
+    ref_branch    = _get_str("ref", GH_BRANCH)
+
+    # Effective model override columns (comma-separated)
+    oc = _get_str("override_cols", "AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES")
+    override_cols = [c.strip() for c in oc.split(",") if c.strip()] or None
+
+    # Load artifacts
+    mappings = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref_branch)
+    df_cads  = _load_cads_df(cads_path, cads_is_excel, cads_sheet, ref=ref_branch)
+    df_cads  = _strip_object_columns(df_cads)
+
+    source = HARVEST_SOURCE
+
+    # Route by source
+    if source in ("inputs", "quick_ymmt"):
+        # inputs: year/make/model/trim from params
+        year = _get_str("year", "")
+        make = _get_str("make", "")
+        model = _get_str("model", "")
+        trim = _get_str("trim", "")
+        results, diag = filter_cads_generic(
+            df_cads, year, make, model, trim,
+            exact_model_when_full=model_exact_when_full,
+            trim_exact_only=trim_exact_only,
+            strict_and=strict_and,
+            stopword_threshold=stopword_threshold,
+            token_min_len=token_min_len,
+            effective_model_cols_override=override_cols,
+            trim_as_hint=trim_as_hint,
+            year_require_exact=year_require_exact,
+        )
+        render_harvest_table(
+            results,
+            table_id="cads_inputs_results" if source == "inputs" else "cads_mapped_quick_ymmt",
+            preferred_order=HARVEST_PREF_ORDER,
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+            caption="CADS – Input-driven results" if source == "inputs" else "CADS – Quick YMM(/T) mapped results",
+            plain=plain,
+        )
+        st.stop()
+
+    elif source == "mapped":
+        # mapped: union all mappings for given YMM(/T)
+        year = _get_str("year", ""); make = _get_str("make", ""); model = _get_str("model", ""); trim = _get_str("trim", "")
+        ymmt_list = find_mappings_by_ymm_all(mappings, year, make, model, trim if canon_text(trim, True) else None)
+        hits = []
+        for _, mp in ymmt_list:
+            df_hit, diag = match_cads_rows_for_mapping(
+                df_cads, mp,
+                exact_model_when_full=model_exact_when_full, trim_exact_only=trim_exact_only, strict_and=strict_and,
+                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
+                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
+            )
+            if len(df_hit) > 0:
+                df_hit = df_hit.copy()
+                df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
+                df_hit["__tier__"] = diag.get("tier_used")
+                hits.append(df_hit)
+        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
+        render_harvest_table(
+            df_union,
+            table_id="cads_mapped_results",
+            preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+            caption="CADS – Mapped search results",
+            plain=plain,
+        )
+        st.stop()
+
+    elif source == "quick_vehicle":
+        # quick_vehicle: `vehicle` param, map via tolerant trim logic
+        veh_txt = _get_str("vehicle", "")
+        if not veh_txt:
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_mapped_quick_vehicle", caption="No vehicle provided", plain=plain)
+            st.stop()
+
+        year_val = extract_primary_year(veh_txt)
+        toks = tokens(veh_txt, min_len=1)  # preserve single-letter like 'S' in 'S line'
+        make_val = toks[1] if len(toks) >= 2 else ""
+        model_val = toks[2] if len(toks) >= 3 else ""
+        trim_val  = " ".join(toks[3:]) if len(toks) > 3 else ""
+
+        all_mps = []
+        for _, v in mappings.items():
+            if canon_text(v.get("make","")) != canon_text(make_val): continue
+            if not year_token_matches(v.get("year",""), str(year_val)): continue
+            if canon_text(v.get("model","")) != canon_text(model_val): continue
+            if trim_val:
+                ok, _ = trim_matches(v.get("trim",""), trim_val, exact_only=False)
+                if not ok: continue
+            else:
+                if v.get("trim","").strip(): continue
+            all_mps.append(v)
+
+        hits = []
+        for mp in all_mps:
+            df_hit, diag = match_cads_rows_for_mapping(
+                df_cads, mp,
+                exact_model_when_full=model_exact_when_full, trim_exact_only=False, strict_and=strict_and,
+                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
+                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
+            )
+            if len(df_hit) > 0:
+                df_hit = df_hit.copy()
+                df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle",""))
+                df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
+                df_hit["__tier__"] = diag.get("tier_used")
+                hits.append(df_hit)
+        df_all = pd.concat(hits, ignore_index=True) if hits else df_cads.iloc[0:0]
+        if len(df_all) > 0:
+            df_all = df_all.drop_duplicates(subset=["STYLE_ID","AD_VEH_ID"], keep="first").reset_index(drop=True)
+        render_harvest_table(
+            df_all,
+            table_id="cads_mapped_quick_vehicle",
+            preferred_order=["Mapped Vehicle"] + HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+            include_attr_cols=["Mapped Vehicle","AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+            caption="CADS – Quick Vehicle mapped results",
+            plain=plain,
+        )
+        st.stop()
+
+    elif source == "unmapped":
+        veh_txt = canon_text(_get_str("vehicle", ""))
+        if not veh_txt:
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_unmapped_results", caption="No vehicle provided", plain=plain)
+            st.stop()
+        hits = []
+        for col in VEHICLE_LIKE_CANDS:
+            if col in df_cads.columns:
+                ser = df_cads[col].astype(str).str.lower()
+                mask = ser.str.contains(veh_txt, na=False)
+                if mask.any():
+                    hits.append(df_cads[mask])
+        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
+        render_harvest_table(
+            df_union,
+            table_id="cads_unmapped_results",
+            preferred_order=HARVEST_PREF_ORDER,
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+            caption="CADS – Unmapped search results",
+            plain=plain,
+        )
+        st.stop()
+
+    # Default: nothing matched
+    st.markdown("<p id='harvest-empty'>No harvest source matched or insufficient parameters.</p>", unsafe_allow_html=True)
+    st.stop()
+
+# If HARVEST_MODE is on, run the stateless path and stop.
+if HARVEST_MODE:
+    _run_harvest()
+
+# ===================== Normal Interactive UI (unchanged core UX) =====================
+# Sidebar: CADS Settings
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
 CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
 CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT)
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
 
-# ---- Sidebar: Actions & Matching ----
+# Sidebar: Actions & Matching
 st.sidebar.header("Actions")
 st.sidebar.subheader("Mappings Source")
 load_branch = st.sidebar.text_input(
@@ -787,7 +917,8 @@ MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-wor
 STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
 YEAR_REQUIRE_EXACT = st.sidebar.checkbox(
     "Require exact year match", value=True,
-    help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated.")
+    help="Only include rows where the user-entered year appears among the CADS row's year tokens. Rows with unparseable year won't be eliminated."
+)
 STOPWORD_THRESHOLD = st.sidebar.slider("Per-make stopword threshold", 0.1, 0.9, 0.60, 0.05)
 TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
 
@@ -795,13 +926,13 @@ st.sidebar.subheader("Effective Model (override)")
 EFFECTIVE_MODEL_COLS_OVERRIDE = st.sidebar.text_input(
     "Comma-separated CADS columns to use (optional)",
     value="AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES",
-    help="If blank, auto-detect model-like and series-like columns.")
+    help="If blank, auto-detect model-like and series-like columns."
+)
 OVERRIDE_COLS = [c.strip() for c in EFFECTIVE_MODEL_COLS_OVERRIDE.split(",") if c.strip()] or None
-
 TABLE_HEIGHT = st.sidebar.slider("Results table height (px)", 400, 1200, 700, 50)
 
-# ---- Common CADS loader helper ----
-def _load_cads_df():
+# Helper to load CADS for UI
+def _load_cads_df_ui():
     if cads_upload is not None:
         if cads_upload.name.lower().endswith(".xlsx"):
             return pd.read_excel(cads_upload, engine="openpyxl")
@@ -813,7 +944,7 @@ def _load_cads_df():
         return load_cads_from_github_excel(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=st.session_state["load_branch"], sheet_name=sheet_arg)
     return load_cads_from_github_csv(GH_OWNER, GH_REPO, CADS_PATH, GH_TOKEN, ref=st.session_state["load_branch"])
 
-# ---- Always refresh mappings on run, unless locally modified
+# Always refresh mappings unless locally modified
 local_mod_flag = st.session_state.get("local_mappings_modified", False)
 try:
     fetched = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, st.session_state["load_branch"])
@@ -825,7 +956,7 @@ try:
 except Exception as e:
     st.warning(f"Could not load mappings from GitHub: {e}")
 
-# ---- YMM Quick Lookup (mapped)
+# ---- Quick Lookups & full UI (unchanged logic) ----
 st.header("YMM Quick Lookup (mapped)")
 ymmt_col1, ymmt_col2, ymmt_col3, ymmt_col4 = st.columns(4)
 with ymmt_col1: q_year  = st.text_input("Quick Year",  key="quick_year_input",  placeholder="e.g., 2025")
@@ -838,27 +969,19 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
         st.warning("Enter at least Year, Make, and Model.")
     else:
         try:
-            all_mps = find_mappings_by_ymm_all(
-                st.session_state.get("mappings", {}),
-                q_year, q_make, q_model, q_trim or None
-            )
+            all_mps = find_mappings_by_ymm_all(st.session_state.get("mappings", {}), q_year, q_make, q_model, q_trim or None)
             if not all_mps:
                 st.error("❌ No mapped entries for this YMM(/T). If expected, add mappings below and commit, then retry.")
             else:
-                df_cads = _load_cads_df()
-                df_cads = _strip_object_columns(df_cads)
+                df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
                 hits = []
                 for _, mp in all_mps:
                     df_hit, diag = match_cads_rows_for_mapping(
                         df_cads, mp,
                         exact_model_when_full=MODEL_EXACT_WHEN_FULL,
-                        trim_exact_only=False,
-                        strict_and=STRICT_AND,
-                        stopword_threshold=STOPWORD_THRESHOLD,
-                        token_min_len=TOKEN_MIN_LEN,
-                        effective_model_cols_override=OVERRIDE_COLS,
-                        trim_as_hint=True,
-                        year_require_exact=YEAR_REQUIRE_EXACT,
+                        trim_exact_only=False, strict_and=STRICT_AND,
+                        stopword_threshold=STOPWORD_THRESHOLD, token_min_len=TOKEN_MIN_LEN,
+                        effective_model_cols_override=OVERRIDE_COLS, trim_as_hint=True, year_require_exact=YEAR_REQUIRE_EXACT,
                     )
                     if len(df_hit) > 0:
                         df_hit = df_hit.copy()
@@ -869,22 +992,11 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
                     df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
                     st.success(f"Found {len(df_union)} CADS row(s) for YMM(/T) '{q_year} {q_make} {q_model} {q_trim or ''}'.")
                     st.dataframe(df_union, use_container_width=True, height=TABLE_HEIGHT)
-
-                    # Store & Render Mozenda-friendly harvest table
-                    st.session_state["df_quick_ymmt"] = df_union
-                    render_harvest_table(
-                        df_union,
-                        table_id="cads_mapped_quick_ymmt",
-                        preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
-                        include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
-                        caption="CADS – Quick YMM(/T) mapped results"
-                    )
                 else:
                     st.warning("No CADS rows matched for the mapped YMM(/T). Check Code/Model Code/Vehicle text or adjust Matching Controls.")
         except Exception as e:
             st.error(f"Quick YMM(/T) search failed: {e}")
 
-# ---- Vehicle-Only Quick Lookup (mapped)
 st.header("Vehicle-Only Quick Lookup (mapped)")
 quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
 
@@ -894,63 +1006,41 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
         st.warning("Enter a vehicle string first.")
     else:
         try:
-            # ✅ Parse input into Year, Make, Model, Trim
             year_val = extract_primary_year(veh_txt)
-
-            # PATCH: keep single-letter tokens (preserve 'S' in 'S line')
             tokens_list = tokens(veh_txt, min_len=1)
-
-            make_val, model_val, trim_val = "", "", ""
-            if len(tokens_list) >= 2:
-                make_val = tokens_list[1]  # Assume second token is Make
-            if len(tokens_list) >= 3:
-                model_val = tokens_list[2]  # Assume third token is Model
-            if len(tokens_list) > 3:
-                trim_val = " ".join(tokens_list[3:])  # Remaining tokens = Trim
-
+            make_val = tokens_list[1] if len(tokens_list) >= 2 else ""
+            model_val = tokens_list[2] if len(tokens_list) >= 3 else ""
+            trim_val  = " ".join(tokens_list[3:]) if len(tokens_list) > 3 else ""
             mappings = st.session_state.get("mappings", {})
 
-            # ✅ Tolerant trim
             all_mps = []
-            for k, v in mappings.items():
-                if canon_text(v.get("make", "")) != canon_text(make_val): 
-                    continue
-                if not year_token_matches(v.get("year", ""), str(year_val)): 
-                    continue
-                if canon_text(v.get("model", "")) != canon_text(model_val): 
-                    continue
-
+            for _, v in mappings.items():
+                if canon_text(v.get("make","")) != canon_text(make_val): continue
+                if not year_token_matches(v.get("year",""), str(year_val)): continue
+                if canon_text(v.get("model","")) != canon_text(model_val): continue
                 if trim_val:
                     ok, _ = trim_matches(v.get("trim",""), trim_val, exact_only=False)
-                    if not ok:
-                        continue
+                    if not ok: continue
                 else:
-                    if v.get("trim", "").strip():
-                        continue
-
-                all_mps.append((k, v))
+                    if v.get("trim","").strip(): continue
+                all_mps.append(v)
 
             if not all_mps:
                 st.error("❌ No mapped entries for this vehicle. If expected, add mappings below and commit, then retry.")
             else:
-                df_cads = _load_cads_df()
-                df_cads = _strip_object_columns(df_cads)
+                df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
                 hits = []
-                for _, mp in all_mps:
+                for mp in all_mps:
                     df_hit, diag = match_cads_rows_for_mapping(
                         df_cads, mp,
                         exact_model_when_full=MODEL_EXACT_WHEN_FULL,
-                        trim_exact_only=False,
-                        strict_and=STRICT_AND,
-                        stopword_threshold=STOPWORD_THRESHOLD,
-                        token_min_len=TOKEN_MIN_LEN,
-                        effective_model_cols_override=OVERRIDE_COLS,
-                        trim_as_hint=True,
-                        year_require_exact=YEAR_REQUIRE_EXACT,
+                        trim_exact_only=False, strict_and=STRICT_AND,
+                        stopword_threshold=STOPWORD_THRESHOLD, token_min_len=TOKEN_MIN_LEN,
+                        effective_model_cols_override=OVERRIDE_COLS, trim_as_hint=True, year_require_exact=YEAR_REQUIRE_EXACT,
                     )
                     if len(df_hit) > 0:
                         df_hit = df_hit.copy()
-                        df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle", ""))  # Clarify
+                        df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle",""))
                         df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
                         df_hit["__tier__"] = diag.get("tier_used")
                         hits.append(df_hit)
@@ -960,43 +1050,26 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
                     df_all = df_all.drop_duplicates(subset=["STYLE_ID", "AD_VEH_ID"]).reset_index(drop=True)
                     st.success(f"Found {len(df_all)} CADS row(s) for '{veh_txt}'.")
                     st.dataframe(df_all, use_container_width=True, height=TABLE_HEIGHT)
-
-                    # Store & Render Mozenda-friendly harvest table
-                    st.session_state["df_quick_vehicle"] = df_all
-                    render_harvest_table(
-                        df_all,
-                        table_id="cads_mapped_quick_vehicle",
-                        preferred_order=["Mapped Vehicle"] + HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
-                        include_attr_cols=["Mapped Vehicle","AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
-                        caption="CADS – Quick Vehicle mapped results"
-                    )
                 else:
                     st.warning("No CADS rows matched for the mapped vehicle(s). Check Code/Model Code/Vehicle text.")
         except Exception as e:
             st.error(f"Quick vehicle search failed: {e}")
 
-# ---- Search CADS for Unmapped Vehicle (unique keys)
 st.header("Search CADS for Unmapped Vehicle")
-unmapped_vehicle = st.text_input(
-    "Vehicle (search in CADS)",
-    key="unmapped_vehicle_input_v1",
-    placeholder="e.g., Q3 S line 45 TFSI quattro Premium"
-)
+unmapped_vehicle = st.text_input("Vehicle (search in CADS)", key="unmapped_vehicle_input_v1", placeholder="e.g., Q3 S line 45 TFSI quattro Premium")
 if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
     veh_txt = canon_text(unmapped_vehicle)
     if not veh_txt:
         st.warning("Enter a vehicle string first.")
     else:
         try:
-            df_cads = _load_cads_df()
-            df_cads = _strip_object_columns(df_cads)
+            df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
             hits = []
             for col in VEHICLE_LIKE_CANDS:
                 if col in df_cads.columns:
                     ser = df_cads[col].astype(str).str.lower()
                     mask = ser.str.contains(veh_txt, na=False)
-                    if mask.any():
-                        hits.append(df_cads[mask])
+                    if mask.any(): hits.append(df_cads[mask])
             if hits:
                 df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True)
                 st.success(f"Found {len(df_union)} CADS row(s) matching '{unmapped_vehicle}'.")
@@ -1005,31 +1078,14 @@ if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
                 st.session_state["results_df_unmapped"] = df_union
                 st.session_state["code_candidates_unmapped"] = get_cads_code_candidates(df_union)
                 st.session_state["model_code_candidates_unmapped"] = get_model_code_candidates(df_union)
-                st.session_state["code_column_unmapped"] = (
-                    st.session_state["code_candidates_unmapped"][0]
-                    if st.session_state.get("code_candidates_unmapped")
-                    else None
-                )
-                st.session_state["model_code_column_unmapped"] = (
-                    st.session_state["model_code_candidates_unmapped"][0]
-                    if st.session_state.get("model_code_candidates_unmapped")
-                    else None
-                )
-
-                # Render Mozenda-friendly harvest table
-                render_harvest_table(
-                    df_union,
-                    table_id="cads_unmapped_results",
-                    preferred_order=HARVEST_PREF_ORDER,
-                    include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-                    caption="CADS – Unmapped search results"
-                )
+                st.session_state["code_column_unmapped"] = st.session_state["code_candidates_unmapped"][0] if st.session_state.get("code_candidates_unmapped") else None
+                st.session_state["model_code_column_unmapped"] = st.session_state["model_code_candidates_unmapped"][0] if st.session_state.get("model_code_candidates_unmapped") else None
             else:
                 st.warning("No CADS rows matched that vehicle text.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Selection helpers & add-to-mappings (unique key fix)
+# ---- Selection helpers & add-to-mappings
 def _select_all(df_key: str):
     if df_key in st.session_state:
         df = st.session_state[df_key].copy()
@@ -1052,41 +1108,23 @@ def _effective_vehicle_text(row: pd.Series) -> str:
                 return val
     return ""
 
-def _add_selected_rows_to_mappings(
-    df_key,
-    code_col_key: str,
-    model_code_col_key: str,
-    year_val: str,
-    make_val: str,
-    model_val: str,
-    trim_val: str,
-    vehicle_val: str,
-    rows_override=None
-):
-    """
-    Add selected rows to mappings.
-    If rows_override is provided, use it; otherwise read st.session_state[df_key] and filter Select==True.
-    """
+def _add_selected_rows_to_mappings(df_key, code_col_key: str, model_code_col_key: str, year_val: str, make_val: str, model_val: str, trim_val: str, vehicle_val: str, rows_override=None):
     import pandas as pd
     if rows_override is not None:
         selected = rows_override.copy()
     else:
         df = st.session_state.get(df_key)
         if df is None or len(df) == 0:
-            st.warning("No rows to add.")
-            return
+            st.warning("No rows to add."); return
         if "Select" not in df.columns:
-            st.warning("Selection column is missing.")
-            return
+            st.warning("Selection column is missing."); return
         selected = df[df["Select"].astype(bool) == True]
 
     if len(selected) == 0:
-        st.warning("Select at least one row.")
-        return
+        st.warning("Select at least one row."); return
 
     code_col = st.session_state.get(code_col_key)
     model_code_col = st.session_state.get(model_code_col_key)
-
     added = 0
     st.session_state.setdefault("mappings", {})
 
@@ -1095,7 +1133,6 @@ def _add_selected_rows_to_mappings(
         vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
         code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
         model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
-        # Unique key fix (keeps STYLE_ID/AD_VEH_ID to avoid collisions)
         unique_id = str(row.get("STYLE_ID") or row.get("AD_VEH_ID") or "")
         key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}|{unique_id}"
         st.session_state.mappings[key] = {
@@ -1112,29 +1149,15 @@ def _add_selected_rows_to_mappings(
     st.session_state["local_mappings_modified"] = True
     st.success(f"Added {added} mapping(s).")
 
-# ---- Results Table for Unmapped Vehicle (with edited DataFrame)
+# --- Mapped results table (edited DataFrame)
 if "results_df_unmapped" in st.session_state:
     st.subheader("Select CADS rows to map this vehicle")
     cUA, cUB = st.columns(2)
     with cUA:
-        st.session_state["code_column_unmapped"] = st.selectbox(
-            "Code column (unmapped results)",
-            options=st.session_state.get("code_candidates_unmapped", []),
-            index=0 if st.session_state.get("code_candidates_unmapped") else None,
-        )
+        st.session_state["code_column_unmapped"] = st.selectbox("Code column (unmapped results)", options=st.session_state.get("code_candidates_unmapped", []), index=0 if st.session_state.get("code_candidates_unmapped") else None)
     with cUB:
-        st.session_state["model_code_column_unmapped"] = st.selectbox(
-            "Model Code column (unmapped results)",
-            options=st.session_state.get("model_code_candidates_unmapped", []),
-            index=0 if st.session_state.get("model_code_candidates_unmapped") else None,
-        )
-
-    edited_unmapped_df = st.data_editor(
-        st.session_state["results_df_unmapped"],
-        use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
-    )
-
+        st.session_state["model_code_column_unmapped"] = st.selectbox("Model Code column (unmapped results)", options=st.session_state.get("model_code_candidates_unmapped", []), index=0 if st.session_state.get("model_code_candidates_unmapped") else None)
+    edited_unmapped_df = st.data_editor(st.session_state["results_df_unmapped"], use_container_width=True, height=TABLE_HEIGHT, key="editor_unmapped", column_config={"Select": st.column_config.CheckboxColumn(required=False)})
     if st.button("➕ Add selected (unmapped) to mappings", key="btn_unmapped_add_v1"):
         df_to_use = edited_unmapped_df if edited_unmapped_df is not None else st.session_state["results_df_unmapped"]
         selected = df_to_use[df_to_use["Select"].astype(bool) == True] if "Select" in df_to_use.columns else df_to_use.iloc[0:0]
@@ -1145,14 +1168,7 @@ if "results_df_unmapped" in st.session_state:
             mk_val = (st.session_state.get("make_input", "") or "").strip()
             md_val = (st.session_state.get("model_input", "") or "").strip()
             tr_val = (st.session_state.get("trim_input", "") or "").strip()
-            _add_selected_rows_to_mappings(
-                df_key=None,
-                code_col_key="code_column_unmapped",
-                model_code_col_key="model_code_column_unmapped",
-                year_val=y_val, make_val=mk_val, model_val=md_val, trim_val=tr_val,
-                vehicle_val=st.session_state.get("unmapped_vehicle_input_v1", ""),
-                rows_override=selected,
-            )
+            _add_selected_rows_to_mappings(None, "code_column_unmapped", "model_code_column_unmapped", y_val, mk_val, md_val, tr_val, st.session_state.get("unmapped_vehicle_input_v1",""), selected)
 
 # ---- Inputs (YMMT + Vehicle) for standard mapping flow
 st.subheader("Edit / Add Mapping")
@@ -1166,12 +1182,9 @@ with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholde
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
 st.caption(
-    f"🔎 Inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' "
-    f"Model='{canon_text(model)}' Trim='{canon_text(trim, True)}' | "
-    f"TRIM_AS_HINT={TRIM_AS_HINT}, TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, "
-    f"MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, STRICT_AND={STRICT_AND}, "
-    f"YEAR_REQUIRE_EXACT={YEAR_REQUIRE_EXACT}, STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, "
-    f"TOKEN_MIN_LEN={TOKEN_MIN_LEN}, OverrideCols={OVERRIDE_COLS or '(auto)'}"
+    f"🔎 Inputs → Year='{canon_text(year)}' Make='{canon_text(make)}' Model='{canon_text(model)}' Trim='{canon_text(trim, True)}' | "
+    f"TRIM_AS_HINT={TRIM_AS_HINT}, TRIM_EXACT_ONLY={TRIM_EXACT_ONLY}, MODEL_EXACT_WHEN_FULL={MODEL_EXACT_WHEN_FULL}, STRICT_AND={STRICT_AND}, "
+    f"YEAR_REQUIRE_EXACT={YEAR_REQUIRE_EXACT}, STOPWORD_THRESHOLD={STOPWORD_THRESHOLD}, TOKEN_MIN_LEN={TOKEN_MIN_LEN}, OverrideCols={OVERRIDE_COLS or '(auto)'}"
 )
 
 # ---- Existing Mapping (for current inputs)
@@ -1183,75 +1196,39 @@ if canon_text(vehicle) and not (canon_text(year) or canon_text(make) or canon_te
     vehicle_first = True
     if vm:
         k, v = vm
-        existing_rows.append({
-            "Match Level": "by_vehicle",
-            "Score": 1.0,
-            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
-            "Model": v.get("model",""), "Trim": v.get("trim",""),
-            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
-            "Model Code": v.get("model_code",""),
-        })
+        existing_rows.append({"Match Level":"by_vehicle","Score":1.0,"Key":k,"Year":v.get("year",""),"Make":v.get("make",""),"Model":v.get("model",""),"Trim":v.get("trim",""),"Vehicle":v.get("vehicle",""),"Code":v.get("code",""),"Model Code":v.get("model_code","")})
 
 if not existing_rows:
-    best = pick_best_mapping(
-        st.session_state.get("mappings", {}), year, make, model, trim,
-        trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
-    )
+    best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, trim, trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
     if not best and (year or make or model):
-        best = pick_best_mapping(
-            st.session_state.get("mappings", {}), year, make, model, "",
-            trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
-        )
+        best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, "", trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
     if best:
         k, v, score = best
-        existing_rows.append({
-            "Match Level": "generic_best_trim_model_year" if canon_text(trim, True) else "generic_best_by_ymm",
-            "Score": round(score,3),
-            "Key": k, "Year": v.get("year",""), "Make": v.get("make",""),
-            "Model": v.get("model",""), "Trim": v.get("trim",""),
-            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""),
-            "Model Code": v.get("model_code",""),
-        })
+        existing_rows.append({"Match Level":"generic_best_trim_model_year" if canon_text(trim, True) else "generic_best_by_ymm","Score":round(score,3),"Key":k,"Year":v.get("year",""),"Make":v.get("make",""),"Model":v.get("model",""),"Trim":v.get("trim",""),"Vehicle":v.get("vehicle",""),"Code":v.get("code",""),"Model Code":v.get("model_code","")})
 
 if existing_rows:
     st.dataframe(pd.DataFrame(existing_rows), use_container_width=True)
 else:
     st.info("No existing mapping detected for current inputs.")
 
-# ---- CADS Search Buttons (mapped + inputs)
+# ---- CADS Search Buttons
 b1, b2, b3, b4 = st.columns(4)
 
-# (Mapped vehicle) — includes YMM multi-mapping fallback
 with b2:
     if st.button("🔎 Search CADS (mapped vehicle)"):
         try:
-            df_cads = _load_cads_df()
-            df_cads = _strip_object_columns(df_cads)
+            df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
             mapping_to_use = None
             vm = pick_mapping_by_vehicle(st.session_state.get("mappings", {}), vehicle)
 
             if canon_text(vehicle) and vm:
                 mapping_to_use = vm[1]
             else:
-                # If user provided YMM(/T) but no Vehicle, collect ALL mappings for YMM(/T) and union results
-                ymmt_list = find_mappings_by_ymm_all(
-                    st.session_state.get("mappings", {}),
-                    year, make, model, trim if canon_text(trim, True) else None
-                )
+                ymmt_list = find_mappings_by_ymm_all(st.session_state.get("mappings", {}), year, make, model, trim if canon_text(trim, True) else None)
                 if ymmt_list:
                     hits = []
                     for _, mp in ymmt_list:
-                        df_hit, diag = match_cads_rows_for_mapping(
-                            df_cads, mp,
-                            exact_model_when_full=MODEL_EXACT_WHEN_FULL,
-                            trim_exact_only=TRIM_EXACT_ONLY,
-                            strict_and=STRICT_AND,
-                            stopword_threshold=STOPWORD_THRESHOLD,
-                            token_min_len=TOKEN_MIN_LEN,
-                            effective_model_cols_override=OVERRIDE_COLS,
-                            trim_as_hint=True,
-                            year_require_exact=YEAR_REQUIRE_EXACT,
-                        )
+                        df_hit, diag = match_cads_rows_for_mapping(df_cads, mp, MODEL_EXACT_WHEN_FULL, TRIM_EXACT_ONLY, STRICT_AND, STOPWORD_THRESHOLD, TOKEN_MIN_LEN, OVERRIDE_COLS, True, YEAR_REQUIRE_EXACT)
                         if len(df_hit) > 0:
                             df_hit = df_hit.copy()
                             df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
@@ -1266,39 +1243,16 @@ with b2:
                         st.session_state["model_code_candidates_mapped"] = get_model_code_candidates(df_union)
                         st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state.get("code_candidates_mapped") else None
                         st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state.get("model_code_candidates_mapped") else None
-
-                        # Render Mozenda-friendly harvest table
-                        render_harvest_table(
-                            df_union,
-                            table_id="cads_mapped_results",
-                            preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
-                            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
-                            caption="CADS – Mapped search results (YMM multi-map)"
-                        )
-                        st.stop()  # short-circuit single-mapping flow
-                # Else fall back to best single mapping
-                best = pick_best_mapping(
-                    st.session_state.get("mappings", {}), year, make, model, trim,
-                    trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
-                )
+                        st.stop()
+                best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, trim, trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
                 if not best and (year or make or model):
-                    best = pick_best_mapping(
-                        st.session_state.get("mappings", {}), year, make, model, "",
-                        trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL,
-                    )
+                    best = pick_best_mapping(st.session_state.get("mappings", {}), year, make, model, "", trim_exact_only=TRIM_EXACT_ONLY, model_exact_when_full=MODEL_EXACT_WHEN_FULL)
                 if best: mapping_to_use = best[1]
 
             if not mapping_to_use:
                 st.warning("No mapped vehicle detected.")
             else:
-                df_match, diag = match_cads_rows_for_mapping(
-                    df_cads, mapping_to_use,
-                    exact_model_when_full=MODEL_EXACT_WHEN_FULL,
-                    trim_exact_only=TRIM_EXACT_ONLY, strict_and=STRICT_AND,
-                    stopword_threshold=STOPWORD_THRESHOLD, token_min_len=TOKEN_MIN_LEN,
-                    effective_model_cols_override=OVERRIDE_COLS,
-                    trim_as_hint=True, year_require_exact=YEAR_REQUIRE_EXACT,
-                )
+                df_match, diag = match_cads_rows_for_mapping(df_cads, mapping_to_use, MODEL_EXACT_WHEN_FULL, TRIM_EXACT_ONLY, STRICT_AND, STOPWORD_THRESHOLD, TOKEN_MIN_LEN, OVERRIDE_COLS, True, YEAR_REQUIRE_EXACT)
                 st.session_state["last_diag_mapped"] = diag
                 st.caption(f"Tier used (mapped): {diag.get('tier_used')}")
                 if len(df_match) > 0:
@@ -1310,26 +1264,15 @@ with b2:
                     st.session_state["code_column_mapped"] = st.session_state["code_candidates_mapped"][0] if st.session_state.get("code_candidates_mapped") else None
                     st.session_state["model_code_column_mapped"] = st.session_state["model_code_candidates_mapped"][0] if st.session_state.get("model_code_candidates_mapped") else None
                     st.success(f"Found {len(selectable)} CADS row(s).")
-
-                    # Render Mozenda-friendly harvest table
-                    render_harvest_table(
-                        selectable,
-                        table_id="cads_mapped_results",
-                        preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
-                        include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
-                        caption="CADS – Mapped search results"
-                    )
                 else:
                     st.warning("No CADS rows found.")
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# (Use current inputs)
 with b3:
     if st.button("🔎 Search CADS (use current inputs)"):
         try:
-            df_cads = _load_cads_df()
-            df_cads = _strip_object_columns(df_cads)
+            df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
             results, diag = filter_cads_generic(
                 df_cads, year, make, model, trim,
                 exact_model_when_full=MODEL_EXACT_WHEN_FULL,
@@ -1354,19 +1297,10 @@ with b3:
                 st.session_state["code_column_inputs"] = st.session_state["code_candidates_inputs"][0] if st.session_state.get("code_candidates_inputs") else None
                 st.session_state["model_code_column_inputs"] = st.session_state["model_code_candidates_inputs"][0] if st.session_state.get("model_code_candidates_inputs") else None
                 st.success(f"Found {len(selectable)} CADS row(s).")
-
-                # Render Mozenda-friendly harvest table
-                render_harvest_table(
-                    selectable,
-                    table_id="cads_inputs_results",
-                    preferred_order=HARVEST_PREF_ORDER,
-                    include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-                    caption="CADS – Input-driven results"
-                )
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# --- Mapped results table (edited DataFrame)
+# --- Mapped results editor
 if "results_df_mapped" in st.session_state:
     st.subheader("Select vehicles from CADS results — Mapped Vehicle")
     cA, cB, cC = st.columns([1, 1, 2])
@@ -1374,24 +1308,12 @@ if "results_df_mapped" in st.session_state:
         if st.button("Select All (mapped)"): _select_all("results_df_mapped")
     with cB:
         if st.button("Clear Selection (mapped)"): _clear_selection("results_df_mapped")
-    edited_mapped_df = st.data_editor(
-        st.session_state["results_df_mapped"],
-        use_container_width=True, height=TABLE_HEIGHT, key="editor_mapped",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
-    )
+    edited_mapped_df = st.data_editor(st.session_state["results_df_mapped"], use_container_width=True, height=TABLE_HEIGHT, key="editor_mapped", column_config={"Select": st.column_config.CheckboxColumn(required=False)})
     cX, cY, cZ = st.columns(3)
     with cX:
-        st.session_state["code_column_mapped"] = st.selectbox(
-            "Code column (mapped results)",
-            options=st.session_state.get("code_candidates_mapped", []),
-            index=0 if st.session_state.get("code_candidates_mapped") else None,
-        )
+        st.session_state["code_column_mapped"] = st.selectbox("Code column (mapped results)", options=st.session_state.get("code_candidates_mapped", []), index=0 if st.session_state.get("code_candidates_mapped") else None)
     with cY:
-        st.session_state["model_code_column_mapped"] = st.selectbox(
-            "Model Code column (mapped results)",
-            options=st.session_state.get("model_code_candidates_mapped", []),
-            index=0 if st.session_state.get("model_code_candidates_mapped") else None,
-        )
+        st.session_state["model_code_column_mapped"] = st.selectbox("Model Code column (mapped results)", options=st.session_state.get("model_code_candidates_mapped", []), index=0 if st.session_state.get("model_code_candidates_mapped") else None)
     with cZ:
         if st.button("➕ Add selected (mapped) to mappings", key="btn_mapped_add_v1"):
             df_to_use = edited_mapped_df if edited_mapped_df is not None else st.session_state["results_df_mapped"]
@@ -1399,15 +1321,9 @@ if "results_df_mapped" in st.session_state:
             if len(selected) == 0:
                 st.warning("Select at least one row.")
             else:
-                _add_selected_rows_to_mappings(
-                    df_key=None,
-                    code_col_key="code_column_mapped",
-                    model_code_col_key="model_code_column_mapped",
-                    year_val=year, make_val=make, model_val=model, trim_val=trim, vehicle_val=vehicle,
-                    rows_override=selected,
-                )
+                _add_selected_rows_to_mappings(None, "code_column_mapped", "model_code_column_mapped", year, make, model, trim, vehicle, selected)
 
-# --- Direct input results table (edited DataFrame)
+# --- Direct input editor
 if "results_df_inputs" in st.session_state:
     st.subheader("Select vehicles from CADS results — Direct Input Search")
     cA, cB, cC = st.columns([1, 1, 2])
@@ -1415,24 +1331,12 @@ if "results_df_inputs" in st.session_state:
         if st.button("Select All (inputs)"): _select_all("results_df_inputs")
     with cB:
         if st.button("Clear Selection (inputs)"): _clear_selection("results_df_inputs")
-    edited_inputs_df = st.data_editor(
-        st.session_state["results_df_inputs"],
-        use_container_width=True, height=TABLE_HEIGHT, key="editor_inputs",
-        column_config={"Select": st.column_config.CheckboxColumn(required=False)}
-    )
+    edited_inputs_df = st.data_editor(st.session_state["results_df_inputs"], use_container_width=True, height=TABLE_HEIGHT, key="editor_inputs", column_config={"Select": st.column_config.CheckboxColumn(required=False)})
     cX, cY, cZ = st.columns(3)
     with cX:
-        st.session_state["code_column_inputs"] = st.selectbox(
-            "Code column (input results)",
-            options=st.session_state.get("code_candidates_inputs", []),
-            index=0 if st.session_state.get("code_candidates_inputs") else None,
-        )
+        st.session_state["code_column_inputs"] = st.selectbox("Code column (input results)", options=st.session_state.get("code_candidates_inputs", []), index=0 if st.session_state.get("code_candidates_inputs") else None)
     with cY:
-        st.session_state["model_code_column_inputs"] = st.selectbox(
-            "Model Code column (input results)",
-            options=st.session_state.get("model_code_candidates_inputs", []),
-            index=0 if st.session_state.get("model_code_candidates_inputs") else None,
-        )
+        st.session_state["model_code_column_inputs"] = st.selectbox("Model Code column (input results)", options=st.session_state.get("model_code_candidates_inputs", []), index=0 if st.session_state.get("model_code_candidates_inputs") else None)
     with cZ:
         if st.button("➕ Add selected (inputs) to mappings", key="btn_inputs_add_v1"):
             df_to_use = edited_inputs_df if edited_inputs_df is not None else st.session_state["results_df_inputs"]
@@ -1440,24 +1344,12 @@ if "results_df_inputs" in st.session_state:
             if len(selected) == 0:
                 st.warning("Select at least one row.")
             else:
-                _add_selected_rows_to_mappings(
-                    df_key=None,
-                    code_col_key="code_column_inputs",
-                    model_code_col_key="model_code_column_inputs",
-                    year_val=year, make_val=make, model_val=model, trim_val=trim, vehicle_val=vehicle,
-                    rows_override=selected,
-                )
+                _add_selected_rows_to_mappings(None, "code_column_inputs", "model_code_column_inputs", year, make, model, trim, vehicle, selected)
 
 # ---- Diagnostics
 st.subheader("Diagnostics")
-exp = st.expander("Mapped Search Diagnostics", expanded=False)
-with exp:
-    st.write("Last mapped search diagnostics:")
-    st.json(st.session_state.get("last_diag_mapped", {}))
-exp2 = st.expander("Inputs Search Diagnostics", expanded=False)
-with exp2:
-    st.write("Last inputs search diagnostics:")
-    st.json(st.session_state.get("last_diag_inputs", {}))
+exp = st.expander("Mapped Search Diagnostics", expanded=False);   exp.write("Last mapped search diagnostics:");   exp.json(st.session_state.get("last_diag_mapped", {}))
+exp2 = st.expander("Inputs Search Diagnostics", expanded=False);  exp2.write("Last inputs search diagnostics:");  exp2.json(st.session_state.get("last_diag_inputs", {}))
 
 # ---- Current Mappings
 st.subheader("Current Mappings (session)")
@@ -1468,46 +1360,14 @@ if st.session_state.get("mappings"):
         if v.get("trim"):
             mapped_vehicle_display += f" {v.get('trim','')}"
         rows.append({
-            "Mapped Vehicle": mapped_vehicle_display,
-            "Key": k,
-            "Year": v.get("year",""),
-            "Make": v.get("make",""),
-            "Model": v.get("model",""),
-            "Trim": v.get("trim",""),
-            "Vehicle": v.get("vehicle",""),
-            "Code": v.get("code",""),
-            "Model Code": v.get("model_code",""),
+            "Mapped Vehicle": mapped_vehicle_display, "Key": k, "Year": v.get("year",""),
+            "Make": v.get("make",""), "Model": v.get("model",""), "Trim": v.get("trim",""),
+            "Vehicle": v.get("vehicle",""), "Code": v.get("code",""), "Model Code": v.get("model_code",""),
             "YMMT": v.get("ymmt",""),
         })
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
-
-# ---- Minimal Mozenda Harvester Mode (single table view)
-if HARVEST_MODE:
-    # Decide which result to show
-    source_map = {
-        "mapped":        ("results_df_mapped", "cads_mapped_results", "CADS – Mapped search results"),
-        "inputs":        ("results_df_inputs", "cads_inputs_results", "CADS – Input-driven results"),
-        "quick_ymmt":    ("df_quick_ymmt", "cads_mapped_quick_ymmt", "CADS – Quick YMM(/T) mapped results"),
-        "quick_vehicle": ("df_quick_vehicle", "cads_mapped_quick_vehicle", "CADS – Quick Vehicle mapped results"),
-        "unmapped":      ("results_df_unmapped", "cads_unmapped_results", "CADS – Unmapped search results"),
-    }
-    key, table_id, cap = source_map.get(HARVEST_SOURCE, source_map["mapped"])
-    df_h = st.session_state.get(key)
-
-    st.markdown("<p class='harvest-note'>Harvester Mode: minimal DOM for Mozenda (no editors/widgets).</p>", unsafe_allow_html=True)
-    if df_h is not None and len(df_h) > 0:
-        render_harvest_table(
-            df_h,
-            table_id=table_id,
-            preferred_order=HARVEST_PREF_ORDER + (["__mapped_key__","__tier__"] if "__mapped_key__" in df_h.columns else []),
-            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"] + (["__mapped_key__","__tier__"] if "__mapped_key__" in (df_h.columns) else []),
-            caption=cap
-        )
-    else:
-        st.markdown("<p id='harvest-empty'>No rows (run a search first or pick another source).</p>", unsafe_allow_html=True)
-    st.stop()
 
 # ---- Commit to GitHub
 missing_secrets = []
@@ -1523,16 +1383,9 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
         st.sidebar.error("Cannot commit: fix missing secrets first.")
     else:
         try:
-            resp = save_json_to_github(
-                GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN,
-                GH_BRANCH, st.session_state.get("mappings", {}),
-                commit_msg,
-                author_name="AFF Mapping App", author_email="aff-mapping@app.local",
-                use_feature_branch=use_feature_branch
-            )
+            resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email="aff-mapping@app.local", use_feature_branch=use_feature_branch)
             st.sidebar.success("Committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
-            # After successful commit, re-fetch from the branch we actually wrote to
             try:
                 wrote_branch = st.session_state["load_branch"] if not use_feature_branch else "aff-mapping-app"
                 fetched_after = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, wrote_branch)
@@ -1541,19 +1394,8 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
                 st.sidebar.info(f"Reloaded {len(fetched_after)} mapping(s) from GitHub @{wrote_branch} after commit.")
             except Exception as e2:
                 st.sidebar.warning(f"Post-commit reload failed: {e2}")
-            # Append audit log (non-blocking)
             try:
-                append_jsonl_to_github(
-                    GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH,
-                    {
-                        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                        "user":"streamlit-app","action":"commit",
-                        "count": len(st.session_state.get("mappings", {})), "path": MAPPINGS_PATH,
-                        "branch": wrote_branch
-                    },
-                    commit_message="chore(app): append audit commit entry",
-                    use_feature_branch=use_feature_branch
-                )
+                append_jsonl_to_github(GH_OWNER, GH_REPO, AUDIT_LOG_PATH, GH_TOKEN, GH_BRANCH, {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ"), "user":"streamlit-app","action":"commit", "count": len(st.session_state.get("mappings", {})), "path": MAPPINGS_PATH, "branch": wrote_branch}, commit_message="chore(app): append audit commit entry", use_feature_branch=use_feature_branch)
             except Exception as log_err:
                 st.sidebar.warning(f"Audit log append failed (non-blocking): {log_err}")
         except Exception as e:
