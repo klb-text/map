@@ -104,10 +104,6 @@ def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> bool:
 # ========================== GitHub loader with fallback ==========================
 @st.cache_data(ttl=30)
 def fetch_mappings(owner: str, repo: str, path: str, token: str, ref: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str]]:
-    """
-    Try GitHub Contents API; if empty or fail, try raw.githubusercontent.com.
-    Returns (data_dict, diagnostics)
-    """
     diag = {"api_status":"", "api_used":"0", "raw_status":"", "raw_used":"0", "note":""}
     data: Dict[str, Dict[str, str]] = {}
 
@@ -166,26 +162,13 @@ def fetch_mappings(owner: str, repo: str, path: str, token: str, ref: str) -> Tu
 # ========================== Lookups ==========================
 def pick_mapping_by_vehicle(mappings: Dict[str, Dict[str, str]], vehicle: str) -> List[Tuple[str, Dict[str, str]]]:
     cv = canon_text(vehicle)
-    out = []
-    for k, v in mappings.items():
-        if canon_text(v.get("vehicle", "")) == cv:
-            out.append((k, v))
-    return out
+    return [(k, v) for k, v in mappings.items() if canon_text(v.get("vehicle", "")) == cv]
 
-def find_mappings_by_ymmt(
-    mappings: Dict[str, Dict[str, str]],
-    year: str, make: str, model: str, trim: Optional[str] = None
-) -> List[Tuple[str, Dict[str, str]]]:
-    cy  = (year or "")
-    cmk = canon_text(make)
-    cmd = canon_text(model)
-    ctr = canon_text(trim or "", True)
+def find_mappings_by_ymmt(mappings: Dict[str, Dict[str, str]], year: str, make: str, model: str, trim: Optional[str] = None) -> List[Tuple[str, Dict[str, str]]]:
+    cy  = (year or ""); cmk = canon_text(make); cmd = canon_text(model); ctr = canon_text(trim or "", True)
     out = []
     for k, v in mappings.items():
-        vy  = v.get("year", "")
-        vmk = v.get("make", "")
-        vmd = v.get("model", "")
-        vtr = v.get("trim", "")
+        vy, vmk, vmd, vtr = v.get("year",""), v.get("make",""), v.get("model",""), v.get("trim","")
         if canon_text(vmk) != cmk: continue
         if not year_token_matches(vy, cy): continue
         if canon_text(vmd) != cmd: continue
@@ -194,9 +177,6 @@ def find_mappings_by_ymmt(
     return out
 
 def parse_vehicle_freeform(s: str) -> Tuple[Optional[int], str, str, str]:
-    """
-    Heuristic: Year Make Model [Trim ...]
-    """
     year = extract_primary_year(s)
     tks  = tokens(s, min_len=1)
     make = tks[1] if len(tks) >= 2 else ""
@@ -211,10 +191,6 @@ def _esc(s: str) -> str:
             .replace('"',"&quot;").replace("'","&#39;"))
 
 def render_harvest_table(rows: List[Dict[str, str]], table_id="mapped_harvest", caption="Mapped Vehicles", plain: bool=False):
-    """
-    rows: list of dicts with keys: 'Key','Year','Make','Model','Trim','Vehicle','Code','Model Code','YMMT'
-    Renders a simple semantic table with per-cell IDs and data-col-key for Mozenda.
-    """
     cols = ["Key","Year","Make","Model","Trim","Vehicle","Code","Model Code","YMMT","__source"]
     css = ""
     if not plain:
@@ -228,20 +204,13 @@ def render_harvest_table(rows: List[Dict[str, str]], table_id="mapped_harvest", 
         """
     parts = [css, f"<table id='{_esc(table_id)}' data-source='mapped'>"]
     parts.append(f"<caption>{_esc(caption)}</caption>")
-    # header
     parts.append("<thead><tr>")
     for c in cols:
         parts.append(f"<th scope='col' data-col-key='{_esc(c)}'>{_esc(c)}</th>")
     parts.append("</tr></thead>")
-    # body
     parts.append("<tbody>")
     for r in rows:
-        rk  = r.get("Key","")
-        yr  = r.get("Year","")
-        mk  = r.get("Make","")
-        md  = r.get("Model","")
-        trm = r.get("Trim","")
-        # Row attributes for short XPath filters:
+        rk  = r.get("Key",""); yr  = r.get("Year",""); mk  = r.get("Make",""); md  = r.get("Model",""); trm = r.get("Trim","")
         row_attrs = (
             f"data-row-key='{_esc(rk)}' "
             f"data-year='{_esc(yr)}' "
@@ -320,7 +289,6 @@ with st.form("vehicle_search_form", clear_on_submit=False):
     with c1:
         submitted = st.form_submit_button("Search")
     with c2:
-        # ✅ Use callback instead of manual assignment to avoid StreamlitAPIException
         cleared = st.form_submit_button("Clear", on_click=_clear_veh_input)
 
 # ========================== Fetch mappings ==========================
@@ -391,14 +359,16 @@ def compute_rows(vehicle_text: str, mappings: Dict[str, Dict[str, str]]) -> Tupl
 
     return out_rows, src
 
+# Perform lookup on Search
+just_searched_value = None
 if submitted:
-    rows_out, by_source = compute_rows(st.session_state["veh_input"].strip(), mappings)
+    just_searched_value = st.session_state["veh_input"].strip()
+    rows_out, by_source = compute_rows(just_searched_value, mappings)
     st.session_state["last_rows_out"] = rows_out
     st.session_state["last_by_source"] = by_source
 
     # Optional auto-clear after successful search (textbox only)
     if AUTO_CLEAR and rows_out:
-        # Use the same safe pattern as callback to avoid mutation errors
         st.session_state["veh_input"] = ""
 
 # Use last results if present (keeps table visible across reruns)
@@ -411,7 +381,12 @@ if rows_out:
         st.success(f"Found {len(rows_out)} mapped entr{'y' if len(rows_out)==1 else 'ies'} ({by_source}).")
     render_harvest_table(rows_out, table_id="mapped_harvest", caption="Mapped Vehicles", plain=PLAIN)
 else:
-    st.info("Enter a vehicle above and click Search.")
+    # When user just searched and no results came back, show a clear message
+    if not HARVEST_ONLY and submitted and just_searched_value:
+        st.warning(f"No mapped entries found for: **{just_searched_value}**")
+        st.caption("Tip: Check spacing/casing, or try fewer words (e.g., '2025 Audi SQ5').")
+    else:
+        st.info("Enter a vehicle above and click Search.")
 
 # Quick XPath tips (visible only in non-harvest mode)
 if not HARVEST_ONLY:
@@ -426,7 +401,6 @@ if not HARVEST_ONLY:
 # Harvest-only via URL param (optional)
 params = st.experimental_get_query_params()
 if params.get("harvest", ["0"])[0] == "1":
-    # Only stop in harvest mode to keep the DOM minimal for Mozenda
     st.stop()
 
 # --- EOF ---
