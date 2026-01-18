@@ -1,7 +1,7 @@
 
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
-# Full-Length Patched Build (2026-01-13)
+# Full-Length Patched Build (2026-01-18)
 
 import base64, json, time, io, re, difflib
 from typing import Optional, List, Dict, Tuple, Set
@@ -29,7 +29,9 @@ CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "M
 
 # ---- Canonicalization / Helpers ----
 def canon_text(val: str, for_trim: bool=False) -> str:
-    s = (val or "").strip().lower()
+    # PATCH: normalize NBSP to regular space to avoid invisible mismatches
+    s = (val or "").replace("\u00A0", " ")
+    s = s.strip().lower()
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
     s = re.sub(r"\s+", " ", s)
@@ -716,7 +718,7 @@ try:
 except Exception as e:
     st.warning(f"Could not load mappings from GitHub: {e}")
 
-# ---- YMM Quick Lookup (mapped) ----
+# ---- YMM Quick Lookup (mapped)
 st.header("YMM Quick Lookup (mapped)")
 ymmt_col1, ymmt_col2, ymmt_col3, ymmt_col4 = st.columns(4)
 with ymmt_col1: q_year  = st.text_input("Quick Year",  key="quick_year_input",  placeholder="e.g., 2025")
@@ -765,9 +767,7 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
         except Exception as e:
             st.error(f"Quick YMM(/T) search failed: {e}")
 
-
-
-# ---- Vehicle-Only Quick Lookup (mapped) ----
+# ---- Vehicle-Only Quick Lookup (mapped)
 st.header("Vehicle-Only Quick Lookup (mapped)")
 quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
 
@@ -779,34 +779,41 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
         try:
             # ✅ Parse input into Year, Make, Model, Trim
             year_val = extract_primary_year(veh_txt)
-            tokens_list = tokens(veh_txt)
+
+            # PATCH: keep single-letter tokens (preserve 'S' in 'S line')
+            tokens_list = tokens(veh_txt, min_len=1)
+
             make_val, model_val, trim_val = "", "", ""
-            
             if len(tokens_list) >= 2:
                 make_val = tokens_list[1]  # Assume second token is Make
             if len(tokens_list) >= 3:
                 model_val = tokens_list[2]  # Assume third token is Model
             if len(tokens_list) > 3:
                 trim_val = " ".join(tokens_list[3:])  # Remaining tokens = Trim
-            
+
             mappings = st.session_state.get("mappings", {})
-            
-            # ✅ Stricter logic: If Trim provided → exact match; else → only YMM mappings (trim empty)
+
+            # ✅ Stricter logic previously required exact trim equality; switch to tolerant matching
             all_mps = []
             for k, v in mappings.items():
-                if canon_text(v.get("make", "")) != canon_text(make_val): continue
-                if not year_token_matches(v.get("year", ""), str(year_val)): continue
-                if canon_text(v.get("model", "")) != canon_text(model_val): continue
-                
+                if canon_text(v.get("make", "")) != canon_text(make_val): 
+                    continue
+                if not year_token_matches(v.get("year", ""), str(year_val)): 
+                    continue
+                if canon_text(v.get("model", "")) != canon_text(model_val): 
+                    continue
+
                 if trim_val:
-                    # Require exact trim match
-                    if canon_text(v.get("trim", ""), True) != canon_text(trim_val, True): continue
+                    ok, _ = trim_matches(v.get("trim",""), trim_val, exact_only=False)  # PATCH: tolerant trim
+                    if not ok:
+                        continue
                 else:
-                    # Only include mappings with empty trim
-                    if v.get("trim", "").strip(): continue
-                
+                    # Only include mappings with empty trim when no trim provided
+                    if v.get("trim", "").strip():
+                        continue
+
                 all_mps.append((k, v))
-            
+
             if not all_mps:
                 st.error("❌ No mapped entries for this vehicle. If expected, add mappings below and commit, then retry.")
             else:
@@ -827,14 +834,14 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
                     )
                     if len(df_hit) > 0:
                         df_hit = df_hit.copy()
-                        df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle", ""))  # ✅ Rename column for clarity
+                        df_hit.insert(0, "Mapped Vehicle", mp.get("vehicle", ""))  # Clarify
                         df_hit["__mapped_key__"] = f"{mp.get('make','')}|{mp.get('model','')}|{mp.get('trim','')}|{mp.get('year','')}"
                         df_hit["__tier__"] = diag.get("tier_used")
                         hits.append(df_hit)
-                
+
                 if hits:
                     df_all = pd.concat(hits, ignore_index=True)
-                    df_all = df_all.drop_duplicates(subset=["STYLE_ID", "AD_VEH_ID"]).reset_index(drop=True)  # ✅ Deduplicate
+                    df_all = df_all.drop_duplicates(subset=["STYLE_ID", "AD_VEH_ID"]).reset_index(drop=True)
                     st.success(f"Found {len(df_all)} CADS row(s) for '{veh_txt}'.")
                     st.dataframe(df_all, use_container_width=True, height=TABLE_HEIGHT)
                 else:
@@ -842,8 +849,7 @@ if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"
         except Exception as e:
             st.error(f"Quick vehicle search failed: {e}")
 
-
-# ---- Search CADS for Unmapped Vehicle (unique keys) ----
+# ---- Search CADS for Unmapped Vehicle (unique keys)
 st.header("Search CADS for Unmapped Vehicle")
 unmapped_vehicle = st.text_input(
     "Vehicle (search in CADS)",
@@ -888,7 +894,7 @@ if st.button("🔍 Search CADS for Unmapped Vehicle", key="btn_unmapped_v1"):
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# ---- Selection helpers & add-to-mappings (unique key fix) ----
+# ---- Selection helpers & add-to-mappings (unique key fix)
 def _select_all(df_key: str):
     if df_key in st.session_state:
         df = st.session_state[df_key].copy()
@@ -954,7 +960,7 @@ def _add_selected_rows_to_mappings(
         vehicle_text = (vehicle_val or "").strip() or _effective_vehicle_text(row)
         code_val = str(row.get(code_col, "") or "").strip() if code_col else ""
         model_code_val = str(row.get(model_code_col, "") or "").strip() if model_code_col else ""
-        # ✅ Unique key fix
+        # Unique key fix (keeps STYLE_ID/AD_VEH_ID to avoid collisions)
         unique_id = str(row.get("STYLE_ID") or row.get("AD_VEH_ID") or "")
         key = f"{canon_text(make_val)}|{canon_text(model_val)}|{canon_text(trim_val, True)}|{(year_val or '').strip()}|{unique_id}"
         st.session_state.mappings[key] = {
@@ -971,7 +977,7 @@ def _add_selected_rows_to_mappings(
     st.session_state["local_mappings_modified"] = True
     st.success(f"Added {added} mapping(s).")
 
-# ---- Results Table for Unmapped Vehicle (with edited DataFrame) ----
+# ---- Results Table for Unmapped Vehicle (with edited DataFrame)
 if "results_df_unmapped" in st.session_state:
     st.subheader("Select CADS rows to map this vehicle")
     cUA, cUB = st.columns(2)
@@ -1013,7 +1019,7 @@ if "results_df_unmapped" in st.session_state:
                 rows_override=selected,
             )
 
-# ---- Inputs (YMMT + Vehicle) for standard mapping flow ----
+# ---- Inputs (YMMT + Vehicle) for standard mapping flow
 st.subheader("Edit / Add Mapping")
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025")
@@ -1033,7 +1039,7 @@ st.caption(
     f"TOKEN_MIN_LEN={TOKEN_MIN_LEN}, OverrideCols={OVERRIDE_COLS or '(auto)'}"
 )
 
-# ---- Existing Mapping (for current inputs) ----
+# ---- Existing Mapping (for current inputs)
 st.subheader("Existing Mapping (for current inputs)")
 existing_rows = []
 vehicle_first = False
@@ -1077,7 +1083,7 @@ if existing_rows:
 else:
     st.info("No existing mapping detected for current inputs.")
 
-# ---- CADS Search Buttons (mapped + inputs) ----
+# ---- CADS Search Buttons (mapped + inputs)
 b1, b2, b3, b4 = st.columns(4)
 
 # (Mapped vehicle) — includes YMM multi-mapping fallback
@@ -1198,7 +1204,7 @@ with b3:
         except Exception as e:
             st.error(f"CADS search failed: {e}")
 
-# --- Mapped results table (edited DataFrame) ---
+# --- Mapped results table (edited DataFrame)
 if "results_df_mapped" in st.session_state:
     st.subheader("Select vehicles from CADS results — Mapped Vehicle")
     cA, cB, cC = st.columns([1, 1, 2])
@@ -1239,7 +1245,7 @@ if "results_df_mapped" in st.session_state:
                     rows_override=selected,
                 )
 
-# --- Direct input results table (edited DataFrame) ---
+# --- Direct input results table (edited DataFrame)
 if "results_df_inputs" in st.session_state:
     st.subheader("Select vehicles from CADS results — Direct Input Search")
     cA, cB, cC = st.columns([1, 1, 2])
@@ -1280,7 +1286,7 @@ if "results_df_inputs" in st.session_state:
                     rows_override=selected,
                 )
 
-# ---- Diagnostics ----
+# ---- Diagnostics
 st.subheader("Diagnostics")
 exp = st.expander("Mapped Search Diagnostics", expanded=False)
 with exp:
@@ -1291,8 +1297,7 @@ with exp2:
     st.write("Last inputs search diagnostics:")
     st.json(st.session_state.get("last_diag_inputs", {}))
 
-
-# ---- Current Mappings ----
+# ---- Current Mappings
 st.subheader("Current Mappings (session)")
 if st.session_state.get("mappings"):
     rows = []
@@ -1301,7 +1306,7 @@ if st.session_state.get("mappings"):
         if v.get("trim"):
             mapped_vehicle_display += f" {v.get('trim','')}"
         rows.append({
-            "Mapped Vehicle": mapped_vehicle_display,  # ✅ New column
+            "Mapped Vehicle": mapped_vehicle_display,
             "Key": k,
             "Year": v.get("year",""),
             "Make": v.get("make",""),
@@ -1316,8 +1321,7 @@ if st.session_state.get("mappings"):
 else:
     st.info("No mappings yet. Add one above or select CADS rows to add mappings.")
 
-
-# ---- Commit to GitHub ----
+# ---- Commit to GitHub
 missing_secrets = []
 if not GH_TOKEN:  missing_secrets.append("github.token")
 if not GH_OWNER:  missing_secrets.append("github.owner")
