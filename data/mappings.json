@@ -108,5 +108,85 @@
     "code": "459276",
     "model_code": "F3BCEA",
     "ymmt": "2025|audi|q3|s line 45 tfsi premium"
+  },
+  "audi|q5|quattro premium|2025|472562": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q5",
+    "trim": "quattro  Premium",
+    "vehicle": "new q5 q5 premium 2.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472562",
+    "model_code": "GUBAAY",
+    "ymmt": "2025|audi|q5|quattro premium"
+  },
+  "audi|q5|quattro premium plus|2025|472562": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q5",
+    "trim": "quattro  Premium Plus",
+    "vehicle": "new q5 q5 premium 2.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472562",
+    "model_code": "GUBAAY",
+    "ymmt": "2025|audi|q5|quattro premium plus"
+  },
+  "audi|q5|quattro premium plus|2025|472563": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q5",
+    "trim": "quattro  Premium Plus",
+    "vehicle": "new q5 q5 premium plus 2.0 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "472563",
+    "model_code": "GUBAAY",
+    "ymmt": "2025|audi|q5|quattro premium plus"
+  },
+  "audi|q7|45 tfsi quattro premium|2025|455539": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q7",
+    "trim": "45 TFSI quattro  Premium",
+    "vehicle": "q7 q7 premium 45 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "455539",
+    "model_code": "4MQAC1",
+    "ymmt": "2025|audi|q7|45 tfsi quattro premium"
+  },
+  "audi|q7|55 tfsi quattro premium plus|2025|455542": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q7",
+    "trim": "55 TFSI quattro  Premium Plus",
+    "vehicle": "q7 q7 premium 55 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "455542",
+    "model_code": "4MQAX2",
+    "ymmt": "2025|audi|q7|55 tfsi quattro premium plus"
+  },
+  "audi|q8|55 tfsi quattro premium plus|2025|459283": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "Q8",
+    "trim": "55 TFSI quattro  Premium Plus",
+    "vehicle": "q8 q8 premium 55 tfsi quattro 4dr all-wheel drive quattro sport utility",
+    "code": "459283",
+    "model_code": "4MT5X2",
+    "ymmt": "2025|audi|q8|55 tfsi quattro premium plus"
+  },
+  "audi|a3|sedan 40 tfsi quattro premium|2025|464566": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "A3",
+    "trim": "Sedan 40 TFSI quattro  Premium",
+    "vehicle": "a3 a3 premium 40 tfsi quattro 4dr all-wheel drive quattro sedan",
+    "code": "464566",
+    "model_code": "8YMBUY",
+    "ymmt": "2025|audi|a3|sedan 40 tfsi quattro premium"
+  },
+  "audi|a5|quattro premium|2025|459381": {
+    "year": "2025",
+    "make": "AUDI",
+    "model": "A5",
+    "trim": "quattro  Premium",
+    "vehicle": "2025 Audi A5 quattro  Premium",
+    "code": "459381",
+    "model_code": "F5FBZY",
+    "ymmt": "2025|audi|a5|quattro premium"
   }
 }
