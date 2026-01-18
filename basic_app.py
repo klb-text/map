@@ -2,7 +2,6 @@
 import base64, json, re
 from typing import Dict, List, Optional, Tuple
 import requests
-import pandas as pd
 import streamlit as st
 from requests.adapters import HTTPAdapter, Retry
 
@@ -10,20 +9,20 @@ from requests.adapters import HTTPAdapter, Retry
 st.set_page_config(page_title="Mapped Vehicle Lookup (Minimal Harvest)", layout="wide")
 st.title("Mapped Vehicle Lookup (Minimal Harvest)")
 
-# ---- GitHub config (from secrets, with sidebar overrides) ----
+# ---- GitHub config (secrets + sidebar overrides) ----
 gh_cfg = st.secrets.get("github", {})
 DEF_TOKEN  = gh_cfg.get("token", "")
 DEF_OWNER  = gh_cfg.get("owner", "")
 DEF_REPO   = gh_cfg.get("repo", "")
 DEF_BRANCH = gh_cfg.get("branch", "main")
-MAPPINGS_PATH = "data/mappings.json"  # adjust if your file lives elsewhere
+MAPPINGS_PATH_DEFAULT = "data/mappings.json"  # change if your mappings live elsewhere
 
 st.sidebar.header("GitHub Source")
-GH_TOKEN  = st.sidebar.text_input("Token", value=DEF_TOKEN, type="password")
-GH_OWNER  = st.sidebar.text_input("Owner", value=DEF_OWNER or "your-org-or-user")
-GH_REPO   = st.sidebar.text_input("Repo", value=DEF_REPO or "your-repo")
-GH_BRANCH = st.sidebar.text_input("Branch", value=DEF_BRANCH or "main")
-MAPPINGS_PATH = st.sidebar.text_input("Path to mappings.json", value=MAPPINGS_PATH)
+GH_TOKEN  = st.sidebar.text_input("Token (repo read scope if private)", value=DEF_TOKEN, type="password")
+GH_OWNER  = st.sidebar.text_input("Owner", value=DEF_OWNER)
+GH_REPO   = st.sidebar.text_input("Repo", value=DEF_REPO)
+GH_BRANCH = st.sidebar.text_input("Branch (or tag/SHA)", value=DEF_BRANCH)
+MAPPINGS_PATH = st.sidebar.text_input("Path to mappings.json", value=MAPPINGS_PATH_DEFAULT)
 
 # ========================== HTTP session ==========================
 _session = requests.Session()
@@ -39,6 +38,9 @@ def gh_headers(token: str) -> Dict[str, str]:
 
 def gh_contents_url(owner: str, repo: str, path: str) -> str:
     return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+
+def gh_raw_url(owner: str, repo: str, branch: str, path: str) -> str:
+    return f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
 
 # ========================== Canon helpers ==========================
 def canon_text(val: str, for_trim: bool=False) -> str:
@@ -95,48 +97,72 @@ def trim_tokens(s: str) -> set:
 def trim_matches(row_trim: str, user_trim: str, exact_only: bool=False) -> bool:
     row = canon_text(row_trim, True)
     usr = canon_text(user_trim, True)
-    if not usr:
-        return True
-    if row == usr:
-        return True
-    if exact_only:
-        return False
+    if not usr: return True
+    if row == usr: return True
+    if exact_only: return False
     return trim_tokens(usr).issubset(trim_tokens(row))
 
-# ========================== GitHub loader ==========================
-@st.cache_data(ttl=60)
-def fetch_mappings(owner: str, repo: str, path: str, token: str, ref: str) -> Dict[str, Dict[str, str]]:
+# ========================== GitHub loader with fallback ==========================
+@st.cache_data(ttl=30)
+def fetch_mappings(owner: str, repo: str, path: str, token: str, ref: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str]]:
     """
-    Loads mappings.json from GitHub contents API.
-    Returns {} if not found or parse error.
+    Try GitHub Contents API; if empty or fail, try raw.githubusercontent.com.
+    Returns (data_dict, diagnostics)
     """
-    url = gh_contents_url(owner, repo, path)
-    r = _session.get(url, headers=gh_headers(token), params={"ref": ref}, timeout=15)
-    if r.status_code == 200:
-        j = r.json()
-        if "content" in j:
-            decoded = base64.b64decode(j["content"]).decode("utf-8", errors="replace")
-            try:
-                data = json.loads(decoded)
-                if isinstance(data, dict):
-                    return data
-            except Exception:
-                return {}
-        # fallback to download_url if present
-        dl = j.get("download_url")
-        if dl:
-            r2 = _session.get(dl, timeout=15)
-            if r2.status_code == 200:
+    diag = {"api_status":"", "api_used":"0", "raw_status":"", "raw_used":"0", "note":""}
+    data: Dict[str, Dict[str, str]] = {}
+
+    # 1) API attempt
+    try:
+        url_api = gh_contents_url(owner, repo, path)
+        r = _session.get(url_api, headers=gh_headers(token), params={"ref": ref}, timeout=15)
+        diag["api_status"] = f"{r.status_code}"
+        if r.status_code == 200:
+            j = r.json()
+            content = None
+            if isinstance(j, dict) and "content" in j and j["content"]:
                 try:
-                    data = json.loads(r2.text)
-                    return data if isinstance(data, dict) else {}
+                    content = base64.b64decode(j["content"]).decode("utf-8", errors="replace")
                 except Exception:
-                    return {}
-        return {}
-    elif r.status_code == 404:
-        return {}
-    else:
-        raise RuntimeError(f"GitHub fetch failed ({r.status_code}): {r.text}")
+                    content = None
+            if not content and isinstance(j, dict) and j.get("download_url"):
+                r2 = _session.get(j["download_url"], timeout=15)
+                if r2.status_code == 200:
+                    content = r2.text
+            if content:
+                try:
+                    parsed = json.loads(content)
+                    if isinstance(parsed, dict):
+                        data = parsed
+                        diag["api_used"] = "1"
+                        return data, diag
+                    else:
+                        diag["note"] = "API: JSON parsed but not a dict."
+                except Exception as ex:
+                    diag["note"] = f"API: JSON parse error: {ex}"
+    except Exception as ex:
+        diag["note"] = f"API error: {ex}"
+
+    # 2) Raw fallback
+    try:
+        url_raw = gh_raw_url(owner, repo, ref, path)
+        r = _session.get(url_raw, timeout=15)
+        diag["raw_status"] = f"{r.status_code}"
+        if r.status_code == 200:
+            try:
+                parsed = json.loads(r.text)
+                if isinstance(parsed, dict):
+                    data = parsed
+                    diag["raw_used"] = "1"
+                    return data, diag
+                else:
+                    diag["note"] = "RAW: JSON parsed but not a dict."
+            except Exception as ex:
+                diag["note"] = f"RAW: JSON parse error: {ex}"
+    except Exception as ex:
+        diag["note"] = f"RAW error: {ex}"
+
+    return data, diag
 
 # ========================== Lookups ==========================
 def pick_mapping_by_vehicle(mappings: Dict[str, Dict[str, str]], vehicle: str) -> List[Tuple[str, Dict[str, str]]]:
@@ -161,14 +187,10 @@ def find_mappings_by_ymmt(
         vmk = v.get("make", "")
         vmd = v.get("model", "")
         vtr = v.get("trim", "")
-        if canon_text(vmk) != cmk:
-            continue
-        if not year_token_matches(vy, cy):
-            continue
-        if canon_text(vmd) != cmd:
-            continue
-        if ctr and not trim_matches(vtr, ctr, exact_only=False):
-            continue
+        if canon_text(vmk) != cmk: continue
+        if not year_token_matches(vy, cy): continue
+        if canon_text(vmd) != cmd: continue
+        if ctr and not trim_matches(vtr, ctr, exact_only=False): continue
         out.append((k, v))
     return out
 
@@ -236,6 +258,26 @@ def render_harvest_table(rows: List[Dict[str, str]], table_id="mapped_harvest", 
     parts.append("</tbody></table>")
     st.markdown("\n".join(parts), unsafe_allow_html=True)
 
+# ========================== Sidebar Diagnostics (optional) ==========================
+st.sidebar.header("Diagnostics")
+if st.sidebar.button("Test GitHub Connection"):
+    if not (GH_OWNER and GH_REPO and GH_BRANCH and MAPPINGS_PATH):
+        st.sidebar.error("Fill Owner, Repo, Branch, and Path.")
+    else:
+        try:
+            data, diag = fetch_mappings(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH)
+            keys = list(data.keys())
+            st.sidebar.write({
+                "api_status": diag.get("api_status"),
+                "api_used": diag.get("api_used"),
+                "raw_status": diag.get("raw_status"),
+                "raw_used": diag.get("raw_used"),
+                "count": len(keys),
+                "sample_key": keys[0] if keys else "(none)"
+            })
+        except Exception as e:
+            st.sidebar.error(f"Fetch failed: {e}")
+
 # ========================== UI Inputs ==========================
 vehicle_input = st.text_input("Enter Vehicle (e.g., 2025 Audi SQ5 Premium Plus)", key="veh_input", placeholder="Year Make Model [Trim]")
 
@@ -244,17 +286,27 @@ HARVEST_ONLY = st.sidebar.checkbox("Harvest Mode (table-only)", value=("1" == st
 PLAIN = st.sidebar.checkbox("Plain (no CSS)", value=("1" == st.experimental_get_query_params().get("plain", ["0"])[0]))
 
 # ========================== Fetch mappings ==========================
-try:
-    mappings = fetch_mappings(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH)
-    st.caption(f"Loaded {len(mappings)} mapping entries from GitHub: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}/{MAPPINGS_PATH}")
-except Exception as e:
-    st.error(f"Failed to load mappings: {e}")
-    mappings = {}
-
-# ========================== Lookup & Render ==========================
 rows_out: List[Dict[str, str]] = []
 by_source = ""
+mappings: Dict[str, Dict[str, str]] = {}
 
+if not (GH_OWNER and GH_REPO and GH_BRANCH and MAPPINGS_PATH):
+    st.warning("Fill GitHub Owner, Repo, Branch, and Path in the sidebar, or set them in .streamlit/secrets.toml.")
+else:
+    try:
+        mappings, diag = fetch_mappings(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH)
+        st.caption(
+            f"Loaded {len(mappings)} mapping entries from GitHub "
+            f"({'API' if diag.get('api_used')=='1' else 'RAW' if diag.get('raw_used')=='1' else 'none'}) "
+            f"{GH_OWNER}/{GH_REPO}@{GH_BRANCH}/{MAPPINGS_PATH}"
+        )
+        if not mappings and diag.get("api_status") == "404" and diag.get("raw_status") == "404":
+            st.warning("File not found. Check path/branch (e.g., 'data/mappings.json').")
+    except Exception as e:
+        st.error(f"Failed to load mappings: {e}")
+        mappings = {}
+
+# ========================== Lookup & Render ==========================
 if vehicle_input.strip() and mappings:
     # 1) Try exact vehicle match
     direct_hits = pick_mapping_by_vehicle(mappings, vehicle_input)
@@ -300,7 +352,10 @@ if rows_out:
         st.success(f"Found {len(rows_out)} mapped entr{'y' if len(rows_out)==1 else 'ies'} ({by_source}).")
     render_harvest_table(rows_out, table_id="mapped_harvest", caption="Mapped Vehicles", plain=PLAIN)
 else:
-    st.info("No mapped entries found for the provided vehicle." if vehicle_input.strip() else "Enter a vehicle to look up mapped entries.")
+    if vehicle_input.strip():
+        st.info("No mapped entries found for the provided vehicle.")
+    else:
+        st.info("Enter a vehicle to look up mapped entries.")
 
 # Quick XPath tips (visible only in non-harvest mode)
 if not HARVEST_ONLY:
@@ -312,10 +367,9 @@ if not HARVEST_ONLY:
         language="text"
     )
 
-# Harvest-only via URL param (optional and non-blocking)
+# Harvest-only via URL param (optional)
 params = st.experimental_get_query_params()
 if params.get("harvest", ["0"])[0] == "1":
-    # force table-only (no extra widgets below)
     st.stop()
 
 # --- EOF ---
