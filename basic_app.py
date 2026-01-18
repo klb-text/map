@@ -1,4 +1,3 @@
-
 import base64, json, re
 from typing import Dict, List, Optional, Tuple
 import requests
@@ -278,15 +277,7 @@ if st.sidebar.button("Test GitHub Connection"):
         except Exception as e:
             st.sidebar.error(f"Fetch failed: {e}")
 
-# ========================== Inputs + Search Button ==========================
-with st.form("vehicle_search_form", clear_on_submit=False):
-    vehicle_input = st.text_input(
-        "Enter Vehicle (e.g., 2025 Audi SQ5 Premium Plus)",
-        key="veh_input",
-        placeholder="Year Make Model [Trim]"
-    )
-    submitted = st.form_submit_button("Search")
-
+# ========================== Options (Harvest & Auto-Clear) ==========================
 st.sidebar.header("Options")
 HARVEST_ONLY = st.sidebar.checkbox(
     "Harvest Mode (table-only)",
@@ -296,12 +287,39 @@ PLAIN = st.sidebar.checkbox(
     "Plain (no CSS)",
     value=("1" == st.experimental_get_query_params().get("plain", ["0"])[0])
 )
+AUTO_CLEAR = st.sidebar.checkbox(
+    "Auto-clear after successful Search",
+    value=False,
+    help="When enabled, the vehicle textbox will clear automatically after results are found."
+)
 
-# Initialize session storage for results so they persist across reruns
+# ========================== Session State init ==========================
 if "last_rows_out" not in st.session_state:
     st.session_state["last_rows_out"] = []
 if "last_by_source" not in st.session_state:
     st.session_state["last_by_source"] = ""
+if "veh_input" not in st.session_state:
+    st.session_state["veh_input"] = ""
+
+# ========================== Inputs + Search/Clear Buttons ==========================
+with st.form("vehicle_search_form", clear_on_submit=False):
+    vehicle_input = st.text_input(
+        "Enter Vehicle (e.g., 2025 Audi SQ5 Premium Plus)",
+        key="veh_input",
+        placeholder="Year Make Model [Trim]"
+    )
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        submitted = st.form_submit_button("Search")
+    with c2:
+        cleared = st.form_submit_button("Clear")
+
+# Clear handler: empties the textbox and last results
+if cleared:
+    st.session_state["veh_input"] = ""
+    st.session_state["last_rows_out"] = []
+    st.session_state["last_by_source"] = ""
+    st.rerun()
 
 # ========================== Fetch mappings ==========================
 rows_out: List[Dict[str, str]] = []
@@ -372,11 +390,16 @@ def compute_rows(vehicle_text: str, mappings: Dict[str, Dict[str, str]]) -> Tupl
     return out_rows, src
 
 if submitted:
-    rows_out, by_source = compute_rows(vehicle_input.strip(), mappings)
+    rows_out, by_source = compute_rows(st.session_state["veh_input"].strip(), mappings)
     st.session_state["last_rows_out"] = rows_out
     st.session_state["last_by_source"] = by_source
 
-# If not submitted, reuse last results (keeps table on screen after captures or reruns)
+    # Optional auto-clear after successful search
+    if AUTO_CLEAR and rows_out:
+        st.session_state["veh_input"] = ""
+        # Keep results visible; no rerun, so Mozenda can still capture
+
+# Use last results if present (keeps table visible across reruns)
 rows_out = st.session_state.get("last_rows_out", [])
 by_source = st.session_state.get("last_by_source", "")
 
