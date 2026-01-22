@@ -1338,12 +1338,13 @@ with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025"
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Audi")
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Q7")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., 45 TFSI quattro Premium")
+with c5:
+    vehicle = st.text_input(
+        "Vehicle (REQUIRED - paste exact value from source website)",
+        key="vehicle_input",
+        placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic",
+    ).strip()
 
-with c5: vehicle = st.text_input(
-    "Vehicle (REQUIRED – paste exact value from source website)",
-    key="vehicle_input",
-    placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic"
-   
 # --- Soft YMM hints from helper file (if available) ---
 vehicle_key = canon_vehicle_key(vehicle_vo)
 try:
