@@ -48,6 +48,15 @@ def canon_text(val: str, for_trim: bool=False) -> str:
             s = s.replace(k, v)
     return s
 
+# Canonicalization specific to vehicle_ymm_hints.json keys ONLY.
+# This builds on canon_text and removes punctuation so pasted vehicle strings
+# match stable JSON keys without altering CADS matching behavior.
+def canon_vehicle_key(text: str) -> str:
+    s = canon_text(text)
+    s = re.sub(r"[^\w\s]", " ", s)   # strip punctuation (quotes, slashes, hyphens)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
 # Use canon_text for general matching normalization; this adds punctuation stripping
 # ONLY for vehicle_ymm_hints.json key lookups (so we don't change matching behavior).
 def canon_vehicle_key(text: str) -> str:
