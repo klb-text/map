@@ -720,6 +720,16 @@ def render_harvest_table(
 # ===================== UI (normal mode) =====================
 st.title("AFF Vehicle Mapping")
 
+# ------------------------------------------------------------------
+# Mapping Mode Selector (Helpers vs Advanced)
+# ------------------------------------------------------------------
+mapping_mode = st.radio(
+    "Mapping Mode",
+    ["Vehicle‑Only (Recommended)", "Advanced (YMM / YMMT)"],
+    key="mapping_mode",
+    horizontal=True,
+)
+
 # Parse URL params early (used by both modes)
 params = st.experimental_get_query_params()
 HARVEST_MODE   = (params.get("harvest", ["0"])[0] == "1")
@@ -936,6 +946,31 @@ if HARVEST_MODE:
     _run_harvest()
 
 # ===================== Normal Interactive UI (unchanged core UX) =====================
+
+# ===================== Normal Interactive UI =====================
+
+
+if mapping_mode == "Vehicle‑Only (Recommended)":
+    # ✅ vehicle-only UX block (large table, select, map)
+    ...
+
+elif mapping_mode == "Advanced (YMM / YMMT)":
+    # ✅ advanced narrowing block
+    ...
+
+    # 👇 legacy expert UI lives here 👇
+    st.header("YMM Quick Lookup (mapped)")
+    ...
+    st.subheader("Edit / Add Mapping")
+    ...
+
+
+# 👇 existing sections remain unchanged 👇
+st.header("YMM Quick Lookup (mapped)")
+...
+st.subheader("Edit / Add Mapping")
+...
+
 # Sidebar: CADS Settings
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
