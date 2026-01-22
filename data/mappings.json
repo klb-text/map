@@ -188,5 +188,35 @@
     "code": "459381",
     "model_code": "F5FBZY",
     "ymmt": "2025|audi|a5|quattro premium"
+  },
+  "acura|tlx|tech 10 speed automatic|2025|461904": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "TLX",
+    "trim": "TECH 10 Speed Automatic",
+    "vehicle": "2025 TLX TECH 10 Speed Automatic",
+    "code": "461904",
+    "model_code": "UB5F4SGNW",
+    "ymmt": "2025|acura|tlx|tech 10 speed automatic"
+  },
+  "acura|adx|fwd continuously variable transmission|2025|471475": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "FWD Continuously Variable Transmission",
+    "vehicle": "2025 ADX FWD Continuously Variable Transmission",
+    "code": "471475",
+    "model_code": "SA1H3SJNW",
+    "ymmt": "2025|acura|adx|fwd continuously variable transmission"
+  },
+  "acura|integra|fwd continuously variable transmission|2026|480284": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "FWD Continuously Variable Transmission",
+    "vehicle": "2026 Integra FWD Continuously Variable Transmission",
+    "code": "480284",
+    "model_code": "DE4H2TJW",
+    "ymmt": "2026|acura|integra|fwd continuously variable transmission"
   }
 }
