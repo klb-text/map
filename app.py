@@ -1,3 +1,4 @@
+
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Harvester Mode: server-executed, stateless; Mozenda-friendly semantic table
@@ -21,7 +22,6 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 MAPPINGS_PATH   = "data/mappings.json"
 AUDIT_LOG_PATH  = "data/mappings_log.jsonl"
 CADS_PATH       = "CADS.csv"
-UNBUILDABLE_PATH = "data/unbuildable_vehicles.json"
 CADS_IS_EXCEL   = False
 CADS_SHEET_NAME_DEFAULT = "0"
 
@@ -111,12 +111,12 @@ def model_similarity(a: str, b: str) -> float:
 _session = requests.Session()
 _retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])
 _adapter = HTTPAdapter(max_retries=_retries)
-_session.mount(https://, _adapter)
-_session.mount(http://, _adapter)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
 
 def gh_headers(token: str): return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-def gh_contents_url(owner, repo, path): return fhttps://api.github.com/repos/{owner}/{repo}/contents/{path}
-def gh_ref_heads(owner, repo, branch): return fhttps://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}
+def gh_contents_url(owner, repo, path): return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+def gh_ref_heads(owner, repo, branch): return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
 
 # ---- CADS Loaders ----
 def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -234,51 +234,6 @@ def compute_per_make_stopwords(df_make_slice: pd.DataFrame, stopword_threshold: 
     return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
 
 # ---- GitHub Persistence Helpers ----
-
-@st.cache_data(ttl=60)
-def fetch_mappings_from_github(owner, repo, path, token, ref):
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": ref},
-        timeout=15,
-    )
-    if r.status_code == 200:
-        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
-        try:
-            data = json.loads(decoded)
-            return data if isinstance(data, dict) else {}
-        except Exception:
-            return {}
-    elif r.status_code == 404:
-        return {}
-    else:
-        raise RuntimeError(
-            f"Failed to load mappings ({r.status_code}): {r.text}"
-        )
-
-# ---- GitHub loader (always fetch mappings on startup / reload) ----
-
-@st.cache_data(ttl=60)
-def fetch_unbuildable_from_github(owner, repo, path, token, ref):
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": ref},
-        timeout=15,
-    )
-    if r.status_code == 200:
-        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
-        try:
-            data = json.loads(decoded)
-            return data if isinstance(data, dict) else {}
-        except Exception:
-            return {}
-    elif r.status_code == 404:
-        return {}
-    else:
-        raise RuntimeError(f"Failed to load unbuildable list ({r.status_code}): {r.text}")
-        
 def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
                         author_name=None, author_email=None, use_feature_branch=False, feature_branch_name="aff-mapping-app"):
     content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
@@ -290,7 +245,7 @@ def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_m
             r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
             if r_base.status_code == 200:
                 base_sha = r_base.json()["object"]["sha"]
-                _session.post(fhttps://api.github.com/repos/{owner}/{repo}/git/refs,
+                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
                               headers=gh_headers(token),
                               json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
         target_branch = feature_branch_name
@@ -311,36 +266,6 @@ def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_m
             if r4.status_code in (200, 201): return r4.json()
     raise RuntimeError(f"Failed to save file ({r2.status_code}): {r2.text}")
 
-def save_unbuildable_to_github(owner, repo, path, token, branch, payload_dict):
-    content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
-    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": branch},
-        timeout=15,
-    )
-    sha = r.json().get("sha") if r.status_code == 200 else None
-
-    data = {
-        "message": "chore(app): mark vehicle as missing CADS data",
-        "content": content_b64,
-        "branch": branch,
-    }
-    if sha:
-        data["sha"] = sha
-
-    r2 = _session.put(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        json=data,
-        timeout=15,
-    )
-    if r2.status_code not in (200, 201):
-        raise RuntimeError(f"Failed to save unbuildable list ({r2.status_code}): {r2.text}")
-
-
 def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_message,
                            use_feature_branch=False, feature_branch_name="aff-mapping-app"):
     target_branch = branch
@@ -350,7 +275,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
             r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
             if r_base.status_code == 200:
                 base_sha = r_base.json()["object"]["sha"]
-                _session.post(fhttps://api.github.com/repos/{owner}/{repo}/git/refs,
+                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
                               headers=gh_headers(token),
                               json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
         target_branch = feature_branch_name
@@ -369,6 +294,27 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
     if r2.status_code in (200, 201): return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
+
+# ---- GitHub loader (always fetch mappings on startup / reload) ----
+@st.cache_data(ttl=60)
+def fetch_mappings_from_github(owner, repo, path, token, ref) -> Dict[str, Dict[str, str]]:
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        try:
+            data = json.loads(decoded)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    elif r.status_code == 404:
+        return {}
+    else:
+        raise RuntimeError(f"Failed to load mappings ({r.status_code}): {r.text}")
 
 # ---- Mapping pickers ----
 def pick_best_mapping(
@@ -1280,51 +1226,10 @@ if not existing_rows:
         k, v, score = best
         existing_rows.append({"Match Level":"generic_best_trim_model_year" if canon_text(trim, True) else "generic_best_by_ymm","Score":round(score,3),"Key":k,"Year":v.get("year",""),"Make":v.get("make",""),"Model":v.get("model",""),"Trim":v.get("trim",""),"Vehicle":v.get("vehicle",""),"Code":v.get("code",""),"Model Code":v.get("model_code","")})
 
-
 if existing_rows:
     st.dataframe(pd.DataFrame(existing_rows), use_container_width=True)
 else:
     st.info("No existing mapping detected for current inputs.")
-
-    vehicle_text = (vehicle or "").strip()
-    if vehicle_text:
-        # Check if already marked unbuildable
-        unbuildable = fetch_unbuildable_from_github(
-            GH_OWNER, GH_REPO, UNBUILDABLE_PATH, GH_TOKEN, st.session_state["load_branch"]
-        )
-
-        if canon_text(vehicle_text) in {canon_text(v) for v in unbuildable.keys()}:
-            st.warning("🚧 Missing Vehicle Data")
-            st.caption("This vehicle is not yet available in the CADS file.")
-        else:
-            if st.button("🚧 No Vehicle Data Yet"):
-                try:
-                    now_ts = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    unbuildable[vehicle_text] = {
-                        "vehicle": vehicle_text,
-                        "year": year.strip(),
-                        "make": make.strip(),
-                        "model": model.strip(),
-                        "reason": "CADS does not contain this model year yet",
-                        "added_at": now_ts,
-                        "added_by": "dashboard-app",
-                    }
-
-                    save_unbuildable_to_github(
-                        GH_OWNER,
-                        GH_REPO,
-                        UNBUILDABLE_PATH,
-                        GH_TOKEN,
-                        st.session_state["load_branch"],
-                        unbuildable,
-                    )
-
-                    st.success("Vehicle marked as missing CADS data.")
-                    st.cache_data.clear()
-
-                except Exception as e:
-                    st.error(f"Failed to mark vehicle as missing: {e}")
-
 
 # ---- CADS Search Buttons
 b1, b2, b3, b4 = st.columns(4)
@@ -1498,7 +1403,7 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
         st.sidebar.error("Cannot commit: fix missing secrets first.")
     else:
         try:
-            resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email=aff-mapping@app.local, use_feature_branch=use_feature_branch)
+            resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email="aff-mapping@app.local", use_feature_branch=use_feature_branch)
             st.sidebar.success("Committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
             try:
