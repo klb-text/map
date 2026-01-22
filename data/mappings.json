@@ -218,5 +218,275 @@
     "code": "480284",
     "model_code": "DE4H2TJW",
     "ymmt": "2026|acura|integra|fwd continuously variable transmission"
+  },
+  "acura|integra||2026|480284": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "",
+    "vehicle": "2026 Integra",
+    "code": "480284",
+    "model_code": "DE4H2TJW",
+    "ymmt": "2026|acura|integra|"
+  },
+  "acura|integra||2026|480285": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "",
+    "vehicle": "2026 Integra",
+    "code": "480285",
+    "model_code": "DE4H3TJW",
+    "ymmt": "2026|acura|integra|"
+  },
+  "acura|integra||2026|480286": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "",
+    "vehicle": "2026 Integra",
+    "code": "480286",
+    "model_code": "DE4H6TJW",
+    "ymmt": "2026|acura|integra|"
+  },
+  "acura|integra||2026|480287": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "",
+    "vehicle": "2026 Integra",
+    "code": "480287",
+    "model_code": "DE4G7TJW",
+    "ymmt": "2026|acura|integra|"
+  },
+  "acura|integra||2026|480288": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "Integra",
+    "trim": "",
+    "vehicle": "2026 Integra",
+    "code": "480288",
+    "model_code": "DE5G9TEW",
+    "ymmt": "2026|acura|integra|"
+  },
+  "acura|adx||2025|471472": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471472",
+    "model_code": "SA2H3SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|adx||2025|471474": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471474",
+    "model_code": "SA2H7SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|adx||2025|471473": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471473",
+    "model_code": "SA2H5SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|adx||2025|471475": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471475",
+    "model_code": "SA1H3SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|adx||2025|471477": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471477",
+    "model_code": "SA1H7SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|adx||2025|471476": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "ADX",
+    "trim": "",
+    "vehicle": "2025 ADX",
+    "code": "471476",
+    "model_code": "SA1H5SJNW",
+    "ymmt": "2025|acura|adx|"
+  },
+  "acura|mdx||2026|475875": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475875",
+    "model_code": "YD9H3TJNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475876": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475876",
+    "model_code": "YD9H4TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475869": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475869",
+    "model_code": "YE1H3TJNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475873": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475873",
+    "model_code": "YE1H9TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475871": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475871",
+    "model_code": "YE1H0TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475872": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475872",
+    "model_code": "YE1H8TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475870": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475870",
+    "model_code": "YE1H4TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|mdx||2026|475874": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "MDX",
+    "trim": "",
+    "vehicle": "2026 MDX",
+    "code": "475874",
+    "model_code": "YD8H8TKNW",
+    "ymmt": "2026|acura|mdx|"
+  },
+  "acura|rdx||2026|481241": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "",
+    "vehicle": "2026 RDX",
+    "code": "481241",
+    "model_code": "TC2H4TJNW",
+    "ymmt": "2026|acura|rdx|"
+  },
+  "acura|rdx||2026|481245": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "",
+    "vehicle": "2026 RDX",
+    "code": "481245",
+    "model_code": "TC2H8TKNW",
+    "ymmt": "2026|acura|rdx|"
+  },
+  "acura|rdx||2026|481243": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "",
+    "vehicle": "2026 RDX",
+    "code": "481243",
+    "model_code": "TC2H6TKNW",
+    "ymmt": "2026|acura|rdx|"
+  },
+  "acura|rdx||2026|481244": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "",
+    "vehicle": "2026 RDX",
+    "code": "481244",
+    "model_code": "TC2H7TKNW",
+    "ymmt": "2026|acura|rdx|"
+  },
+  "acura|rdx||2026|481242": {
+    "year": "2026",
+    "make": "Acura",
+    "model": "RDX",
+    "trim": "",
+    "vehicle": "2026 RDX",
+    "code": "481242",
+    "model_code": "TC2H5TKNW",
+    "ymmt": "2026|acura|rdx|"
+  },
+  "acura|tlx||2025|461904": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "TLX",
+    "trim": "",
+    "vehicle": "2025 TLX",
+    "code": "461904",
+    "model_code": "UB5F4SGNW",
+    "ymmt": "2025|acura|tlx|"
+  },
+  "acura|tlx||2025|461905": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "TLX",
+    "trim": "",
+    "vehicle": "2025 TLX",
+    "code": "461905",
+    "model_code": "UB6F5SGNW",
+    "ymmt": "2025|acura|tlx|"
+  },
+  "acura|tlx||2025|461906": {
+    "year": "2025",
+    "make": "Acura",
+    "model": "TLX",
+    "trim": "",
+    "vehicle": "2025 TLX",
+    "code": "461906",
+    "model_code": "UB7F0SGW",
+    "ymmt": "2025|acura|tlx|"
   }
 }
