@@ -48,6 +48,18 @@ def canon_text(val: str, for_trim: bool=False) -> str:
             s = s.replace(k, v)
     return s
 
+# Use canon_text for general matching normalization; this adds punctuation stripping
+# ONLY for vehicle_ymm_hints.json key lookups (so we don't change matching behavior).
+def canon_vehicle_key(text: str) -> str:
+    """
+    Canonical form for vehicle_ymm_hints.json keys.
+    Built on canon_text (do not re-implement matching normalization here).
+    """
+    s = canon_text(text)
+    s = re.sub(r"[^\w\s]", " ", s)      # strip punctuation to stabilize keys
+    s = re.sub(r"\s+", " ", s).strip()  # collapse whitespace
+    return s
+
 def tokens(s: str, min_len: int = 2) -> List[str]:
     s = canon_text(s)
     tks = re.split(r"[^\w]+", s)
@@ -258,7 +270,46 @@ def fetch_mappings_from_github(owner, repo, path, token, ref):
             f"Failed to load mappings ({r.status_code}): {r.text}"
         )
 
+YMM_HINTS_PATH = "data/vehicle_ymm_hints.json"
+
+@st.cache_data(ttl=300)
+def fetch_vehicle_ymm_hints(owner, repo, path, token, ref):
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        try:
+            return json.loads(decoded)
+        except Exception:
+            return {"vehicles": {}}
+    elif r.status_code == 404:
+        return {"vehicles": {}}
+    else:
+        raise RuntimeError(f"Failed to load YMM hints: {r.text}")
+
 # ---- GitHub loader (always fetch mappings on startup / reload) ----
+# ---- GitHub loader (hints) ----
+YMM_HINTS_PATH = "data/vehicle_ymm_hints.json"
+
+@st.cache_data(ttl=300)
+def fetch_vehicle_ymm_hints(owner, repo, path, token, ref):
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        return json.loads(decoded)
+    elif r.status_code == 404:
+        return {"vehicles": {}}
+    else:
+        raise RuntimeError(f"Failed to load YMM hints: {r.text}")
 
 @st.cache_data(ttl=60)
 def fetch_unbuildable_from_github(owner, repo, path, token, ref):
@@ -1286,6 +1337,26 @@ with c5: vehicle = st.text_input(
     "Vehicle (REQUIRED – paste exact value from source website)",
     key="vehicle_input",
     placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic"
+   
+# --- Soft YMM hints from helper file (if available) ---
+vehicle_key = canon_vehicle_key(vehicle_vo)
+try:
+    ymm_hints = fetch_vehicle_ymm_hints(
+        GH_OWNER, GH_REPO, YMM_HINTS_PATH, GH_TOKEN, st.session_state["load_branch"]
+    )
+except Exception as _e:
+    ymm_hints = {"vehicles": {}}
+
+hint_list = ymm_hints.get("vehicles", {}).get(vehicle_key, [])
+hint_year = hint_make = hint_model = None
+
+if hint_list:
+    # Take the highest-confidence hint; you can later make this smarter
+    best = sorted(hint_list, key=lambda x: x.get("confidence", 0), reverse=True)[0]
+    hint_year  = (best.get("year")  or "").strip()
+    hint_make  = (best.get("make")  or "").strip()
+    hint_model = (best.get("model") or "").strip()
+ 
 )
 
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
