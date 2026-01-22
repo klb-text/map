@@ -1139,7 +1139,13 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
             st.error(f"Quick YMM(/T) search failed: {e}")
 
 st.header("Vehicle-Only Quick Lookup (mapped)")
-quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
+
+quick_vehicle = st.text_input(
+    "Vehicle (Year Make Model [Trim])",
+    key="quick_vehicle_input",
+    placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus",
+).strip()
+
 
 if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"):
     veh_txt = (quick_vehicle or "").strip()
