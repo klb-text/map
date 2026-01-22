@@ -1,8 +1,7 @@
 
 # basic_app.py
-# AFF Vehicle Mapping – Minimal Harvest App
-# Purpose: Deterministic, read-only vehicle lookup for Mozenda
-# Full Build (2026-01-22)
+# AFF Vehicle Harvest – Minimal Read-Only App for Mozenda
+# Full version (browser + Mozenda compatible)
 
 import base64
 import json
@@ -13,6 +12,7 @@ from requests.adapters import HTTPAdapter, Retry
 
 # ---------------- Page Config ----------------
 st.set_page_config(page_title="AFF Vehicle Harvest", layout="wide")
+st.title("AFF Vehicle Harvest")
 
 # ---------------- GitHub Config ----------------
 gh_cfg = st.secrets.get("github", {})
@@ -30,7 +30,7 @@ _retries = Retry(
     total=3,
     backoff_factor=0.5,
     status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["GET"]
+    allowed_methods=["GET"],
 )
 _adapter = HTTPAdapter(max_retries=_retries)
 _session.mount("https://", _adapter)
@@ -38,7 +38,7 @@ _session.mount("https://", _adapter)
 def gh_headers(token: str):
     return {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json"
+        "Accept": "application/vnd.github+json",
     }
 
 def gh_contents_url(owner, repo, path):
@@ -89,27 +89,38 @@ def fetch_unbuildable_from_github(owner, repo, path, token, ref):
     else:
         raise RuntimeError(f"Failed to load unbuildable list ({r.status_code}): {r.text}")
 
-# ---------------- Start App ----------------
-st.title("AFF Vehicle Harvest")
-
+# ---------------- Resolve Vehicle Input ----------------
 params = st.experimental_get_query_params()
-HARVEST_MODE = params.get("harvest", ["0"])[0] == "1"
-vehicle = params.get("vehicle", [""])[0]
+vehicle_from_query = params.get("vehicle", [""])[0]
 
-vehicle_text = (vehicle or "").strip()
+vehicle_text = (
+    vehicle_from_query.strip()
+    if vehicle_from_query
+    else st.text_input(
+        "Vehicle (for browser testing)",
+        placeholder="e.g. 2027 Acura Integra",
+    ).strip()
+)
 
-# ---------------- Missing Vehicle Data Check (CRITICAL) ----------------
-if vehicle_text:
-    unbuildable = fetch_unbuildable_from_github(
-        GH_OWNER, GH_REPO, UNBUILDABLE_PATH, GH_TOKEN, GH_BRANCH
+# ---------------- Guard: Still no vehicle ----------------
+if not vehicle_text:
+    st.markdown(
+        "<p id='vehicle-status' data-status='empty'>No vehicle provided</p>",
+        unsafe_allow_html=True,
     )
+    st.stop()
 
-    if canon_text(vehicle_text) in {canon_text(k) for k in unbuildable.keys()}:
-        st.markdown(
-            "<p id='vehicle-status' data-status='missing'>Missing Vehicle Data</p>",
-            unsafe_allow_html=True
-        )
-        st.stop()
+# ---------------- Missing Vehicle Data Short-Circuit ----------------
+unbuildable = fetch_unbuildable_from_github(
+    GH_OWNER, GH_REPO, UNBUILDABLE_PATH, GH_TOKEN, GH_BRANCH
+)
+
+if canon_text(vehicle_text) in {canon_text(v) for v in unbuildable.keys()}:
+    st.markdown(
+        "<p id='vehicle-status' data-status='missing'>Missing Vehicle Data</p>",
+        unsafe_allow_html=True,
+    )
+    st.stop()
 
 # ---------------- Load Mappings ----------------
 mappings = fetch_mappings_from_github(
@@ -117,39 +128,29 @@ mappings = fetch_mappings_from_github(
 )
 
 # ---------------- Render Results ----------------
-
 def render_mapping_table(rows):
     if not rows:
-        if not vehicle_text:
-            st.markdown(
-                "<p id='vehicle-status' data-status='empty'>No vehicle provided</p>",
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                f"<p id='vehicle-status' data-status='unmapped'>"
-                f"No mapped entries found for: {vehicle_text}"
-                f"</p>",
-                unsafe_allow_html=True
-            )
+        st.markdown(
+            f"<p id='vehicle-status' data-status='unmapped'>"
+            f"No mapped entries found for: {vehicle_text}"
+            f"</p>",
+            unsafe_allow_html=True,
+        )
         return
-
 
     parts = [
         "<table id='mapped_harvest' data-source='mapped'>",
         "<thead><tr>",
-        "<th>Vehicle</th><th>Program Type</th><th>Code</th><th>Model Code</th><th>Scope</th>",
-        "</tr></thead><tbody>"
+        "<th>Vehicle</th><th>Code</th><th>Model Code</th>",
+        "</tr></thead><tbody>",
     ]
 
     for r in rows:
         parts.append(
             "<tr>"
             f"<td>{r.get('vehicle','')}</td>"
-            f"<td>{r.get('program_type','')}</td>"
             f"<td>{r.get('code','')}</td>"
             f"<td>{r.get('model_code','')}</td>"
-            f"<td>{r.get('scope','')}</td>"
             "</tr>"
         )
 
@@ -158,16 +159,12 @@ def render_mapping_table(rows):
 
 # ---------------- Vehicle Lookup ----------------
 matched = []
+cv = canon_text(vehicle_text)
 
-if vehicle_text:
-    cv = canon_text(vehicle_text)
-    for _, v in mappings.items():
-        if canon_text(v.get("vehicle", "")) == cv:
-            matched.append(v)
+for _, v in mappings.items():
+    if canon_text(v.get("vehicle", "")) == cv:
+        matched.append(v)
 
 render_mapping_table(matched)
-
-if HARVEST_MODE:
-    st.stop()
 
 # --- EOF ---
