@@ -30,23 +30,37 @@ CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
 
 # ---- Canonicalization / Helpers ----
-def canon_text(val: str, for_trim: bool=False) -> str:
-    s = (val or "").replace("\u00A0", " ")  # normalize NBSP
+
+# ---- Canonicalization / Helpers ----
+def canon_text(val: str, for_trim: bool = False) -> str:
+    s = (val or "").replace("\u00A0", " ")
     s = s.strip().lower()
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
     s = re.sub(r"\s+", " ", s)
     if for_trim:
         repl = {
-            "all wheel drive":"awd","all-wheel drive":"awd","4wd":"awd","4x4":"awd",
-            "front wheel drive":"fwd","front-wheel drive":"fwd",
-            "rear wheel drive":"rwd","rear-wheel drive":"rwd",
-            "two wheel drive":"2wd","two-wheel drive":"2wd",
-            "plug-in hybrid":"phev","electric":"ev","bev":"ev",
+            "all wheel drive": "awd", "all-wheel drive": "awd", "4wd": "awd", "4x4": "awd",
+            "front wheel drive": "fwd", "front-wheel drive": "fwd",
+            "rear wheel drive": "rwd", "rear-wheel drive": "rwd",
+            "two wheel drive": "2wd", "two-wheel drive": "2wd",
+            "plug-in hybrid": "phev", "electric": "ev", "bev": "ev",
         }
         for k, v in repl.items():
             s = s.replace(k, v)
     return s
+
+
+def canon_vehicle_key(text: str) -> str:
+    """
+    Canonical form for vehicle_ymm_hints.json keys ONLY.
+    Built on canon_text so we do not change CADS matching behavior.
+    """
+    s = canon_text(text)
+    s = re.sub(r"[^\w\s]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
 
 # Canonicalization specific to vehicle_ymm_hints.json keys ONLY.
 # This builds on canon_text and removes punctuation so pasted vehicle strings
