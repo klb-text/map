@@ -235,6 +235,29 @@ def compute_per_make_stopwords(df_make_slice: pd.DataFrame, stopword_threshold: 
     return {t for t, c in freq.items() if (c / total) >= float(stopword_threshold)}
 
 # ---- GitHub Persistence Helpers ----
+
+# ---- GitHub loader (always fetch mappings on startup / reload) ----
+
+@st.cache_data(ttl=60)
+def fetch_unbuildable_from_github(owner, repo, path, token, ref):
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        try:
+            data = json.loads(decoded)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    elif r.status_code == 404:
+        return {}
+    else:
+        raise RuntimeError(f"Failed to load unbuildable list ({r.status_code}): {r.text}")
+        
 def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_message,
                         author_name=None, author_email=None, use_feature_branch=False, feature_branch_name="aff-mapping-app"):
     content = json.dumps(payload_dict, indent=2, ensure_ascii=False)
@@ -325,29 +348,6 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
     r2 = _session.put(gh_contents_url(owner, repo, path), headers=gh_headers(token), json=data, timeout=15)
     if r2.status_code in (200, 201): return r2.json()
     raise RuntimeError(f"Failed to append log ({r2.status_code}): {r2.text}")
-
-# ---- GitHub loader (always fetch mappings on startup / reload) ----
-
-@st.cache_data(ttl=60)
-def fetch_unbuildable_from_github(owner, repo, path, token, ref):
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": ref},
-        timeout=15,
-    )
-    if r.status_code == 200:
-        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
-        try:
-            data = json.loads(decoded)
-            return data if isinstance(data, dict) else {}
-        except Exception:
-            return {}
-    elif r.status_code == 404:
-        return {}
-    else:
-        raise RuntimeError(f"Failed to load unbuildable list ({r.status_code}): {r.text}")
-
 
 # ---- Mapping pickers ----
 def pick_best_mapping(
