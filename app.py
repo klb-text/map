@@ -1364,7 +1364,7 @@ if hint_list:
     hint_make  = (best.get("make")  or "").strip()
     hint_model = (best.get("model") or "").strip()
  
-)
+
 
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
