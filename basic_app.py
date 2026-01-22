@@ -117,13 +117,23 @@ mappings = fetch_mappings_from_github(
 )
 
 # ---------------- Render Results ----------------
+
 def render_mapping_table(rows):
     if not rows:
-        st.markdown(
-            f"<p>No mapped entries found for: {vehicle_text}</p>",
-            unsafe_allow_html=True
-        )
+        if not vehicle_text:
+            st.markdown(
+                "<p id='vehicle-status' data-status='empty'>No vehicle provided</p>",
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f"<p id='vehicle-status' data-status='unmapped'>"
+                f"No mapped entries found for: {vehicle_text}"
+                f"</p>",
+                unsafe_allow_html=True
+            )
         return
+
 
     parts = [
         "<table id='mapped_harvest' data-source='mapped'>",
