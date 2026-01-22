@@ -1,4 +1,4 @@
-
+print(">>> app.py top reached")
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Harvester Mode: server-executed, stateless; Mozenda-friendly semantic table
@@ -28,7 +28,7 @@ CADS_SHEET_NAME_DEFAULT = "0"
 
 CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
-
+print(">>> app.py top reached")
 # ---- Canonicalization / Helpers ----
 
 # ---- Canonicalization / Helpers ----
