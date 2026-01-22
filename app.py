@@ -1,4 +1,3 @@
-print(">>> app.py top reached")
 # app.py
 # AFF Vehicle Mapping – Streamlit + GitHub persistence + CADS search + row selection
 # Harvester Mode: server-executed, stateless; Mozenda-friendly semantic table
@@ -28,59 +27,24 @@ CADS_SHEET_NAME_DEFAULT = "0"
 
 CADS_CODE_PREFS       = ["STYLE_ID", "AD_VEH_ID", "AD_MFGCODE"]
 CADS_MODEL_CODE_PREFS = ["AD_MFGCODE", "MODEL_CODE", "ModelCode", "MFG_CODE", "MFGCODE"]
-print(">>> app.py top reached")
-# ---- Canonicalization / Helpers ----
 
 # ---- Canonicalization / Helpers ----
-def canon_text(val: str, for_trim: bool = False) -> str:
-    s = (val or "").replace("\u00A0", " ")
+def canon_text(val: str, for_trim: bool=False) -> str:
+    s = (val or "").replace("\u00A0", " ")  # normalize NBSP
     s = s.strip().lower()
     s = re.sub(r"^[\s\.,;:!]+", "", s)
     s = re.sub(r"[\s\.,;:!]+$", "", s)
     s = re.sub(r"\s+", " ", s)
     if for_trim:
         repl = {
-            "all wheel drive": "awd", "all-wheel drive": "awd", "4wd": "awd", "4x4": "awd",
-            "front wheel drive": "fwd", "front-wheel drive": "fwd",
-            "rear wheel drive": "rwd", "rear-wheel drive": "rwd",
-            "two wheel drive": "2wd", "two-wheel drive": "2wd",
-            "plug-in hybrid": "phev", "electric": "ev", "bev": "ev",
+            "all wheel drive":"awd","all-wheel drive":"awd","4wd":"awd","4x4":"awd",
+            "front wheel drive":"fwd","front-wheel drive":"fwd",
+            "rear wheel drive":"rwd","rear-wheel drive":"rwd",
+            "two wheel drive":"2wd","two-wheel drive":"2wd",
+            "plug-in hybrid":"phev","electric":"ev","bev":"ev",
         }
         for k, v in repl.items():
             s = s.replace(k, v)
-    return s
-
-
-def canon_vehicle_key(text: str) -> str:
-    """
-    Canonical form for vehicle_ymm_hints.json keys ONLY.
-    Built on canon_text so we do not change CADS matching behavior.
-    """
-    s = canon_text(text)
-    s = re.sub(r"[^\w\s]", " ", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
-
-
-# Canonicalization specific to vehicle_ymm_hints.json keys ONLY.
-# This builds on canon_text and removes punctuation so pasted vehicle strings
-# match stable JSON keys without altering CADS matching behavior.
-def canon_vehicle_key(text: str) -> str:
-    s = canon_text(text)
-    s = re.sub(r"[^\w\s]", " ", s)   # strip punctuation (quotes, slashes, hyphens)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
-
-# Use canon_text for general matching normalization; this adds punctuation stripping
-# ONLY for vehicle_ymm_hints.json key lookups (so we don't change matching behavior).
-def canon_vehicle_key(text: str) -> str:
-    """
-    Canonical form for vehicle_ymm_hints.json keys.
-    Built on canon_text (do not re-implement matching normalization here).
-    """
-    s = canon_text(text)
-    s = re.sub(r"[^\w\s]", " ", s)      # strip punctuation to stabilize keys
-    s = re.sub(r"\s+", " ", s).strip()  # collapse whitespace
     return s
 
 def tokens(s: str, min_len: int = 2) -> List[str]:
@@ -147,12 +111,12 @@ def model_similarity(a: str, b: str) -> float:
 _session = requests.Session()
 _retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504], allowed_methods=["GET","PUT","POST"])
 _adapter = HTTPAdapter(max_retries=_retries)
-_session.mount("https://", _adapter)
-_session.mount("http://", _adapter)
+_session.mount(https://, _adapter)
+_session.mount(http://, _adapter)
 
 def gh_headers(token: str): return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-def gh_contents_url(owner, repo, path): return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-def gh_ref_heads(owner, repo, branch): return f"https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}"
+def gh_contents_url(owner, repo, path): return fhttps://api.github.com/repos/{owner}/{repo}/contents/{path}
+def gh_ref_heads(owner, repo, branch): return fhttps://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}
 
 # ---- CADS Loaders ----
 def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -293,46 +257,7 @@ def fetch_mappings_from_github(owner, repo, path, token, ref):
             f"Failed to load mappings ({r.status_code}): {r.text}"
         )
 
-YMM_HINTS_PATH = "data/vehicle_ymm_hints.json"
-
-@st.cache_data(ttl=300)
-def fetch_vehicle_ymm_hints(owner, repo, path, token, ref):
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": ref},
-        timeout=15,
-    )
-    if r.status_code == 200:
-        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
-        try:
-            return json.loads(decoded)
-        except Exception:
-            return {"vehicles": {}}
-    elif r.status_code == 404:
-        return {"vehicles": {}}
-    else:
-        raise RuntimeError(f"Failed to load YMM hints: {r.text}")
-
 # ---- GitHub loader (always fetch mappings on startup / reload) ----
-# ---- GitHub loader (hints) ----
-YMM_HINTS_PATH = "data/vehicle_ymm_hints.json"
-
-@st.cache_data(ttl=300)
-def fetch_vehicle_ymm_hints(owner, repo, path, token, ref):
-    r = _session.get(
-        gh_contents_url(owner, repo, path),
-        headers=gh_headers(token),
-        params={"ref": ref},
-        timeout=15,
-    )
-    if r.status_code == 200:
-        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
-        return json.loads(decoded)
-    elif r.status_code == 404:
-        return {"vehicles": {}}
-    else:
-        raise RuntimeError(f"Failed to load YMM hints: {r.text}")
 
 @st.cache_data(ttl=60)
 def fetch_unbuildable_from_github(owner, repo, path, token, ref):
@@ -365,7 +290,7 @@ def save_json_to_github(owner, repo, path, token, branch, payload_dict, commit_m
             r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
             if r_base.status_code == 200:
                 base_sha = r_base.json()["object"]["sha"]
-                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
+                _session.post(fhttps://api.github.com/repos/{owner}/{repo}/git/refs,
                               headers=gh_headers(token),
                               json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
         target_branch = feature_branch_name
@@ -425,7 +350,7 @@ def append_jsonl_to_github(owner, repo, path, token, branch, record, commit_mess
             r_base = _session.get(gh_ref_heads(owner, repo, branch), headers=gh_headers(token), timeout=15)
             if r_base.status_code == 200:
                 base_sha = r_base.json()["object"]["sha"]
-                _session.post(f"https://api.github.com/repos/{owner}/{repo}/git/refs",
+                _session.post(fhttps://api.github.com/repos/{owner}/{repo}/git/refs,
                               headers=gh_headers(token),
                               json={"ref": f"refs/heads/{feature_branch_name}", "sha": base_sha}, timeout=15)
         target_branch = feature_branch_name
@@ -794,16 +719,6 @@ def render_harvest_table(
 # ===================== UI (normal mode) =====================
 st.title("AFF Vehicle Mapping")
 
-# ------------------------------------------------------------------
-# Mapping Mode Selector (Helpers vs Advanced)
-# ------------------------------------------------------------------
-mapping_mode = st.radio(
-    "Mapping Mode",
-    ["Vehicle‑Only (Recommended)", "Advanced (YMM / YMMT)"],
-    key="mapping_mode",
-    horizontal=True,
-)
-
 # Parse URL params early (used by both modes)
 params = st.experimental_get_query_params()
 HARVEST_MODE   = (params.get("harvest", ["0"])[0] == "1")
@@ -1020,31 +935,6 @@ if HARVEST_MODE:
     _run_harvest()
 
 # ===================== Normal Interactive UI (unchanged core UX) =====================
-
-# ===================== Normal Interactive UI =====================
-
-
-if mapping_mode == "Vehicle‑Only (Recommended)":
-    # ✅ vehicle-only UX block (large table, select, map)
-    ...
-
-elif mapping_mode == "Advanced (YMM / YMMT)":
-    # ✅ advanced narrowing block
-    ...
-
-    # 👇 legacy expert UI lives here 👇
-    st.header("YMM Quick Lookup (mapped)")
-    ...
-    st.subheader("Edit / Add Mapping")
-    ...
-
-
-# 👇 existing sections remain unchanged 👇
-st.header("YMM Quick Lookup (mapped)")
-...
-st.subheader("Edit / Add Mapping")
-...
-
 # Sidebar: CADS Settings
 st.sidebar.subheader("CADS Settings")
 CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
@@ -1162,13 +1052,7 @@ if st.button("🔎 Quick Search by YMM(/T) (mapped)", key="btn_quick_ymmt_v1"):
             st.error(f"Quick YMM(/T) search failed: {e}")
 
 st.header("Vehicle-Only Quick Lookup (mapped)")
-
-quick_vehicle = st.text_input(
-    "Vehicle (Year Make Model [Trim])",
-    key="quick_vehicle_input",
-    placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus",
-).strip()
-
+quick_vehicle = st.text_input("Vehicle (Year Make Model [Trim])", key="quick_vehicle_input", placeholder="e.g., 2025 Audi SQ5 or 2025 Audi SQ5 Premium Plus")
 
 if st.button("🔎 Quick Search by Vehicle (mapped)", key="btn_quick_vehicle_v2"):
     veh_txt = (quick_vehicle or "").strip()
@@ -1361,33 +1245,12 @@ with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025"
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Audi")
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Q7")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., 45 TFSI quattro Premium")
-with c5:
-    vehicle = st.text_input(
-        "Vehicle (REQUIRED - paste exact value from source website)",
-        key="vehicle_input",
-        placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic",
-    ).strip()
 
-# --- Soft YMM hints from helper file (if available) ---
-vehicle_key = canon_vehicle_key(vehicle_vo)
-try:
-    ymm_hints = fetch_vehicle_ymm_hints(
-        GH_OWNER, GH_REPO, YMM_HINTS_PATH, GH_TOKEN, st.session_state["load_branch"]
-    )
-except Exception as _e:
-    ymm_hints = {"vehicles": {}}
-
-hint_list = ymm_hints.get("vehicles", {}).get(vehicle_key, [])
-hint_year = hint_make = hint_model = None
-
-if hint_list:
-    # Take the highest-confidence hint; you can later make this smarter
-    best = sorted(hint_list, key=lambda x: x.get("confidence", 0), reverse=True)[0]
-    hint_year  = (best.get("year")  or "").strip()
-    hint_make  = (best.get("make")  or "").strip()
-    hint_model = (best.get("model") or "").strip()
- 
-
+with c5: vehicle = st.text_input(
+    "Vehicle (REQUIRED – paste exact value from source website)",
+    key="vehicle_input",
+    placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic"
+)
 
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
@@ -1635,7 +1498,7 @@ if st.sidebar.button("💾 Commit mappings to GitHub"):
         st.sidebar.error("Cannot commit: fix missing secrets first.")
     else:
         try:
-            resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email="aff-mapping@app.local", use_feature_branch=use_feature_branch)
+            resp = save_json_to_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, GH_BRANCH, st.session_state.get("mappings", {}), commit_msg, author_name="AFF Mapping App", author_email=aff-mapping@app.local, use_feature_branch=use_feature_branch)
             st.sidebar.success("Committed ✅")
             st.sidebar.caption(f"Commit: {resp['commit']['sha'][:7]}")
             try:
