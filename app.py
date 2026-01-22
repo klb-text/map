@@ -1109,6 +1109,20 @@ def _effective_vehicle_text(row: pd.Series) -> str:
     return ""
 
 def _add_selected_rows_to_mappings(df_key, code_col_key: str, model_code_col_key: str, year_val: str, make_val: str, model_val: str, trim_val: str, vehicle_val: str, rows_override=None):
+
+    # === ENFORCE VEHICLE REQUIRED (STATIC, VERBATIM) ===
+    vehicle_text = (vehicle_val or "").strip()
+
+    if not vehicle_text:
+        st.warning(
+            "Vehicle is required.\n\n"
+            "Paste the exact vehicle string from the source website "
+            "(e.g., '2026 Acura TLX FWD 2.4L Automatic').\n\n"
+            "Vehicle is treated as a static, authoritative identifier."
+        )
+        return
+    # ==================================================
+
     import pandas as pd
     if rows_override is not None:
         selected = rows_override.copy()
@@ -1177,7 +1191,13 @@ with c1: year = st.text_input("Year", key="year_input", placeholder="e.g., 2025"
 with c2: make = st.text_input("Make", key="make_input", placeholder="e.g., Audi")
 with c3: model = st.text_input("Model", key="model_input", placeholder="e.g., Q7")
 with c4: trim = st.text_input("Trim", key="trim_input", placeholder="e.g., 45 TFSI quattro Premium")
-with c5: vehicle = st.text_input("Vehicle (alt)", key="vehicle_input", placeholder="Optional")
+
+with c5: vehicle = st.text_input(
+    "Vehicle (REQUIRED – paste exact value from source website)",
+    key="vehicle_input",
+    placeholder="e.g., 2026 Acura TLX FWD 2.4L Automatic"
+)
+
 with c6: mapped_code = st.text_input("Mapped Code", key="code_input", placeholder="Optional (STYLE_ID/AD_VEH_ID/etc.)")
 model_code_input = st.text_input("Model Code (optional)", key="model_code_input", placeholder="AD_MFGCODE/MODEL_CODE/etc.")
 
