@@ -7,5 +7,14 @@
     "reason": "CADS does not contain this model year yet",
     "added_at": "2026-01-22T19:41:47Z",
     "added_by": "dashboard-app"
+  },
+  "2027 rlx": {
+    "vehicle": "2027 rlx",
+    "year": "2027",
+    "make": "Acura",
+    "model": "rlx",
+    "reason": "CADS does not contain this model year yet",
+    "added_at": "2026-01-22T19:44:24Z",
+    "added_by": "dashboard-app"
   }
 }
