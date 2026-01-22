@@ -1,0 +1,50 @@
+
+{
+  "meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-01-19T22:00:00Z",
+    "source_files": ["AFF Vehicles YMMT.csv"],
+    "description": "Soft YMM hints for vehicle-only input"
+  },
+  "normalization": {
+    "lowercase": true,
+    "whitespace": "collapse",
+    "strip_punctuation": true,
+    "preserve_numbers": true
+  },
+  "vehicles": {
+    "2027 integra": [
+      {
+        "year": "2027",
+        "make": "Acura",
+        "model": "Integra",
+        "trim": "",
+        "confidence": 0.9,
+        "sources": 1,
+        "flags": ["future_model_year"]
+      }
+    ],
+    "2025 giulia tributo italiano awd": [
+      {
+        "year": "2025",
+        "make": "Alfa Romeo",
+        "model": "Giulia",
+        "trim": "Tributo Italiano AWD",
+        "confidence": 0.96,
+        "sources": 1,
+        "flags": []
+      }
+    ],
+    "2026 integra fwd continuously variable transmission": [
+      {
+        "year": "2026",
+        "make": "Acura",
+        "model": "Integra",
+        "trim": "FWD CVT",
+        "confidence": 0.92,
+        "sources": 1,
+        "flags": []
+      }
+    ]
+  }
+}
