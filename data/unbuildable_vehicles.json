@@ -1,1 +1,11 @@
-{}
+{
+  "2027 Integra": {
+    "vehicle": "2027 Integra",
+    "year": "2027",
+    "make": "Acura",
+    "model": "Integra",
+    "reason": "CADS does not contain this model year yet",
+    "added_at": "2026-01-22T19:41:47Z",
+    "added_by": "dashboard-app"
+  }
+}
