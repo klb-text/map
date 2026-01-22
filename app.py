@@ -236,6 +236,28 @@ def compute_per_make_stopwords(df_make_slice: pd.DataFrame, stopword_threshold: 
 
 # ---- GitHub Persistence Helpers ----
 
+@st.cache_data(ttl=60)
+def fetch_mappings_from_github(owner, repo, path, token, ref):
+    r = _session.get(
+        gh_contents_url(owner, repo, path),
+        headers=gh_headers(token),
+        params={"ref": ref},
+        timeout=15,
+    )
+    if r.status_code == 200:
+        decoded = base64.b64decode(r.json()["content"]).decode("utf-8")
+        try:
+            data = json.loads(decoded)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    elif r.status_code == 404:
+        return {}
+    else:
+        raise RuntimeError(
+            f"Failed to load mappings ({r.status_code}): {r.text}"
+        )
+
 # ---- GitHub loader (always fetch mappings on startup / reload) ----
 
 @st.cache_data(ttl=60)
