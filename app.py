@@ -147,6 +147,7 @@ def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
     text = raw.decode(encoding, errors="replace")
     return (text, encoding)
 
+
 @st.cache_data(ttl=600)
 def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFrame:
     import csv
@@ -155,31 +156,54 @@ def load_cads_from_github_csv(owner, repo, path, token, ref=None) -> pd.DataFram
     if r.status_code == 200:
         j = r.json(); raw = None
         if "content" in j and j["content"]:
-            try: raw = base64.b64decode(j["content"])
-            except Exception: raw = None
+            try:
+                raw = base64.b64decode(j["content"])
+            except Exception:
+                raw = None
         if (raw is None or raw.strip() == b"") and j.get("download_url"):
             r2 = _session.get(j["download_url"], timeout=15)
-            if r2.status_code == 200: raw = r2.content
-        if raw is None or raw.strip() == b"": raise ValueError(f"CADS `{path}` empty or unavailable.")
+            if r2.status_code == 200:
+                raw = r2.content
+        if raw is None or raw.strip() == b"":
+            raise ValueError(f"CADS `{path}` empty or unavailable.")
+
+        # --- Robust delimiter detection ---
         text, _ = _decode_bytes_to_text(raw)
         sample = text[:4096]
         delimiter = None
         try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=[",","	",";","
-"]) 
+            # Use explicit candidates (NO newline in this list)
+            dialect = csv.Sniffer().sniff(sample, delimiters=[",", "\t", ";", "|"])
             delimiter = dialect.delimiter
         except Exception:
-            for cand in [",","	",";","
-"]:
+            # Fallback: pick first present candidate
+            for cand in [",", "\t", ";", "|"]:
                 if cand in sample:
-                    delimiter = cand; break
+                    delimiter = cand
+                    break
+
+        # Read with the decided delimiter or let pandas infer
         if delimiter is None:
+            # Let pandas detect (slower, but robust)
             df = pd.read_csv(io.StringIO(text), sep=None, engine="python", dtype=str, on_bad_lines="skip")
+            # Optional hardening: if pandas returned one column, retry with common seps
+            if df.shape[1] == 1:
+                for cand in [",", "\t", ";", "|"]:
+                    try:
+                        df_try = pd.read_csv(io.StringIO(text), sep=cand, dtype=str, on_bad_lines="skip", engine="python")
+                        if df_try.shape[1] > 1:
+                            df = df_try
+                            break
+                    except Exception:
+                        pass
         else:
             df = pd.read_csv(io.StringIO(text), sep=delimiter, dtype=str, on_bad_lines="skip", engine="python")
+
         df.columns = [str(c).strip() for c in df.columns]
         return _strip_object_columns(df.dropna(how="all"))
-    if r.status_code == 404: raise FileNotFoundError(f"CADS not found: {path}")
+
+    if r.status_code == 404:
+        raise FileNotFoundError(f"CADS not found: {path}")
     raise RuntimeError(f"Failed to load CADS CSV ({r.status_code}): {r.text}")
 
 @st.cache_data(ttl=600)
