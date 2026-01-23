@@ -43,14 +43,16 @@ def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None
     if example_model:
         df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
 
-    # Ensure columns exist and are strings before join
+    # Ensure all columns exist
     for col in ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']:
         if col not in df.columns:
             df[col] = ''
-        df[col] = df[col].astype(str).fillna('')  # <-- fillna ensures no ValueError
+    
+    # Convert to string and fillna safely
+    df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].astype(str).fillna('')
 
     # Combine key fields for fuzzy search
-    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].agg(' '.join, axis=1)
+    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].agg(lambda x: ' '.join(x), axis=1)
 
     # Fuzzy matching
     matches = process.extract(vehicle_input, df['vehicle_search'].tolist(), scorer=fuzz.token_sort_ratio, limit=50)
