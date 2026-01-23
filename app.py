@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import os
 from rapidfuzz import process, fuzz
-import requests
-from datetime import datetime
 
 # ---------------------- File Paths ----------------------
 CADS_FILE = "CADS.csv"
@@ -14,20 +12,15 @@ MAPPINGS_FILE = "Mappings.csv"
 @st.cache_data
 def load_csv(path):
     if not os.path.exists(path):
-        st.warning(f"{path} not found, creating empty file.")
         pd.DataFrame().to_csv(path, index=False)
     if path.endswith(".csv"):
         return pd.read_csv(path)
     else:
         return pd.read_csv(path, delimiter="\t")
 
-@st.cache_data
-def load_vehicle_ref():
-    return pd.read_csv(VEHICLE_REF_FILE, delimiter="\t")
-
-# ---------------------- Load data ----------------------
+# ---------------------- Load Data ----------------------
 cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_vehicle_ref()
+vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 if os.path.exists(MAPPINGS_FILE):
     mappings_df = pd.read_csv(MAPPINGS_FILE)
 else:
@@ -51,19 +44,20 @@ if vehicle_input:
         selected_vehicle = match
         ref_row = vehicle_ref_df.iloc[idx]
         manual_ymmt = {
-            "Year": ref_row.get("Year"),
-            "Make": ref_row.get("Make"),
-            "Model": ref_row.get("Model"),
-            "Trim": ref_row.get("Trim")
+            "Year": ref_row.get("Year", ""),
+            "Make": ref_row.get("Make", ""),
+            "Model": ref_row.get("Model", ""),
+            "Trim": ref_row.get("Trim", "")
         }
 
-# ---------------------- Manual YMMT fallback ----------------------
+# ---------------------- Manual YMMT (horizontal) ----------------------
 st.subheader("Manual YMMT Entry (if smart match not correct)")
 with st.form("manual_ymmt_form"):
-    manual_year = st.text_input("Year", value=manual_ymmt.get("Year", ""))
-    manual_make = st.text_input("Make", value=manual_ymmt.get("Make", ""))
-    manual_model = st.text_input("Model", value=manual_ymmt.get("Model", ""))
-    manual_trim = st.text_input("Trim", value=manual_ymmt.get("Trim", ""))
+    col1, col2, col3, col4 = st.columns(4)
+    manual_year = col1.text_input("Year", value=manual_ymmt.get("Year", ""))
+    manual_make = col2.text_input("Make", value=manual_ymmt.get("Make", ""))
+    manual_model = col3.text_input("Model", value=manual_ymmt.get("Model", ""))
+    manual_trim = col4.text_input("Trim", value=manual_ymmt.get("Trim", ""))
     apply_ymmt = st.form_submit_button("Apply Manual YMMT")
     if apply_ymmt:
         selected_vehicle = vehicle_input
@@ -87,28 +81,27 @@ if selected_vehicle:
         trim = str(manual_ymmt["Trim"])
         filtered_cads = filtered_cads[filtered_cads["STYLE_NAME"].astype(str).str.contains(trim, na=False)]
 
+# ---------------------- Display table with checkboxes ----------------------
 st.subheader("Filtered CADS Rows")
 if not filtered_cads.empty:
-    st.dataframe(filtered_cads)
+    # Add checkbox column
+    filtered_cads["Select"] = False
+    for idx, row in filtered_cads.iterrows():
+        key = f"select_{idx}"
+        filtered_cads.at[idx, "Select"] = st.checkbox(
+            f"{row['DIVISION_NAME']} {row['MODEL_NAME']} {row['STYLE_NAME']}",
+            key=key
+        )
+    st.dataframe(filtered_cads.drop(columns=["Select"]))
 else:
     st.write("No CADS rows matched your selection.")
 
-# ---------------------- Select CADS Rows to Map ----------------------
-st.subheader("Select CADS rows to map")
-selection_cols = ["STYLE_ID", "MODEL_YEAR", "DIVISION_NAME", "MODEL_NAME", "STYLE_NAME"]
-filtered_cads["select"] = False
-for idx, row in filtered_cads.iterrows():
-    key = f"select_{idx}"
-    filtered_cads.at[idx, "select"] = st.checkbox(f"{row['DIVISION_NAME']} {row['MODEL_NAME']} {row['STYLE_NAME']}", key=key)
-
-selected_rows = filtered_cads[filtered_cads["select"]]
-
 # ---------------------- Save Mapping ----------------------
+selected_rows = filtered_cads[filtered_cads["Select"]]
 if st.button("Save Mapping"):
     if selected_rows.empty:
         st.warning("No rows selected to save.")
     else:
-        # Prepare new mappings
         new_mappings = selected_rows.copy()
         new_mappings["Vehicle"] = selected_vehicle
         new_mappings["Year"] = manual_ymmt.get("Year", "")
@@ -117,7 +110,6 @@ if st.button("Save Mapping"):
         new_mappings["Trim"] = manual_ymmt.get("Trim", "")
         new_mappings = new_mappings[["Vehicle", "Year", "Make", "Model", "Trim", "STYLE_ID"]]
 
-        # Append to existing mappings
         mappings_df = pd.concat([mappings_df, new_mappings], ignore_index=True)
         mappings_df.drop_duplicates(subset=["Vehicle", "STYLE_ID"], inplace=True)
         mappings_df.to_csv(MAPPINGS_FILE, index=False)
