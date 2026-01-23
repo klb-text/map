@@ -589,8 +589,9 @@ def render_harvest_table(
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
-    st.markdown("
-".join(parts), unsafe_allow_html=True)
+
+        st.markdown("\n".join(parts), unsafe_allow_html=True)
+
 
 # ===================== SERVER-EXECUTED HARVEST MODE =====================
 
