@@ -1,104 +1,143 @@
 import streamlit as st
 import pandas as pd
 from rapidfuzz import process, fuzz
+import os
+from github import Github
+from io import StringIO
 
-# -------------------------------
-# File paths
-# -------------------------------
+# ------------------------------
+# Configuration
+# ------------------------------
 CADS_FILE = "CADS.csv"
 VEHICLE_REF_FILE = "vehicle_example.txt"
 MAPPINGS_FILE = "Mappings.csv"
 
-# -------------------------------
-# Load CSV with error handling
-# -------------------------------
+# GitHub secrets
+GITHUB_TOKEN = "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"
+GITHUB_OWNER = "klb-text"
+GITHUB_REPO = "map"
+GITHUB_BRANCH = "main"
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+
 @st.cache_data
-def load_csv(path, sep=","):
+def load_csv(path, delimiter=","):
     try:
-        df = pd.read_csv(path, sep=sep)
-        df.columns = df.columns.str.strip()  # Strip whitespace
+        df = pd.read_csv(path, delimiter=delimiter)
         return df
     except Exception as e:
         st.error(f"Error loading {path}: {e}")
         return pd.DataFrame()
 
-cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE, sep="\t")
-mappings_df = load_csv(MAPPINGS_FILE)
+def smart_vehicle_match(cads_df, vehicle_input, top_n=20):
+    # Create a combined search field
+    cads_df['vehicle_search'] = (
+        cads_df['MODEL_YEAR'].astype(str) + " " +
+        cads_df['AD_MAKE'].astype(str) + " " +
+        cads_df['MODEL_NAME'].astype(str) + " " +
+        cads_df['AD_TRIM'].astype(str)
+    )
+    choices = cads_df['vehicle_search'].tolist()
+    results = process.extract(vehicle_input, choices, scorer=fuzz.token_sort_ratio, limit=top_n)
+    matched_indices = [idx for _, _, idx in results if _ > 60]
+    matched_df = cads_df.iloc[matched_indices]
+    return matched_df, results
 
-# -------------------------------
-# Fuzzy matching function
-# -------------------------------
-def smart_vehicle_match(df, query, top_n=20):
-    if df.empty:
-        return pd.DataFrame(), []
+def save_mapping_to_github(selected_df):
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(f"{GITHUB_OWNER}/{GITHUB_REPO}")
+        content_file = repo.get_contents(MAPPINGS_FILE, ref=GITHUB_BRANCH)
+        old_content = content_file.decoded_content.decode()
+        # Append new mappings
+        csv_buffer = StringIO()
+        selected_df.to_csv(csv_buffer, index=False, header=False)
+        new_content = old_content + csv_buffer.getvalue()
+        repo.update_file(MAPPINGS_FILE, "Add new mappings", new_content, content_file.sha, branch=GITHUB_BRANCH)
+        st.success("Mappings saved to GitHub!")
+    except Exception as e:
+        st.error(f"Error saving to GitHub: {e}")
 
-    # Create a combined searchable string
-    for col in ['MODEL_YEAR','AD_MAKE','MODEL_NAME','AD_TRIM']:
-        if col not in df.columns:
-            st.warning(f"Column {col} not in CADS.csv")
-            return pd.DataFrame(), []
-    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','MODEL_NAME','AD_TRIM']].astype(str).agg(' '.join, axis=1)
-
-    choices = df['vehicle_search'].tolist()
-    matches = process.extract(query, choices, scorer=fuzz.token_sort_ratio, limit=top_n)
-    matched_indices = [i[2] for i in matches if i[1] > 50]  # score threshold 50
-    return df.iloc[matched_indices].copy(), matches
-
-# -------------------------------
-# Streamlit UI
-# -------------------------------
+# ------------------------------
+# Load Data
+# ------------------------------
 st.title("AFF Vehicle Mapping")
 
+cads_df = load_csv(CADS_FILE)
+vehicle_ref_df = load_csv(VEHICLE_REF_FILE, delimiter="\t")
+mappings_df = load_csv(MAPPINGS_FILE)
+
+# ------------------------------
+# Vehicle Input
+# ------------------------------
 vehicle_input = st.text_input("Enter Vehicle (freeform)")
 
 # Optional YMMT filters
-st.write("YMMT Filters (optional)")
+st.subheader("YMMT Filter (optional)")
 col1, col2, col3, col4 = st.columns(4)
 year_filter = col1.text_input("Year")
 make_filter = col2.text_input("Make")
 model_filter = col3.text_input("Model")
 trim_filter = col4.text_input("Trim")
 
-search_clicked = st.button("Search")
+# Search button
+search_clicked = st.button("Search Vehicles")
 
-if search_clicked:
-    # Apply YMMT filters if entered
-    filtered_cads = cads_df.copy()
+# ------------------------------
+# Search Logic
+# ------------------------------
+if search_clicked and vehicle_input:
+    # Try to identify make from vehicle_example
+    ref_row = vehicle_ref_df[vehicle_ref_df['Vehicle'].str.lower() == vehicle_input.lower()]
+    example_make = None
+    if not ref_row.empty:
+        example_make = ref_row.iloc[0]['Make']
+
+    matches_df, raw_matches = smart_vehicle_match(cads_df, vehicle_input)
+
+    # Apply optional filters
     if year_filter:
-        filtered_cads = filtered_cads[filtered_cads['MODEL_YEAR'].astype(str).str.contains(year_filter)]
+        matches_df = matches_df[matches_df['MODEL_YEAR'].astype(str) == year_filter]
     if make_filter:
-        filtered_cads = filtered_cads[filtered_cads['AD_MAKE'].astype(str).str.contains(make_filter, case=False)]
+        matches_df = matches_df[matches_df['AD_MAKE'].str.lower() == make_filter.lower()]
+    elif example_make:
+        matches_df = matches_df[matches_df['AD_MAKE'].str.lower() == example_make.lower()]
     if model_filter:
-        filtered_cads = filtered_cads[filtered_cads['MODEL_NAME'].astype(str).str.contains(model_filter, case=False)]
+        matches_df = matches_df[matches_df['MODEL_NAME'].str.lower() == model_filter.lower()]
     if trim_filter:
-        filtered_cads = filtered_cads[filtered_cads['AD_TRIM'].astype(str).str.contains(trim_filter, case=False)]
-
-    # Use vehicle_example.txt to help identify make if needed
-    example_row = vehicle_ref_df[vehicle_ref_df['Vehicle'].str.lower() == vehicle_input.lower()]
-    if not example_row.empty and 'Make' in example_row.columns:
-        example_make = example_row.iloc[0]['Make']
-        filtered_cads = filtered_cads[filtered_cads['AD_MAKE'].str.lower() == str(example_make).lower()]
-
-    matches_df, raw_matches = smart_vehicle_match(filtered_cads, vehicle_input)
+        matches_df = matches_df[matches_df['AD_TRIM'].str.lower() == trim_filter.lower()]
 
     if matches_df.empty:
         st.warning("No matching vehicles found.")
     else:
         st.subheader("Matching Vehicles")
 
-        selected_indices = []
+        # Initialize session state for checkboxes
+        if "selected_indices" not in st.session_state:
+            st.session_state.selected_indices = []
+
+        # Display checkboxes for selection
         for idx, row in matches_df.iterrows():
             label = f"{row['MODEL_YEAR']} {row['AD_MAKE']} {row['MODEL_NAME']} {row['AD_TRIM']} | Model Code: {row['AD_MFGCODE']}"
-            if st.checkbox(label, key=f"chk_{idx}"):
-                selected_indices.append(idx)
+            checked = st.checkbox(label, key=f"chk_{idx}", value=(idx in st.session_state.selected_indices))
+            if checked:
+                if idx not in st.session_state.selected_indices:
+                    st.session_state.selected_indices.append(idx)
+            else:
+                if idx in st.session_state.selected_indices:
+                    st.session_state.selected_indices.remove(idx)
 
+        # Commit Mapping button
         if st.button("Submit Mapping"):
-            if not selected_indices:
+            if not st.session_state.selected_indices:
                 st.warning("No vehicles selected.")
             else:
-                selected_rows = matches_df.loc[selected_indices]
+                selected_rows = matches_df.loc[st.session_state.selected_indices]
                 st.success("Mapping submitted:")
                 st.dataframe(selected_rows[['MODEL_YEAR','AD_MAKE','MODEL_NAME','AD_TRIM','AD_MFGCODE','STYLE_ID']])
-                # Optionally append to Mappings.csv here
-                # selected_rows.to_csv(MAPPINGS_FILE, mode='a', index=False, header=False)
+                # Optionally save to GitHub
+                save_mapping_to_github(selected_rows)
+                # Clear selection
+                st.session_state.selected_indices = []
