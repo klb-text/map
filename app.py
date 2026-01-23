@@ -6,7 +6,7 @@ import os
 # ---------------------- File paths ----------------------
 CADS_FILE = "CADS.csv"
 MAPPINGS_FILE = "Mappings.csv"
-VEHICLE_REF_FILE = "vehicle_example.csv"  # or .txt
+VEHICLE_REF_FILE = "vehicle_example.txt"  # or .txt
 
 # ---------------------- Load CSV helper ----------------------
 @st.cache_data
