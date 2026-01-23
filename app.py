@@ -22,13 +22,14 @@ def load_csv(path, sep='\t'):
 vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 cads_df = load_csv(CADS_FILE)
 
-# Ensure CADS columns exist
+# Ensure required CADS columns exist as strings
 required_cads_cols = ['AD_VEH_ID','AD_YEAR','AD_MAKE','AD_MODEL','AD_MFGCODE',
                       'AD_SERIES','AD_TRIM','STYLE_ID','MODEL_YEAR','DIVISION_NAME',
                       'MODEL_NAME','STYLE_NAME','TRIM','STYLE_CODE']
 for col in required_cads_cols:
     if col not in cads_df.columns:
         cads_df[col] = ""
+    cads_df[col] = cads_df[col].astype(str)
 
 # ---------------------------
 # Smart vehicle match function
@@ -42,8 +43,14 @@ def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None
     if example_model:
         df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
 
+    # Ensure columns exist and are strings before join
+    for col in ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']:
+        if col not in df.columns:
+            df[col] = ''
+        df[col] = df[col].astype(str)
+
     # Combine key fields for fuzzy search
-    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].fillna('').agg(' '.join, axis=1)
+    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].agg(' '.join, axis=1)
 
     # Fuzzy matching
     matches = process.extract(vehicle_input, df['vehicle_search'].tolist(), scorer=fuzz.token_sort_ratio, limit=50)
@@ -110,4 +117,3 @@ if search_clicked and vehicle_input:
                 selected_df = matches_df.loc[selected_indices, ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']]
                 st.success(f"Mapping submitted for {len(selected_df)} vehicle(s).")
                 st.dataframe(selected_df)
-
