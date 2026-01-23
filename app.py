@@ -7,7 +7,7 @@ import os
 # File paths
 # ----------------------
 CADS_FILE = "CADS.csv"
-VEHICLE_REF_FILE = "vehicle_example.txt"
+VEHICLE_REF_FILE = "vehicle_example.csv"
 MAPPINGS_FILE = "Mappings.csv"
 
 # ----------------------
