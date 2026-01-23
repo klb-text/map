@@ -37,34 +37,39 @@ for col in required_cads_cols:
 def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None):
     df = df.copy()
 
-    # Pre-filter by make/model if provided
+    # Pre-filter by make/model from vehicle_example if available
     if example_make and 'AD_MAKE' in df.columns:
         df = df[df['AD_MAKE'].str.lower() == example_make.lower()]
     if example_model and 'AD_MODEL' in df.columns:
         df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
 
     # Ensure all key columns exist
-    key_cols = ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']
+    key_cols = ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']
     for col in key_cols:
         if col not in df.columns:
             df[col] = ''
         else:
-            # Convert each column to string and replace NaN with empty string
             df[col] = df[col].astype(str).fillna('')
 
-    # Safely create a combined search string
-    df['vehicle_search'] = df[key_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
+    # Combine columns for search (ignore empty TRIM)
+    def combine_row(row):
+        parts = [row['MODEL_YEAR'], row['AD_MAKE'], row['AD_MODEL']]
+        if row['TRIM']:
+            parts.append(row['TRIM'])
+        return ' '.join(parts)
 
-    # Fuzzy matching
-    from thefuzz import process, fuzz
-    matches = process.extract(vehicle_input, df['vehicle_search'].tolist(), scorer=fuzz.token_sort_ratio, limit=50)
+    df['vehicle_search'] = df.apply(combine_row, axis=1)
 
-    # Select matches with score >= 60
-    matched_indices = [idx for _, score, idx in matches if score >= 60]
-    matched_df = df.iloc[matched_indices]
+    # Case-insensitive substring match
+    matches_mask = df['vehicle_search'].str.lower().str.contains(vehicle_input.lower())
+    matched_df = df[matches_mask]
 
-    return matched_df, matches
+    # If no matches, fallback to make+model only
+    if matched_df.empty and example_make and example_model:
+        matched_df = df[(df['AD_MAKE'].str.lower() == example_make.lower()) &
+                        (df['AD_MODEL'].str.lower() == example_model.lower())]
 
+    return matched_df, matched_df['vehicle_search'].tolist()
 
 # ---------------------------
 # Streamlit UI
