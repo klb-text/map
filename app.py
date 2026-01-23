@@ -1,134 +1,127 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import os
-import csv
-import requests
-from io import StringIO
 from rapidfuzz import process, fuzz
+import requests
+from datetime import datetime
 
-# ----------------- CONFIG -----------------
+# ---------------------- File Paths ----------------------
 CADS_FILE = "CADS.csv"
 VEHICLE_REF_FILE = "vehicle_example.txt"
-MAPPINGS_FILE = "mappings.csv"
+MAPPINGS_FILE = "Mappings.csv"
 
-# GitHub config (from secrets)
-GH_TOKEN = st.secrets["github"]["token"]
-GH_OWNER = st.secrets["github"]["owner"]
-GH_REPO = st.secrets["github"]["repo"]
-GH_BRANCH = st.secrets["github"]["branch"]
-
-# ----------------- HELPERS -----------------
-def load_csv(path: str, sep=","):
-    """Load CSV or tab-delimited file."""
+# ---------------------- Load CSV / TXT ----------------------
+@st.cache_data
+def load_csv(path):
     if not os.path.exists(path):
-        st.error(f"File not found: {path}")
-        return pd.DataFrame()
-    return pd.read_csv(path, sep=sep, encoding="utf-8")
+        st.warning(f"{path} not found, creating empty file.")
+        pd.DataFrame().to_csv(path, index=False)
+    if path.endswith(".csv"):
+        return pd.read_csv(path)
+    else:
+        return pd.read_csv(path, delimiter="\t")
 
+@st.cache_data
+def load_vehicle_ref():
+    return pd.read_csv(VEHICLE_REF_FILE, delimiter="\t")
 
-def save_mappings(df: pd.DataFrame):
-    """Save mappings locally and push to GitHub."""
-    df.to_csv(MAPPINGS_FILE, index=False)
-    # Push to GitHub via API
-    try:
-        import base64, json
-        url = f"https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/contents/{MAPPINGS_FILE}"
-        # Get SHA if file exists
-        r = requests.get(url, headers={"Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github+json"})
-        sha = r.json().get("sha")
-        content = base64.b64encode(df.to_csv(index=False).encode("utf-8")).decode("utf-8")
-        data = {
-            "message": f"Update mappings",
-            "branch": GH_BRANCH,
-            "content": content,
-        }
-        if sha:
-            data["sha"] = sha
-        r2 = requests.put(url, headers={"Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github+json"}, data=json.dumps(data))
-        if r2.status_code in [200, 201]:
-            st.success("Mappings pushed to GitHub successfully.")
-        else:
-            st.warning(f"Could not push mappings to GitHub: {r2.status_code}")
-    except Exception as e:
-        st.warning(f"Error pushing to GitHub: {e}")
-
-
-def smart_match_vehicle(vehicle_name: str, ref_df: pd.DataFrame, threshold=80):
-    """Return best matching vehicle from reference."""
-    choices = ref_df["Vehicle"].tolist()
-    match, score, idx = process.extractOne(vehicle_name, choices, scorer=fuzz.token_sort_ratio)
-    if score >= threshold:
-        return ref_df.iloc[idx]
-    return None
-
-
-# ----------------- LOAD FILES -----------------
+# ---------------------- Load data ----------------------
 cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE, sep="\t")
-
-# Load mappings if exists
+vehicle_ref_df = load_vehicle_ref()
 if os.path.exists(MAPPINGS_FILE):
-    mappings_df = load_csv(MAPPINGS_FILE)
+    mappings_df = pd.read_csv(MAPPINGS_FILE)
 else:
-    mappings_df = pd.DataFrame(columns=["vehicle", "year", "make", "model", "trim", "cads_style_id"])
+    mappings_df = pd.DataFrame(columns=["Vehicle", "Year", "Make", "Model", "Trim", "STYLE_ID"])
 
-
-# ----------------- STREAMLIT APP -----------------
-st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+# ---------------------- Streamlit UI ----------------------
 st.title("AFF Vehicle Mapping")
 
-# Vehicle input
 vehicle_input = st.text_input("Enter Vehicle Name (freeform)")
 
-# Button to search CADS
-if st.button("Search CADS / Map Vehicle"):
-    if vehicle_input:
-        match_row = smart_match_vehicle(vehicle_input, vehicle_ref_df)
-        if match_row is not None:
-            st.info(f"Smart match found: {match_row['Vehicle']}")
-            year = match_row["Year"]
-            make = match_row["Make"]
-            model = match_row["Model"]
-            trim = match_row.get("Trim", "")
-        else:
-            st.warning("No smart match found. Please enter Year, Make, Model, Trim manually:")
-            year = st.text_input("Year")
-            make = st.text_input("Make")
-            model = st.text_input("Model")
-            trim = st.text_input("Trim")
+selected_vehicle = None
+manual_ymmt = {}
 
-        # Filter CADS for potential matches
-        filtered_cads = cads_df[
-            (cads_df["MODEL_YEAR"].astype(str) == str(year)) &
-            (cads_df["DIVISION_NAME"].str.lower() == make.lower()) &
-            (cads_df["MODEL_NAME"].str.lower() == model.lower())
-        ]
-        if trim:
-            filtered_cads = filtered_cads[filtered_cads["STYLE_NAME"].str.contains(trim, case=False, na=False)]
+# ---------------------- Smart Match ----------------------
+if vehicle_input:
+    choices = vehicle_ref_df["Vehicle"].tolist()
+    match, score, idx = process.extractOne(vehicle_input, choices, scorer=fuzz.token_sort_ratio)
+    st.write(f"Smart match found: **{match}** (score {score})")
+    confirm = st.button("Confirm Smart Match")
+    if confirm:
+        selected_vehicle = match
+        ref_row = vehicle_ref_df.iloc[idx]
+        manual_ymmt = {
+            "Year": ref_row.get("Year"),
+            "Make": ref_row.get("Make"),
+            "Model": ref_row.get("Model"),
+            "Trim": ref_row.get("Trim")
+        }
 
-        st.subheader("CADS Matches")
-        st.dataframe(filtered_cads)
+# ---------------------- Manual YMMT fallback ----------------------
+st.subheader("Manual YMMT Entry (if smart match not correct)")
+with st.form("manual_ymmt_form"):
+    manual_year = st.text_input("Year", value=manual_ymmt.get("Year", ""))
+    manual_make = st.text_input("Make", value=manual_ymmt.get("Make", ""))
+    manual_model = st.text_input("Model", value=manual_ymmt.get("Model", ""))
+    manual_trim = st.text_input("Trim", value=manual_ymmt.get("Trim", ""))
+    apply_ymmt = st.form_submit_button("Apply Manual YMMT")
+    if apply_ymmt:
+        selected_vehicle = vehicle_input
+        manual_ymmt = {
+            "Year": manual_year.strip(),
+            "Make": manual_make.strip(),
+            "Model": manual_model.strip(),
+            "Trim": manual_trim.strip()
+        }
 
-        # Select CADS row to map
-        if not filtered_cads.empty:
-            selected_idx = st.selectbox("Select CADS style to map", filtered_cads.index.tolist())
-            selected_cads = filtered_cads.loc[selected_idx]
-            new_mapping = {
-                "vehicle": vehicle_input,
-                "year": year,
-                "make": make,
-                "model": model,
-                "trim": trim,
-                "cads_style_id": selected_cads["STYLE_ID"]
-            }
-            mappings_df = pd.concat([mappings_df, pd.DataFrame([new_mapping])], ignore_index=True)
-            st.success(f"Vehicle mapped to CADS ID: {selected_cads['STYLE_ID']}")
-            save_mappings(mappings_df)
+# ---------------------- Filter CADS ----------------------
+filtered_cads = cads_df.copy()
+if selected_vehicle:
+    if manual_ymmt.get("Year"):
+        filtered_cads = filtered_cads[filtered_cads["MODEL_YEAR"].astype(str).str.contains(str(manual_ymmt["Year"]), na=False)]
+    if manual_ymmt.get("Make"):
+        filtered_cads = filtered_cads[filtered_cads["DIVISION_NAME"].astype(str).str.contains(str(manual_ymmt["Make"]), na=False)]
+    if manual_ymmt.get("Model"):
+        filtered_cads = filtered_cads[filtered_cads["MODEL_NAME"].astype(str).str.contains(str(manual_ymmt["Model"]), na=False)]
+    if manual_ymmt.get("Trim"):
+        trim = str(manual_ymmt["Trim"])
+        filtered_cads = filtered_cads[filtered_cads["STYLE_NAME"].astype(str).str.contains(trim, na=False)]
 
-# Show existing mappings
-st.subheader("Existing Mappings")
-st.dataframe(mappings_df)
+st.subheader("Filtered CADS Rows")
+if not filtered_cads.empty:
+    st.dataframe(filtered_cads)
+else:
+    st.write("No CADS rows matched your selection.")
 
-# Show total counts
-st.info(f"Total CADS rows: {len(cads_df)}")
-st.info(f"Total Mappings: {len(mappings_df)}")
+# ---------------------- Select CADS Rows to Map ----------------------
+st.subheader("Select CADS rows to map")
+selection_cols = ["STYLE_ID", "MODEL_YEAR", "DIVISION_NAME", "MODEL_NAME", "STYLE_NAME"]
+filtered_cads["select"] = False
+for idx, row in filtered_cads.iterrows():
+    key = f"select_{idx}"
+    filtered_cads.at[idx, "select"] = st.checkbox(f"{row['DIVISION_NAME']} {row['MODEL_NAME']} {row['STYLE_NAME']}", key=key)
+
+selected_rows = filtered_cads[filtered_cads["select"]]
+
+# ---------------------- Save Mapping ----------------------
+if st.button("Save Mapping"):
+    if selected_rows.empty:
+        st.warning("No rows selected to save.")
+    else:
+        # Prepare new mappings
+        new_mappings = selected_rows.copy()
+        new_mappings["Vehicle"] = selected_vehicle
+        new_mappings["Year"] = manual_ymmt.get("Year", "")
+        new_mappings["Make"] = manual_ymmt.get("Make", "")
+        new_mappings["Model"] = manual_ymmt.get("Model", "")
+        new_mappings["Trim"] = manual_ymmt.get("Trim", "")
+        new_mappings = new_mappings[["Vehicle", "Year", "Make", "Model", "Trim", "STYLE_ID"]]
+
+        # Append to existing mappings
+        mappings_df = pd.concat([mappings_df, new_mappings], ignore_index=True)
+        mappings_df.drop_duplicates(subset=["Vehicle", "STYLE_ID"], inplace=True)
+        mappings_df.to_csv(MAPPINGS_FILE, index=False)
+        st.success(f"Saved {len(new_mappings)} mappings!")
+
+st.subheader("Total Mappings")
+st.write(len(mappings_df))
