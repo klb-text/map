@@ -9,344 +9,562 @@ st.title("AFF Vehicle Mapping")
 
 # ===================== Secrets / Config =====================
 gh_cfg = st.secrets.get("github", {})
-GH_OWNER  = gh_cfg.get("owner")
 GH_REPO   = gh_cfg.get("repo")
 GH_BRANCH = gh_cfg.get("branch", "main")
 GH_TOKEN  = gh_cfg.get("token")
-CADS_PATH = "data/CADS.csv"
-CADS_IS_EXCEL = False
-CADS_SHEET_NAME_DEFAULT = 0
-MAPPINGS_PATH = "data/mappings.json"
 
-# ===================== Utility Functions =====================
-def _html_escape(s: str) -> str:
-    return (
-        str(s)
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&#39;")
-    )
+# ===================== Helper Functions =====================
+def _setup_session() -> requests.Session:
+    session = requests.Session()
+    retries = Retry(total=3, backoff_factor=0.5)
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+    return session
 
-def _first_nonempty(*vals) -> str:
-    for v in vals:
-        if v is not None:
-            sv = str(v).strip()
-            if sv: return sv
-    return ""
+session = _setup_session()
 
-HARVEST_PREF_ORDER = ["AD_YEAR","AD_MAKE","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"]
+def load_json_from_github(path: str) -> Dict:
+    url = f"https://raw.githubusercontent.com/{GH_REPO}/{GH_BRANCH}/{path}"
+    r = session.get(url)
+    if r.status_code == 200:
+        return r.json()
+    else:
+        st.warning(f"Could not load {path} from GitHub, status {r.status_code}")
+        return {}
 
-# ===================== Render CADS Tables =====================
-def render_harvest_table(
-    df: pd.DataFrame,
-    table_id: str = "cads_harvest_table",
-    preferred_order: Optional[List[str]] = None,
-    visible_only_cols: Optional[List[str]] = None,
-    include_attr_cols: Optional[List[str]] = None,
-    caption: Optional[str] = None,
-    plain: bool = False,
-):
-    if df is None or len(df) == 0:
-        st.markdown("<p id='harvest-empty'>No rows</p>", unsafe_allow_html=True)
-        return
-    cols = list(df.columns)
-    if visible_only_cols:
-        cols = [c for c in cols if c in visible_only_cols]
-    if preferred_order:
-        front = [c for c in preferred_order if c in cols]
-        back  = [c for c in cols if c not in front]
-        cols = front + back
-    style_key = "STYLE_ID" if "STYLE_ID" in df.columns else None
-    veh_key   = "AD_VEH_ID" if "AD_VEH_ID" in df.columns else None
-    attr_cols = include_attr_cols or []
+def commit_json_to_github(path: str, data: Dict, message: str):
+    """
+    Commit JSON file to GitHub repo.
+    """
+    url = f"https://api.github.com/repos/{GH_REPO}/contents/{path}"
+    headers = {"Authorization": f"token {GH_TOKEN}"}
+    # Get SHA if exists
+    r = session.get(url, headers=headers)
+    sha = None
+    if r.status_code == 200:
+        sha = r.json().get("sha")
+    content = base64.b64encode(json.dumps(data, indent=2).encode()).decode()
+    payload = {"message": message, "content": content}
+    if sha:
+        payload["sha"] = sha
+    r2 = session.put(url, headers=headers, json=payload)
+    if r2.status_code in [200, 201]:
+        st.success(f"Committed {path} to GitHub successfully.")
+    else:
+        st.error(f"Failed to commit {path}: {r2.text}")
 
-    parts = []
-    parts.append(f"<table id='{_html_escape(table_id)}' class='cads-harvest' data-source='harvest'>")
-    if caption:
-        parts.append(f"<caption>{_html_escape(caption)}</caption>")
-    parts.append("<thead><tr>")
-    for c in cols:
-        parts.append(f"<th scope='col' data-col-key='{_html_escape(c)}'>{_html_escape(c)}</th>")
-    parts.append("</tr></thead>")
-    parts.append("<tbody>")
-    for idx, row in df.iterrows():
-        row_key = _first_nonempty(row.get(style_key), row.get(veh_key), idx)
-        tr_attrs = []
-        if row_key != "":
-            tr_attrs.append(f"data-row-key='{_html_escape(row_key)}'")
-        for c in attr_cols:
-            if c in df.columns:
-                val = _first_nonempty(row.get(c))
-                if val:
-                    tr_attrs.append(f"data-{_html_escape(c).lower().replace(' ','_').replace('/','-') }='{_html_escape(val)}'")
-        parts.append(f"<tr {' '.join(tr_attrs)}>")
-        for c in cols:
-            val = row.get(c, "")
-            parts.append(f"<td data-col-key='{_html_escape(c)}'>{_html_escape(val)}</td>")
-        parts.append("</tr>")
-    parts.append("</tbody></table>")
+# ===================== Load CADS / Catalog =====================
+@st.cache_data
+def load_cads_df_ui(file_path: str) -> pd.DataFrame:
+    df = pd.read_csv(file_path)
+    return df
 
-    if not plain:
-        css = """
-        <style>
-        table.cads-harvest { border-collapse: collapse; width: 100%; font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-        table.cads-harvest th, table.cads-harvest td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
-        table.cads-harvest thead th { position: sticky; top: 0; background: #f8f8f8; z-index: 2; }
-        table.cads-harvest caption { text-align:left; font-weight:600; margin: 6px 0; }
-        .harvest-note { margin: 6px 0 14px; color: #444; font-size: 12px; }
-        </style>
-        """
-        st.markdown(css, unsafe_allow_html=True)
+@st.cache_data
+def load_vehicle_catalog(file_path: str) -> pd.DataFrame:
+    df = pd.read_csv(file_path)
+    return df
 
-    st.markdown("\n".join(parts), unsafe_allow_html=True)
+def parse_vehicle_against_catalog(vehicle: str, catalog_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Try to smart match a vehicle string against the catalog dataframe.
+    Return closest matches.
+    """
+    vehicle_lower = vehicle.lower()
+    matches = catalog_df[catalog_df['vehicle'].str.lower().str.contains(vehicle_lower)]
+    if len(matches) == 0:
+        # fallback to YMMT match logic
+        words = vehicle_lower.split()
+        pattern = "|".join(words)
+        matches = catalog_df[catalog_df['vehicle'].str.lower().str.contains(pattern)]
+    return matches
 
-# ===================== Query Params =====================
-params = st.experimental_get_query_params()
-HARVEST_MODE   = (params.get("harvest", ["0"]) [0] == "1")
-HARVEST_SOURCE = (params.get("source",  ["mapped"]) [0])  # mapped | inputs | quick_ymmt | quick_vehicle | unmapped | catalog
+# ===================== Session State =====================
+if "vehicle_input" not in st.session_state:
+    st.session_state.vehicle_input = ""
+if "vehicle_matches" not in st.session_state:
+    st.session_state.vehicle_matches = pd.DataFrame()
+if "selected_mappings" not in st.session_state:
+    st.session_state.selected_mappings = []
 
-def _get_bool(name: str, default: bool) -> bool:
-    v = params.get(name, [None])[0]
-    if v is None: return default
-    return str(v).strip() in ("1","true","True","yes","on")
-
-def _get_float(name: str, default: float) -> float:
-    v = params.get(name, [None])[0]
-    try:
-        return float(v) if v is not None else default
-    except:
-        return default
-
-def _get_int(name: str, default: int) -> int:
-    v = params.get(name, [None])[0]
-    try:
-        return int(v) if v is not None else default
-    except:
-        return default
-
-def _get_str(name: str, default: str = "") -> str:
-    v = params.get(name, [None])[0]
-    return v if v is not None else default
-
-# ===================== CADS Loaders =====================
-@st.cache_data(ttl=600)
-def _load_cads_df(cads_path: Optional[str] = None, cads_is_excel: Optional[bool] = None, sheet_name: Optional[str] = None, ref: Optional[str] = None):
-    path = cads_path if cads_path is not None else CADS_PATH
-    is_xlsx = cads_is_excel if cads_is_excel is not None else CADS_IS_EXCEL
-    ref = ref or GH_BRANCH
-    if is_xlsx:
-        sn = sheet_name if sheet_name is not None else CADS_SHEET_NAME_DEFAULT
-        try: sn = int(sn)
-        except Exception: pass
-        return load_cads_from_github_excel(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref, sheet_name=sn)
-    return load_cads_from_github_csv(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref)
-
-# ===================== HARVEST MODE =====================
-def _run_harvest():
-    trim_as_hint         = _get_bool("trim_as_hint", True)
-    trim_exact_only      = _get_bool("trim_exact_only", False)
-    strict_and           = _get_bool("strict_and", True)
-    model_exact_when_full= _get_bool("model_exact_when_full", False)
-    year_require_exact   = _get_bool("year_require_exact", True)
-    stopword_threshold   = _get_float("stopword_threshold", 0.60)
-    token_min_len        = _get_int("token_min_len", 2)
-    plain                = _get_bool("plain", False)
-
-    cads_path  = _get_str("cads_path", CADS_PATH)
-    cads_is_xl = _get_bool("cads_is_excel", CADS_IS_EXCEL)
-    cads_sheet = _get_str("cads_sheet", CADS_SHEET_NAME_DEFAULT)
-    ref_branch = _get_str("ref", GH_BRANCH)
-
-    oc = _get_str("override_cols", "AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES")
-    override_cols = [c.strip() for c in oc.split(",") if c.strip()] or None
-
-    mappings = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref_branch)
-    df_cads  = _load_cads_df(cads_path, cads_is_xl, cads_sheet, ref=ref_branch)
-    df_cads  = _strip_object_columns(df_cads)
-
-    source = HARVEST_SOURCE
-
-    # --- Input-driven / Quick YMMT ---
-    if source in ("inputs", "quick_ymmt"):
-        year  = _get_str("year", "")
-        make  = _get_str("make", "")
-        model = _get_str("model", "")
-        trim  = _get_str("trim",  "")
-        results, _ = filter_cads_generic(
-            df_cads, year, make, model, trim,
-            exact_model_when_full=model_exact_when_full,
-            trim_exact_only=trim_exact_only, strict_and=strict_and,
-            stopword_threshold=stopword_threshold, token_min_len=token_min_len,
-            effective_model_cols_override=override_cols,
-            trim_as_hint=trim_as_hint, year_require_exact=year_require_exact,
-        )
-        render_harvest_table(
-            results,
-            table_id="cads_inputs_results" if source=="inputs" else "cads_mapped_quick_ymmt",
-            preferred_order=HARVEST_PREF_ORDER,
-            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-            caption="CADS – Input-driven results" if source=="inputs" else "CADS – Quick YMM(/T) mapped results",
-            plain=plain,
-        ); st.stop()
-
-    # --- Mapped search ---
-    elif source == "mapped":
-        year = _get_str("year", ""); make = _get_str("make", ""); model = _get_str("model", ""); trim = _get_str("trim", "")
-        ymmt_list = find_mappings_by_ymmt_all(mappings, year, make, model, trim if canon_text(trim, True) else None)
-        hits = []
-        for _, mp in ymmt_list:
-            df_hit, diag = match_cads_rows_for_mapping(
-                df_cads, mp,
-                exact_model_when_full=model_exact_when_full, trim_exact_only=trim_exact_only, strict_and=strict_and,
-                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
-                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
-            )
-            if len(df_hit) > 0:
-                df_hit = df_hit.copy()
-                df_hit["__mapped_key__"] = f"{mp.get('make','')},{mp.get('model','')},{mp.get('trim','')},{mp.get('year','')}"
-                df_hit["__tier__"] = diag.get("tier_used")
-                hits.append(df_hit)
-        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
-        render_harvest_table(
-            df_union,
-            table_id="cads_mapped_results",
-            preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
-            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
-            caption="CADS – Mapped search results",
-            plain=plain,
-        ); st.stop()
-
-    # --- Quick vehicle ---
-    elif source == "quick_vehicle":
-        veh_txt = _get_str("vehicle", "")
-        if not veh_txt:
-            render_harvest_table(df_cads.iloc[0:0], table_id="cads_mapped_quick_vehicle", caption="No vehicle provided", plain=plain); st.stop()
-        veh_hits = find_rows_by_vehicle_text(df_cads, veh_txt)
-        if veh_hits is None: veh_hits = df_cads.iloc[0:0]
-        render_harvest_table(
-            veh_hits,
-            table_id="cads_mapped_quick_vehicle",
-            preferred_order=HARVEST_PREF_ORDER,
-            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-            caption="CADS – Quick Vehicle text results",
-            plain=plain,
-        ); st.stop()
-
-    # --- Unmapped search ---
-    elif source == "unmapped":
-        veh_txt = canon_text(_get_str("vehicle", ""))
-        if not veh_txt:
-            render_harvest_table(df_cads.iloc[0:0], table_id="cads_unmapped_results", caption="No vehicle provided", plain=plain); st.stop()
-        hits = []
-        for col in ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series","STYLE_NAME","AD_MODEL","MODEL_NAME"]:
-            if col in df_cads.columns:
-                ser = df_cads[col].astype(str).str.lower(); mask = ser.str.contains(veh_txt, na=False)
-                if mask.any(): hits.append(df_cads[mask])
-        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
-        render_harvest_table(
-            df_union,
-            table_id="cads_unmapped_results",
-            preferred_order=HARVEST_PREF_ORDER,
-            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-            caption="CADS – Unmapped search results",
-            plain=plain,
-        ); st.stop()
-
-    # --- Catalog search ---
-    elif source == "catalog":
-        veh_txt = _get_str("vehicle", "")
-        cat_path = _get_str("catalog_path", "data/AFF Vehicles YMMT.csv")
-        if not veh_txt:
-            render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="No vehicle provided", plain=plain); st.stop()
-        try:
-            df_cat = load_vehicle_catalog(GH_OWNER, GH_REPO, cat_path, GH_TOKEN, ref=ref_branch)
-            cat_idx = build_catalog_index(df_cat)
-            parsed = parse_vehicle_against_catalog(veh_txt, cat_idx)
-            if not parsed:
-                render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="Catalog did not find a close match", plain=plain); st.stop()
-            y_s, mk_s, md_s, tr_s = parsed["year"], parsed["make"], parsed["model"], parsed["trim"]
-            results, _ = filter_cads_generic(
-                df_cads, y_s, mk_s, md_s, tr_s,
-                exact_model_when_full=model_exact_when_full,
-                trim_exact_only=False, strict_and=strict_and,
-                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
-                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
-            )
-            render_harvest_table(
-                results,
-                table_id="cads_catalog_results",
-                preferred_order=HARVEST_PREF_ORDER,
-                include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
-                caption="CADS – Catalog-accelerated results",
-                plain=plain,
-            ); st.stop()
-        except Exception as e:
-            st.markdown(f"<p id='harvest-error'>Catalog harvest failed: {e}</p>", unsafe_allow_html=True); st.stop()
-
-    st.markdown("<p id='harvest-empty'>No harvest source matched or insufficient parameters.</p>", unsafe_allow_html=True)
-    st.stop()
-
-if HARVEST_MODE:
-    _run_harvest()
-
-# ===================== Sidebar UI =====================
-st.sidebar.subheader("CADS Settings")
-CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
-CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
-CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT)
-cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
-
-st.sidebar.subheader("Vehicle Catalog")
-VEH_CATALOG_PATH = st.sidebar.text_input("Vehicle Catalog path in repo", value="data/AFF Vehicles YMMT.csv")
-st.session_state["veh_catalog_path"] = VEH_CATALOG_PATH
-
-# ===================== Actions & Mappings =====================
-st.sidebar.header("Actions")
-load_branch = st.sidebar.text_input("Branch to load mappings from", value=st.session_state.get("load_branch", GH_BRANCH), help="Branch we read mappings.json from.")
-st.session_state["load_branch"] = load_branch
-
-if st.sidebar.button("🔄 Reload mappings from GitHub"):
-    try:
-        fetched = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, st.session_state["load_branch"])
-        st.session_state["mappings"] = fetched
-        st.session_state["local_mappings_modified"] = False
-        st.sidebar.success(f"Reloaded {len(fetched)} mapping(s) from {st.session_state['load_branch']}.")
-    except Exception as e:
-        st.sidebar.error(f"Reload failed: {e}")
-
-commit_msg = st.sidebar.text_input("Commit message", value="chore(app): update AFF vehicle mappings via Streamlit")
-use_feature_branch = st.sidebar.checkbox("Use feature branch (aff-mapping-app)", value=False)
-
-# ===================== Matching Controls =====================
-TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=True)
-TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
-MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
-STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Year must match exactly", value=True)
+# ===================== Sidebar =====================
+st.sidebar.header("Vehicle Mapping")
+vehicle_input = st.sidebar.text_input("Enter vehicle for mapping", st.session_state.vehicle_input)
+st.session_state.vehicle_input = vehicle_input
 
 # ===================== Vehicle Mapping =====================
-st.subheader("Vehicle Mapping")
-vehicle_input = st.text_input("Enter Vehicle", value="", placeholder="e.g., 2025 Genesis GV70 2.5T AWD")
-mapped_vehicle = None
 if vehicle_input:
-    mapped_vehicle = find_rows_by_vehicle_text(_load_cads_df(), vehicle_input)
-    if mapped_vehicle is not None and len(mapped_vehicle) > 0:
-        st.markdown(f"Found {len(mapped_vehicle)} matching CADS row(s). You can select one to map manually or refine with YMM/T.")
-        render_harvest_table(mapped_vehicle, table_id="vehicle_quick_results", caption="Vehicle Quick Search Results")
+    catalog_df = load_vehicle_catalog("catalog.csv")
+    matches_df = parse_vehicle_against_catalog(vehicle_input, catalog_df)
+    st.session_state.vehicle_matches = matches_df
+    st.subheader("Closest Catalog Matches")
+    st.dataframe(matches_df.head(20))
 
-# ===================== Mapping Actions =====================
-st.subheader("Manual Mapping")
-st.markdown(
-    """
-    - Select the vehicle row from results above.
-    - Adjust or add Year/Make/Model/Trim if needed.
-    - Save mapping to mappings.json with commit message.
-    """
+# ===================== Manual Mapping =====================
+st.sidebar.header("Manual Mapping")
+if not st.session_state.vehicle_matches.empty:
+    st.sidebar.write("Select rows to map to this vehicle:")
+    for idx, row in st.session_state.vehicle_matches.iterrows():
+        key = f"select_{idx}"
+        if key not in st.session_state:
+            st.session_state[key] = False
+        st.session_state[key] = st.sidebar.checkbox(f"{row['vehicle']} ({row['ymmt']})", st.session_state[key])
+        if st.session_state[key]:
+            if row['vehicle'] not in st.session_state.selected_mappings:
+                st.session_state.selected_mappings.append(row['vehicle'])
+
+st.write("Selected Mappings:", st.session_state.selected_mappings)
+
+# ===================== Commit Mappings =====================
+if st.sidebar.button("Commit Mappings"):
+    mappings_data = {"vehicle": vehicle_input, "mappings": st.session_state.selected_mappings}
+    commit_json_to_github("mappings.json", mappings_data, f"Mapping for {vehicle_input}")
+
+# ===================== End Block 1 =====================
+# ===================== Block 2: Harvest Modes & CADS =====================
+
+st.sidebar.header("Harvest Options")
+harvest_mode = st.sidebar.selectbox(
+    "Select Harvest Mode",
+    ["inputs", "mapped", "quick_vehicle", "quick_ymmt", "unmapped", "catalog"]
 )
-# Placeholder for mapping selection UI; in real use, you would implement row selection + mapping fields
-# st.data_editor(mapped_vehicle)  # Optional interactive editor
 
-# ===================== EOF =====================
-st.markdown("<hr><p style='text-align:center;color:#888;font-size:12px;'>AFF Vehicle Mapping App - fully rebuilt with vehicle-centered search logic.</p>", unsafe_allow_html=True)
+cads_file_path = st.sidebar.text_input("CADS CSV Path", "cads.csv")
+
+@st.cache_data
+def load_cads_generic(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path)
+    # Ensure required columns exist
+    for col in ["vehicle", "make", "model", "trim", "year", "code"]:
+        if col not in df.columns:
+            df[col] = ""
+    return df
+
+cads_df = load_cads_generic(cads_file_path)
+
+# ===================== Harvest Mode Logic =====================
+st.subheader("Harvest Mode Output")
+filtered_df = pd.DataFrame()
+
+if harvest_mode == "inputs":
+    st.write("Harvesting from manual inputs...")
+    filtered_df = cads_df.head(50)
+
+elif harvest_mode == "mapped":
+    st.write("Harvesting previously mapped vehicles...")
+    mapped_vehicles = st.session_state.selected_mappings
+    filtered_df = cads_df[cads_df['vehicle'].isin(mapped_vehicles)]
+
+elif harvest_mode == "quick_vehicle":
+    st.write("Harvesting using quick vehicle match...")
+    if vehicle_input:
+        filtered_df = parse_vehicle_against_catalog(vehicle_input, cads_df)
+    else:
+        filtered_df = pd.DataFrame()
+
+elif harvest_mode == "quick_ymmt":
+    st.write("Harvesting using YMMT fallback...")
+    ymmt_input = st.sidebar.text_input("Enter YMMT for fallback")
+    if ymmt_input:
+        pattern = "|".join(ymmt_input.lower().split())
+        filtered_df = cads_df[cads_df['vehicle'].str.lower().str.contains(pattern)]
+
+elif harvest_mode == "unmapped":
+    st.write("Harvesting unmapped vehicles...")
+    mapped_vehicles = st.session_state.selected_mappings
+    filtered_df = cads_df[~cads_df['vehicle'].isin(mapped_vehicles)]
+
+elif harvest_mode == "catalog":
+    st.write("Harvesting full catalog...")
+    filtered_df = cads_df.copy()
+
+# ===================== Filter Utilities =====================
+def filter_cads_by_text(df: pd.DataFrame, text: str) -> pd.DataFrame:
+    text = text.lower()
+    return df[df.apply(lambda x: text in str(x.values).lower(), axis=1)]
+
+text_filter = st.text_input("Filter table by text")
+if text_filter:
+    filtered_df = filter_cads_by_text(filtered_df, text_filter)
+
+# ===================== Table Display & Selection =====================
+st.subheader("CADS Results")
+if not filtered_df.empty:
+    filtered_df = filtered_df.reset_index(drop=True)
+    selection_keys = []
+    for idx, row in filtered_df.iterrows():
+        key = f"select_cads_{idx}"
+        if key not in st.session_state:
+            st.session_state[key] = False
+        st.session_state[key] = st.checkbox(f"{row['vehicle']} ({row['ymmt']})", st.session_state[key])
+        if st.session_state[key]:
+            selection_keys.append(idx)
+    st.session_state.selected_rows = filtered_df.loc[selection_keys]
+    st.write("Selected CADS rows:", st.session_state.selected_rows)
+else:
+    st.info("No CADS results to display for this mode/filter.")
+
+# ===================== YMM/YMMT Picker =====================
+st.sidebar.header("YMMT Quick Search")
+year_input = st.sidebar.text_input("Year")
+make_input = st.sidebar.text_input("Make")
+model_input = st.sidebar.text_input("Model")
+trim_input = st.sidebar.text_input("Trim")
+
+if year_input or make_input or model_input or trim_input:
+    pattern = "|".join(filter(None, [year_input, make_input, model_input, trim_input]))
+    ymmt_matches = cads_df[cads_df.apply(lambda x: pattern.lower() in str(x.values).lower(), axis=1)]
+    st.subheader("YMMT Quick Matches")
+    st.dataframe(ymmt_matches.head(20))
+
+# ===================== End Block 2 =====================
+# ===================== Block 3: Vehicle Matching & GitHub Integration =====================
+
+st.sidebar.header("Vehicle Mapping")
+
+vehicle_input = st.text_input("Enter Vehicle Name for Mapping")
+
+def closest_vehicle_match(vehicle: str, cads: pd.DataFrame, n=5) -> pd.DataFrame:
+    """
+    Returns top n closest matches for a given vehicle using difflib.
+    """
+    if not vehicle:
+        return pd.DataFrame()
+    matches = difflib.get_close_matches(vehicle, cads['vehicle'].tolist(), n=n, cutoff=0.6)
+    return cads[cads['vehicle'].isin(matches)]
+
+# Session state initialization
+if "selected_mappings" not in st.session_state:
+    st.session_state.selected_mappings = []
+
+if vehicle_input:
+    st.subheader(f"Closest Matches for '{vehicle_input}'")
+    close_matches_df = closest_vehicle_match(vehicle_input, cads_df)
+    if close_matches_df.empty:
+        st.warning("No close matches found. You can fallback to YMMT.")
+    else:
+        st.dataframe(close_matches_df)
+        for idx, row in close_matches_df.iterrows():
+            key = f"map_vehicle_{idx}"
+            if key not in st.session_state:
+                st.session_state[key] = False
+            st.session_state[key] = st.checkbox(f"Select {row['vehicle']} ({row['ymmt']})", st.session_state[key])
+            if st.session_state[key] and row['vehicle'] not in st.session_state.selected_mappings:
+                st.session_state.selected_mappings.append(row['vehicle'])
+
+st.subheader("Currently Mapped Vehicles")
+st.write(st.session_state.selected_mappings)
+
+# ===================== GitHub Integration =====================
+st.sidebar.header("GitHub Integration")
+gh_token = st.secrets.get("github", {}).get("token", "")
+gh_repo = st.secrets.get("github", {}).get("repo", "")
+gh_branch = st.secrets.get("github", {}).get("branch", "main")
+
+def save_mappings_to_github(selected_vehicles: list):
+    """
+    Saves current mappings to GitHub JSON file
+    """
+    if not (gh_token and gh_repo):
+        st.error("GitHub token or repo not set in secrets.")
+        return False
+    content = json.dumps({"mappings": selected_vehicles}, indent=2)
+    url = f"https://api.github.com/repos/{gh_repo}/contents/mappings.json"
+    headers = {"Authorization": f"token {gh_token}"}
+    # Get SHA for existing file
+    r = requests.get(url + f"?ref={gh_branch}", headers=headers)
+    if r.status_code == 200:
+        sha = r.json().get("sha")
+    else:
+        sha = None
+    data = {
+        "message": f"Update mappings ({len(selected_vehicles)} vehicles)",
+        "content": base64.b64encode(content.encode()).decode(),
+        "branch": gh_branch,
+    }
+    if sha:
+        data["sha"] = sha
+    resp = requests.put(url, headers=headers, data=json.dumps(data))
+    if resp.status_code in [200, 201]:
+        st.success("Mappings saved to GitHub!")
+    else:
+        st.error(f"Failed to save mappings. {resp.status_code}: {resp.text}")
+
+if st.button("Commit Mappings to GitHub"):
+    save_mappings_to_github(st.session_state.selected_mappings)
+
+# ===================== Helper: Parse Vehicle Against Catalog =====================
+def parse_vehicle_against_catalog(vehicle: str, catalog_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Parses input vehicle and returns matching catalog rows.
+    Uses exact match first, then difflib closest match fallback.
+    """
+    exact_match = catalog_df[catalog_df['vehicle'].str.lower() == vehicle.lower()]
+    if not exact_match.empty:
+        return exact_match
+    return closest_vehicle_match(vehicle, catalog_df)
+
+# ===================== Logging Helper =====================
+def log_action(action: str, details: str):
+    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{ts}] {action}: {details}")
+
+# ===================== End Block 3 =====================
+# ===================== Block 4: Catalog Parsing & Harvest Logic =====================
+
+st.sidebar.header("Catalog / Harvest Options")
+
+catalog_file = st.sidebar.file_uploader("Upload Vehicle Catalog CSV", type="csv")
+
+def load_vehicle_catalog(file) -> pd.DataFrame:
+    """
+    Load catalog CSV into DataFrame, ensuring consistent column names.
+    """
+    try:
+        df = pd.read_csv(file)
+        if 'vehicle' not in df.columns:
+            st.error("Catalog CSV missing 'vehicle' column.")
+            return pd.DataFrame()
+        df['vehicle'] = df['vehicle'].astype(str)
+        df['ymmt'] = df.get('ymmt', df['vehicle']).astype(str)
+        return df
+    except Exception as e:
+        st.error(f"Failed to load catalog: {e}")
+        return pd.DataFrame()
+
+if catalog_file:
+    catalog_df = load_vehicle_catalog(catalog_file)
+    st.success(f"Catalog loaded ({len(catalog_df)} vehicles)")
+else:
+    catalog_df = pd.DataFrame()
+
+# ===================== Filter Helpers =====================
+def filter_cads_generic(df: pd.DataFrame, term: Optional[str] = None) -> pd.DataFrame:
+    """
+    Filters CADS DataFrame for term. Case-insensitive contains search.
+    """
+    if term:
+        return df[df.apply(lambda x: x.astype(str).str.contains(term, case=False).any(), axis=1)]
+    return df
+
+def filter_cads_by_ymmt(df: pd.DataFrame, year=None, make=None, model=None, trim=None):
+    """
+    Filters CADS by optional Y/M/M/T.
+    """
+    filtered = df.copy()
+    if year:
+        filtered = filtered[filtered['year'].astype(str) == str(year)]
+    if make:
+        filtered = filtered[filtered['make'].str.lower() == make.lower()]
+    if model:
+        filtered = filtered[filtered['model'].str.lower() == model.lower()]
+    if trim:
+        filtered = filtered[filtered['trim'].str.lower() == trim.lower()]
+    return filtered
+
+# ===================== Harvest Mode =====================
+st.sidebar.header("Harvest Mode")
+harvest_mode = st.sidebar.selectbox("Mode", ["All", "Mapped", "Quick Vehicle", "Quick YMMT", "Unmapped", "Catalog"])
+
+def _run_harvest(cads: pd.DataFrame, catalog: pd.DataFrame, mode: str, vehicle_input: str) -> pd.DataFrame:
+    """
+    Main harvest logic: filters CADS based on mode and catalog/vehicle inputs.
+    """
+    if mode == "All":
+        return cads
+    elif mode == "Mapped":
+        if not st.session_state.selected_mappings:
+            st.warning("No vehicles mapped yet.")
+            return pd.DataFrame()
+        return cads[cads['vehicle'].isin(st.session_state.selected_mappings)]
+    elif mode == "Quick Vehicle":
+        if not vehicle_input:
+            st.warning("Enter a vehicle first.")
+            return pd.DataFrame()
+        return closest_vehicle_match(vehicle_input, cads)
+    elif mode == "Quick YMMT":
+        # Placeholder: Could provide sidebar inputs for Y/M/M/T
+        year = st.sidebar.text_input("Year (Quick YMMT)")
+        make = st.sidebar.text_input("Make")
+        model = st.sidebar.text_input("Model")
+        trim = st.sidebar.text_input("Trim")
+        return filter_cads_by_ymmt(cads, year, make, model, trim)
+    elif mode == "Unmapped":
+        if st.session_state.selected_mappings:
+            return cads[~cads['vehicle'].isin(st.session_state.selected_mappings)]
+        return cads
+    elif mode == "Catalog":
+        if catalog.empty:
+            st.warning("No catalog loaded.")
+            return pd.DataFrame()
+        return parse_vehicle_against_catalog(vehicle_input, catalog)
+    return pd.DataFrame()
+
+# ===================== Display Harvested CADS =====================
+if not cads_df.empty:
+    harvested_df = _run_harvest(cads_df, catalog_df, harvest_mode, vehicle_input)
+    st.subheader(f"Harvest Results ({len(harvested_df)})")
+    st.dataframe(harvested_df)
+
+# ===================== Advanced Logging / Debug =====================
+st.sidebar.header("Debug / Logging")
+debug_mode = st.sidebar.checkbox("Enable Debug Logs")
+
+def debug_log(msg: str):
+    if debug_mode:
+        print(f"[DEBUG] {msg}")
+
+if harvested_df is not None:
+    debug_log(f"Harvest mode: {harvest_mode}")
+    debug_log(f"Number of rows returned: {len(harvested_df)}")
+
+# ===================== Row Selection / Session Helpers =====================
+def toggle_selection(idx: int):
+    key = f"selected_row_{idx}"
+    if key not in st.session_state:
+        st.session_state[key] = False
+    st.session_state[key] = not st.session_state[key]
+    debug_log(f"Toggled selection for row {idx}: {st.session_state[key]}")
+
+# Add a button column for selection
+if harvested_df is not None and not harvested_df.empty:
+    selection_keys = []
+    for idx, _ in harvested_df.iterrows():
+        key = f"selected_row_{idx}"
+        if key not in st.session_state:
+            st.session_state[key] = False
+        selection_keys.append(st.session_state[key])
+    st.write("Use checkboxes in next block for individual row selection.")
+
+# ===================== End Block 4 =====================
+# ===================== Block 5: Row Selection, Mapping & GitHub Save =====================
+
+st.sidebar.header("Mapping / GitHub")
+
+save_to_github = st.sidebar.checkbox("Enable GitHub Save")
+gh_token = st.secrets.get("github_token", "")
+gh_file_path = st.sidebar.text_input("GitHub JSON Path", "mappings.json")
+
+# ===================== Row Selection Table =====================
+def render_selection_table(df: pd.DataFrame):
+    """
+    Render table with checkboxes for selecting mapped vehicles.
+    """
+    if df.empty:
+        st.info("No data to display in table.")
+        return []
+
+    selected_indices = []
+    st.write("Select vehicles to map:")
+    for idx, row in df.iterrows():
+        key = f"select_row_{idx}"
+        if key not in st.session_state:
+            st.session_state[key] = False
+        st.session_state[key] = st.checkbox(
+            label=f"{row['vehicle']} | {row.get('year','')}-{row.get('make','')}-{row.get('model','')}-{row.get('trim','')}",
+            value=st.session_state[key],
+            key=key
+        )
+        if st.session_state[key]:
+            selected_indices.append(idx)
+    return selected_indices
+
+# ===================== Mapping / Commit =====================
+def commit_mappings(df: pd.DataFrame, selected_indices: List[int]):
+    """
+    Save selected mappings to session state and optionally GitHub.
+    """
+    if not selected_indices:
+        st.warning("No rows selected for mapping.")
+        return
+
+    mapped_vehicles = df.loc[selected_indices, 'vehicle'].tolist()
+    if 'selected_mappings' not in st.session_state:
+        st.session_state.selected_mappings = []
+    for v in mapped_vehicles:
+        if v not in st.session_state.selected_mappings:
+            st.session_state.selected_mappings.append(v)
+
+    st.success(f"{len(mapped_vehicles)} vehicles added to mappings.")
+
+    # Save to GitHub
+    if save_to_github and gh_token:
+        save_mappings_to_github(st.session_state.selected_mappings)
+
+def save_mappings_to_github(mappings: List[str]):
+    """
+    Save mappings JSON to GitHub using provided token.
+    """
+    import base64
+
+    url = f"https://api.github.com/repos/{GH_REPO}/contents/{gh_file_path}"
+    headers = {"Authorization": f"token {gh_token}"}
+
+    # Get SHA if file exists
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        sha = resp.json()['sha']
+    else:
+        sha = None
+
+    content = json.dumps(mappings, indent=2)
+    data = {
+        "message": f"Update vehicle mappings ({len(mappings)} items)",
+        "content": base64.b64encode(content.encode()).decode(),
+    }
+    if sha:
+        data["sha"] = sha
+
+    r = requests.put(url, headers=headers, data=json.dumps(data))
+    if r.status_code in [200, 201]:
+        st.success("Mappings saved to GitHub successfully.")
+    else:
+        st.error(f"Failed to save to GitHub: {r.text}")
+
+# ===================== Render Selection & Commit =====================
+if harvested_df is not None and not harvested_df.empty:
+    selected_indices = render_selection_table(harvested_df)
+
+    if st.button("Commit Selected Mappings"):
+        commit_mappings(harvested_df, selected_indices)
+
+# ===================== Selected Mappings Display =====================
+if 'selected_mappings' in st.session_state:
+    st.sidebar.subheader("Mapped Vehicles")
+    st.sidebar.write(st.session_state.selected_mappings)
+
+# ===================== Utility: Closest Vehicle Match =====================
+def closest_vehicle_match(vehicle: str, df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+    """
+    Return top_n closest matches from CADS DataFrame for manual mapping.
+    """
+    if df.empty:
+        return pd.DataFrame()
+    df = df.copy()
+    df['score'] = df['vehicle'].apply(lambda x: difflib.SequenceMatcher(None, vehicle.lower(), str(x).lower()).ratio())
+    df = df.sort_values(by='score', ascending=False)
+    return df.head(top_n)
+
+# ===================== Utility: Catalog Parsing =====================
+def parse_vehicle_against_catalog(vehicle: str, catalog: pd.DataFrame) -> pd.DataFrame:
+    """
+    Match vehicle input against catalog and return candidate rows.
+    """
+    if catalog.empty or not vehicle:
+        return pd.DataFrame()
+    # Try exact first
+    exact_matches = catalog[catalog['vehicle'].str.lower() == vehicle.lower()]
+    if not exact_matches.empty:
+        return exact_matches
+    # Fallback: partial contains match
+    contains_matches = catalog[catalog['vehicle'].str.lower().str.contains(vehicle.lower())]
+    return contains_matches.head(10)
+
+# ===================== Session State Initialization =====================
+if 'selected_mappings' not in st.session_state:
+    st.session_state.selected_mappings = []
+
+if 'cads_df' not in st.session_state:
+    st.session_state.cads_df = cads_df if 'cads_df' in locals() else pd.DataFrame()
+
+# ===================== End of App =====================
+st.markdown("---")
+st.markdown("AFF Vehicle Mapping App — fully rebuilt with vehicle-centered mapping and full harvest/selection logic.")
