@@ -1,11 +1,24 @@
-# app.py — Full Streamlit CADS / Vehicle Mapping Script
+import base64, json, io, re, difflib, time
+from typing import Optional, List, Dict, Tuple, Set, Any
+import requests, pandas as pd, streamlit as st
+from requests.adapters import HTTPAdapter, Retry
 
-import streamlit as st
-import pandas as pd
-import json
-from typing import Optional, List, Dict, Any
+# ===================== Page Config =====================
+st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+st.title("AFF Vehicle Mapping")
 
-# -------------------- Helper functions --------------------
+# ===================== Secrets / Config =====================
+gh_cfg = st.secrets.get("github", {})
+GH_OWNER  = gh_cfg.get("owner")
+GH_REPO   = gh_cfg.get("repo")
+GH_BRANCH = gh_cfg.get("branch", "main")
+GH_TOKEN  = gh_cfg.get("token")
+CADS_PATH = "data/CADS.csv"
+CADS_IS_EXCEL = False
+CADS_SHEET_NAME_DEFAULT = 0
+MAPPINGS_PATH = "data/mappings.json"
+
+# ===================== Utility Functions =====================
 def _html_escape(s: str) -> str:
     return (
         str(s)
@@ -23,38 +36,9 @@ def _first_nonempty(*vals) -> str:
             if sv: return sv
     return ""
 
-def _get_bool(name: str, default: bool) -> bool:
-    v = params.get(name, [None])[0]
-    if v is None: return default
-    return str(v).strip() in ("1","true","True","yes","on")
-
-def _get_float(name: str, default: float) -> float:
-    v = params.get(name, [None])[0]
-    try:
-        return float(v) if v is not None else default
-    except:
-        return default
-
-def _get_int(name: str, default: int) -> int:
-    v = params.get(name, [None])[0]
-    try:
-        return int(v) if v is not None else default
-    except:
-        return default
-
-def _get_str(name: str, default: str = "") -> str:
-    v = params.get(name, [None])[0]
-    return v if v is not None else default
-
-def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
-    # Ensure object columns are stripped of whitespace
-    for col in df.select_dtypes(include="object").columns:
-        df[col] = df[col].astype(str).str.strip()
-    return df
-
-# -------------------- HTML Table Renderer --------------------
 HARVEST_PREF_ORDER = ["AD_YEAR","AD_MAKE","AD_MODEL","MODEL_NAME","STYLE_NAME","AD_SERIES","Trim","AD_TRIM","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"]
 
+# ===================== Render CADS Tables =====================
 def render_harvest_table(
     df: pd.DataFrame,
     table_id: str = "cads_harvest_table",
@@ -118,12 +102,35 @@ def render_harvest_table(
 
     st.markdown("\n".join(parts), unsafe_allow_html=True)
 
-# -------------------- Query Params & Loaders --------------------
+# ===================== Query Params =====================
 params = st.experimental_get_query_params()
 HARVEST_MODE   = (params.get("harvest", ["0"]) [0] == "1")
 HARVEST_SOURCE = (params.get("source",  ["mapped"]) [0])  # mapped | inputs | quick_ymmt | quick_vehicle | unmapped | catalog
 
-# -------------------- CADS Loaders --------------------
+def _get_bool(name: str, default: bool) -> bool:
+    v = params.get(name, [None])[0]
+    if v is None: return default
+    return str(v).strip() in ("1","true","True","yes","on")
+
+def _get_float(name: str, default: float) -> float:
+    v = params.get(name, [None])[0]
+    try:
+        return float(v) if v is not None else default
+    except:
+        return default
+
+def _get_int(name: str, default: int) -> int:
+    v = params.get(name, [None])[0]
+    try:
+        return int(v) if v is not None else default
+    except:
+        return default
+
+def _get_str(name: str, default: str = "") -> str:
+    v = params.get(name, [None])[0]
+    return v if v is not None else default
+
+# ===================== CADS Loaders =====================
 @st.cache_data(ttl=600)
 def _load_cads_df(cads_path: Optional[str] = None, cads_is_excel: Optional[bool] = None, sheet_name: Optional[str] = None, ref: Optional[str] = None):
     path = cads_path if cads_path is not None else CADS_PATH
@@ -136,97 +143,210 @@ def _load_cads_df(cads_path: Optional[str] = None, cads_is_excel: Optional[bool]
         return load_cads_from_github_excel(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref, sheet_name=sn)
     return load_cads_from_github_csv(GH_OWNER, GH_REPO, path, GH_TOKEN, ref=ref)
 
-# -------------------- Harvest Mode --------------------
+# ===================== HARVEST MODE =====================
 def _run_harvest():
-    st.markdown("<p>Harvest mode not fully implemented in this simplified version.</p>")
+    trim_as_hint         = _get_bool("trim_as_hint", True)
+    trim_exact_only      = _get_bool("trim_exact_only", False)
+    strict_and           = _get_bool("strict_and", True)
+    model_exact_when_full= _get_bool("model_exact_when_full", False)
+    year_require_exact   = _get_bool("year_require_exact", True)
+    stopword_threshold   = _get_float("stopword_threshold", 0.60)
+    token_min_len        = _get_int("token_min_len", 2)
+    plain                = _get_bool("plain", False)
 
-# -------------------- Main Streamlit UI --------------------
-if HARVEST_MODE:
-    _run_harvest()
+    cads_path  = _get_str("cads_path", CADS_PATH)
+    cads_is_xl = _get_bool("cads_is_excel", CADS_IS_EXCEL)
+    cads_sheet = _get_str("cads_sheet", CADS_SHEET_NAME_DEFAULT)
+    ref_branch = _get_str("ref", GH_BRANCH)
+
+    oc = _get_str("override_cols", "AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES")
+    override_cols = [c.strip() for c in oc.split(",") if c.strip()] or None
+
+    mappings = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, ref_branch)
+    df_cads  = _load_cads_df(cads_path, cads_is_xl, cads_sheet, ref=ref_branch)
+    df_cads  = _strip_object_columns(df_cads)
+
+    source = HARVEST_SOURCE
+
+    # --- Input-driven / Quick YMMT ---
+    if source in ("inputs", "quick_ymmt"):
+        year  = _get_str("year", "")
+        make  = _get_str("make", "")
+        model = _get_str("model", "")
+        trim  = _get_str("trim",  "")
+        results, _ = filter_cads_generic(
+            df_cads, year, make, model, trim,
+            exact_model_when_full=model_exact_when_full,
+            trim_exact_only=trim_exact_only, strict_and=strict_and,
+            stopword_threshold=stopword_threshold, token_min_len=token_min_len,
+            effective_model_cols_override=override_cols,
+            trim_as_hint=trim_as_hint, year_require_exact=year_require_exact,
+        )
+        render_harvest_table(
+            results,
+            table_id="cads_inputs_results" if source=="inputs" else "cads_mapped_quick_ymmt",
+            preferred_order=HARVEST_PREF_ORDER,
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+            caption="CADS – Input-driven results" if source=="inputs" else "CADS – Quick YMM(/T) mapped results",
+            plain=plain,
+        ); st.stop()
+
+    # --- Mapped search ---
+    elif source == "mapped":
+        year = _get_str("year", ""); make = _get_str("make", ""); model = _get_str("model", ""); trim = _get_str("trim", "")
+        ymmt_list = find_mappings_by_ymmt_all(mappings, year, make, model, trim if canon_text(trim, True) else None)
+        hits = []
+        for _, mp in ymmt_list:
+            df_hit, diag = match_cads_rows_for_mapping(
+                df_cads, mp,
+                exact_model_when_full=model_exact_when_full, trim_exact_only=trim_exact_only, strict_and=strict_and,
+                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
+                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
+            )
+            if len(df_hit) > 0:
+                df_hit = df_hit.copy()
+                df_hit["__mapped_key__"] = f"{mp.get('make','')},{mp.get('model','')},{mp.get('trim','')},{mp.get('year','')}"
+                df_hit["__tier__"] = diag.get("tier_used")
+                hits.append(df_hit)
+        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
+        render_harvest_table(
+            df_union,
+            table_id="cads_mapped_results",
+            preferred_order=HARVEST_PREF_ORDER + ["__mapped_key__","__tier__"],
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE","__mapped_key__","__tier__"],
+            caption="CADS – Mapped search results",
+            plain=plain,
+        ); st.stop()
+
+    # --- Quick vehicle ---
+    elif source == "quick_vehicle":
+        veh_txt = _get_str("vehicle", "")
+        if not veh_txt:
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_mapped_quick_vehicle", caption="No vehicle provided", plain=plain); st.stop()
+        veh_hits = find_rows_by_vehicle_text(df_cads, veh_txt)
+        if veh_hits is None: veh_hits = df_cads.iloc[0:0]
+        render_harvest_table(
+            veh_hits,
+            table_id="cads_mapped_quick_vehicle",
+            preferred_order=HARVEST_PREF_ORDER,
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+            caption="CADS – Quick Vehicle text results",
+            plain=plain,
+        ); st.stop()
+
+    # --- Unmapped search ---
+    elif source == "unmapped":
+        veh_txt = canon_text(_get_str("vehicle", ""))
+        if not veh_txt:
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_unmapped_results", caption="No vehicle provided", plain=plain); st.stop()
+        hits = []
+        for col in ["Vehicle","Description","ModelTrim","ModelName","AD_SERIES","Series","STYLE_NAME","AD_MODEL","MODEL_NAME"]:
+            if col in df_cads.columns:
+                ser = df_cads[col].astype(str).str.lower(); mask = ser.str.contains(veh_txt, na=False)
+                if mask.any(): hits.append(df_cads[mask])
+        df_union = pd.concat(hits, ignore_index=True).drop_duplicates().reset_index(drop=True) if hits else df_cads.iloc[0:0]
+        render_harvest_table(
+            df_union,
+            table_id="cads_unmapped_results",
+            preferred_order=HARVEST_PREF_ORDER,
+            include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+            caption="CADS – Unmapped search results",
+            plain=plain,
+        ); st.stop()
+
+    # --- Catalog search ---
+    elif source == "catalog":
+        veh_txt = _get_str("vehicle", "")
+        cat_path = _get_str("catalog_path", "data/AFF Vehicles YMMT.csv")
+        if not veh_txt:
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="No vehicle provided", plain=plain); st.stop()
+        try:
+            df_cat = load_vehicle_catalog(GH_OWNER, GH_REPO, cat_path, GH_TOKEN, ref=ref_branch)
+            cat_idx = build_catalog_index(df_cat)
+            parsed = parse_vehicle_against_catalog(veh_txt, cat_idx)
+            if not parsed:
+                render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="Catalog did not find a close match", plain=plain); st.stop()
+            y_s, mk_s, md_s, tr_s = parsed["year"], parsed["make"], parsed["model"], parsed["trim"]
+            results, _ = filter_cads_generic(
+                df_cads, y_s, mk_s, md_s, tr_s,
+                exact_model_when_full=model_exact_when_full,
+                trim_exact_only=False, strict_and=strict_and,
+                stopword_threshold=stopword_threshold, token_min_len=token_min_len,
+                effective_model_cols_override=override_cols, trim_as_hint=True, year_require_exact=year_require_exact,
+            )
+            render_harvest_table(
+                results,
+                table_id="cads_catalog_results",
+                preferred_order=HARVEST_PREF_ORDER,
+                include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
+                caption="CADS – Catalog-accelerated results",
+                plain=plain,
+            ); st.stop()
+        except Exception as e:
+            st.markdown(f"<p id='harvest-error'>Catalog harvest failed: {e}</p>", unsafe_allow_html=True); st.stop()
+
+    st.markdown("<p id='harvest-empty'>No harvest source matched or insufficient parameters.</p>", unsafe_allow_html=True)
     st.stop()
 
-# Sidebar: CADS Settings
+if HARVEST_MODE:
+    _run_harvest()
+
+# ===================== Sidebar UI =====================
 st.sidebar.subheader("CADS Settings")
-CADS_PATH = st.sidebar.text_input("CADS path in repo", value="data/CADS.csv")
-CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=False)
-CADS_SHEET_NAME_DEFAULT = st.sidebar.text_input("Excel sheet name/index", value="Sheet1")
+CADS_PATH = st.sidebar.text_input("CADS path in repo", value=CADS_PATH)
+CADS_IS_EXCEL = st.sidebar.checkbox("CADS is Excel (.xlsx)", value=CADS_IS_EXCEL)
+CADS_SHEET_NAME = st.sidebar.text_input("Excel sheet name/index", value=CADS_SHEET_NAME_DEFAULT)
 cads_upload = st.sidebar.file_uploader("Upload CADS CSV/XLSX (local test)", type=["csv","xlsx"])
 
-# Sidebar: Vehicle Catalog
 st.sidebar.subheader("Vehicle Catalog")
 VEH_CATALOG_PATH = st.sidebar.text_input("Vehicle Catalog path in repo", value="data/AFF Vehicles YMMT.csv")
 st.session_state["veh_catalog_path"] = VEH_CATALOG_PATH
 
-# Sidebar: Matching Controls
-st.sidebar.subheader("Matching Controls")
-TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint", value=True)
-TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact", value=False)
-MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when multi-word", value=False)
-STRICT_AND = st.sidebar.checkbox("Require strict AND across filters", value=True)
-YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Require exact year match", value=True)
-STOPWORD_THRESHOLD = st.sidebar.slider("Stopword threshold", 0.1, 0.9, 0.6, 0.05)
-TOKEN_MIN_LEN = st.sidebar.slider("Token minimum length", 1, 5, 2, 1)
+# ===================== Actions & Mappings =====================
+st.sidebar.header("Actions")
+load_branch = st.sidebar.text_input("Branch to load mappings from", value=st.session_state.get("load_branch", GH_BRANCH), help="Branch we read mappings.json from.")
+st.session_state["load_branch"] = load_branch
 
-# Effective model columns override
-EFFECTIVE_MODEL_COLS_OVERRIDE = st.sidebar.text_input("Effective model columns (comma-separated)", value="AD_MODEL, MODEL_NAME, STYLE_NAME, AD_SERIES")
-OVERRIDE_COLS = [c.strip() for c in EFFECTIVE_MODEL_COLS_OVERRIDE.split(",") if c.strip()] or None
+if st.sidebar.button("🔄 Reload mappings from GitHub"):
+    try:
+        fetched = fetch_mappings_from_github(GH_OWNER, GH_REPO, MAPPINGS_PATH, GH_TOKEN, st.session_state["load_branch"])
+        st.session_state["mappings"] = fetched
+        st.session_state["local_mappings_modified"] = False
+        st.sidebar.success(f"Reloaded {len(fetched)} mapping(s) from {st.session_state['load_branch']}.")
+    except Exception as e:
+        st.sidebar.error(f"Reload failed: {e}")
 
-# -------------------- Helper to load CADS --------------------
-def _load_cads_df_ui():
-    if cads_upload is not None:
-        if cads_upload.name.lower().endswith(".xlsx"):
-            return pd.read_excel(cads_upload, engine="openpyxl")
-        return pd.read_csv(cads_upload)
-    if CADS_IS_EXCEL:
-        sheet_arg = CADS_SHEET_NAME_DEFAULT
-        try: sheet_arg = int(sheet_arg)
-        except Exception: pass
-        return load_cads_from_github_excel("GH_OWNER", "GH_REPO", CADS_PATH, "GH_TOKEN", ref="main", sheet_name=sheet_arg)
-    return load_cads_from_github_csv("GH_OWNER", "GH_REPO", CADS_PATH, "GH_TOKEN", ref="main")
+commit_msg = st.sidebar.text_input("Commit message", value="chore(app): update AFF vehicle mappings via Streamlit")
+use_feature_branch = st.sidebar.checkbox("Use feature branch (aff-mapping-app)", value=False)
 
-# -------------------- Vehicle Quick Lookup --------------------
-st.header("Vehicle Quick Lookup (catalog → CADS)")
-veh_catalog_txt = st.text_input("Vehicle (Year Make Model [Trim])", placeholder="e.g., 2026 Lexus RX 350 Premium AWD")
+# ===================== Matching Controls =====================
+TRIM_AS_HINT = st.sidebar.checkbox("Use Trim as hint (do not filter)", value=True)
+TRIM_EXACT_ONLY = st.sidebar.checkbox("Trim must be exact (no token-subset)", value=False)
+MODEL_EXACT_WHEN_FULL = st.sidebar.checkbox("Model exact when input is multi-word", value=False)
+STRICT_AND = st.sidebar.checkbox("Require strict AND across provided filters", value=True)
+YEAR_REQUIRE_EXACT = st.sidebar.checkbox("Year must match exactly", value=True)
 
-if st.button("Find by Vehicle"):
-    if not (veh_catalog_txt or "").strip():
-        st.warning("Enter a vehicle string first.")
-    else:
-        try:
-            df_cat = load_vehicle_catalog("GH_OWNER","GH_REPO", VEH_CATALOG_PATH, "GH_TOKEN", ref="main")
-            cat_idx = build_catalog_index(df_cat)
-            parsed = parse_vehicle_against_catalog(veh_catalog_txt, cat_idx)
-            if not parsed:
-                st.info("Could not parse Vehicle deterministically.")
-            else:
-                y_s, mk_s, md_s, tr_s = parsed["year"], parsed["make"], parsed["model"], parsed["trim"]
-                st.caption(f"Catalog parsed → Y={y_s}, Make={mk_s}, Model={md_s}, Trim={tr_s}")
-                df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
-                results, diag = filter_cads_generic(
-                    df_cads, y_s, mk_s, md_s, tr_s,
-                    exact_model_when_full=MODEL_EXACT_WHEN_FULL,
-                    trim_exact_only=False,
-                    strict_and=STRICT_AND,
-                    stopword_threshold=STOPWORD_THRESHOLD,
-                    token_min_len=TOKEN_MIN_LEN,
-                    effective_model_cols_override=OVERRIDE_COLS,
-                    trim_as_hint=True,
-                    year_require_exact=YEAR_REQUIRE_EXACT,
-                )
-                if len(results)==0:
-                    st.warning("No CADS rows matched.")
-                else:
-                    render_harvest_table(results, table_id="quick_vehicle_results", caption=f"{len(results)} CADS row(s) matched.")
-        except Exception as e:
-            st.error(f"Vehicle search failed: {e}")
+# ===================== Vehicle Mapping =====================
+st.subheader("Vehicle Mapping")
+vehicle_input = st.text_input("Enter Vehicle", value="", placeholder="e.g., 2025 Genesis GV70 2.5T AWD")
+mapped_vehicle = None
+if vehicle_input:
+    mapped_vehicle = find_rows_by_vehicle_text(_load_cads_df(), vehicle_input)
+    if mapped_vehicle is not None and len(mapped_vehicle) > 0:
+        st.markdown(f"Found {len(mapped_vehicle)} matching CADS row(s). You can select one to map manually or refine with YMM/T.")
+        render_harvest_table(mapped_vehicle, table_id="vehicle_quick_results", caption="Vehicle Quick Search Results")
 
-# -------------------- Legacy Quick Vehicle Text Search --------------------
-st.header("Legacy Quick Vehicle Text Search")
-veh_legacy = st.text_input("Vehicle text (legacy contains search)", placeholder="e.g., 2026 Pacifica Select AWD")
-if st.button("Find by Vehicle (legacy contains)"):
-    df_cads = _load_cads_df_ui(); df_cads = _strip_object_columns(df_cads)
-    res = find_rows_by_vehicle_text(df_cads, veh_legacy)
-    if res is None or len(res)==0:
-        st.info("No rows matched vehicle text.")
-    else:
-        render_harvest_table(res, table_id="legacy_search_results", caption=f"{len(res)} CADS row(s) matched.")
+# ===================== Mapping Actions =====================
+st.subheader("Manual Mapping")
+st.markdown(
+    """
+    - Select the vehicle row from results above.
+    - Adjust or add Year/Make/Model/Trim if needed.
+    - Save mapping to mappings.json with commit message.
+    """
+)
+# Placeholder for mapping selection UI; in real use, you would implement row selection + mapping fields
+# st.data_editor(mapped_vehicle)  # Optional interactive editor
+
+# ===================== EOF =====================
+st.markdown("<hr><p style='text-align:center;color:#888;font-size:12px;'>AFF Vehicle Mapping App - fully rebuilt with vehicle-centered search logic.</p>", unsafe_allow_html=True)
