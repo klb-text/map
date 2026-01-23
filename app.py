@@ -29,8 +29,8 @@ mappings_df = pd.read_csv(MAPPINGS_FILE)
 # Smart vehicle matching
 # -----------------------------
 def smart_vehicle_match(df, vehicle_input, top_n=10):
-    # Create a searchable vehicle string in CADS
-    df['vehicle_search'] = df[['MODEL_YEAR','MAKE','MODEL_NAME','TRIM']].astype(str).agg(' '.join, axis=1)
+    # Use correct CADS columns
+    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].astype(str).agg(' '.join, axis=1)
 
     # Use RapidFuzz to find top matches
     choices = df['vehicle_search'].tolist()
@@ -39,6 +39,7 @@ def smart_vehicle_match(df, vehicle_input, top_n=10):
     matched_indices = [i for match, score, i in matches if score >= 60]
     matched_df = df.iloc[matched_indices].copy()
     return matched_df
+
 
 # -----------------------------
 # Streamlit UI
