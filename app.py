@@ -1,124 +1,181 @@
+# app.py
 import base64, json, io, re, difflib, time
 from typing import Optional, List, Dict, Tuple, Set, Any
-import requests, pandas as pd, streamlit as st
+import pandas as pd
+import streamlit as st
 from requests.adapters import HTTPAdapter, Retry
+import requests
+from rapidfuzz import fuzz
 from pathlib import Path
-from github import Github
+import csv
 
-# ===================== Page Config =====================
+# ---------------- Page Config ----------------
 st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
 st.title("AFF Vehicle Mapping")
 
-# ===================== Secrets / Config =====================
+# ---------------- Secrets / GitHub ----------------
 gh_cfg = st.secrets.get("github", {})
 GH_TOKEN = gh_cfg.get("token")
 GH_OWNER = gh_cfg.get("owner")
 GH_REPO = gh_cfg.get("repo")
 GH_BRANCH = gh_cfg.get("branch", "main")
 
-# ===================== File Paths =====================
+# ---------------- File Paths ----------------
 CADS_FILE = "CADS.csv"
 MAPPINGS_FILE = "Mappings.csv"
+VEHICLE_REF_FILE = "vehicle_example.csv"  # Reference file for Make/Model/Trim
 
-# ===================== GitHub Integration =====================
-def get_github_file_content(path: str) -> str:
+# ---------------- Utils ----------------
+def load_csv(path: str) -> pd.DataFrame:
+    return pd.read_csv(path)
+
+def save_mappings_to_csv(df: pd.DataFrame, path: str):
+    df.to_csv(path, index=False)
+
+# ---------------- GitHub sync ----------------
+def push_mappings_to_github(path: str):
+    if not GH_TOKEN:
+        st.warning("No GitHub token provided. Mappings not synced.")
+        return
+    import base64
+    from github import Github
     g = Github(GH_TOKEN)
     repo = g.get_repo(f"{GH_OWNER}/{GH_REPO}")
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
     try:
-        file_content = repo.get_contents(path, ref=GH_BRANCH)
-        return base64.b64decode(file_content.content).decode()
-    except:
-        return ""
+        file = repo.get_contents(path, ref=GH_BRANCH)
+        repo.update_file(file.path, f"Update mappings {time.time()}", content, file.sha, branch=GH_BRANCH)
+    except Exception as e:
+        repo.create_file(path, f"Create mappings {time.time()}", content, branch=GH_BRANCH)
 
-def push_github_file(path: str, content: str, message: str):
-    g = Github(GH_TOKEN)
-    repo = g.get_repo(f"{GH_OWNER}/{GH_REPO}")
-    try:
-        file_content = repo.get_contents(path, ref=GH_BRANCH)
-        repo.update_file(path, message, content, file_content.sha, branch=GH_BRANCH)
-    except:
-        repo.create_file(path, message, content, branch=GH_BRANCH)
+# ---------------- Load Data ----------------
+try:
+    cads_df = load_csv(CADS_FILE)
+except FileNotFoundError:
+    st.error(f"{CADS_FILE} not found.")
+    st.stop()
 
-# ===================== Load CADS =====================
-@st.cache_data
-def load_cads(file_path: str) -> pd.DataFrame:
-    return pd.read_csv(file_path)
+# Load mappings if exists
+if Path(MAPPINGS_FILE).exists():
+    mappings_df = load_csv(MAPPINGS_FILE)
+else:
+    mappings_df = pd.DataFrame(columns=["vehicle_input","matched_indices"])
 
-# ===================== Load / Save Mappings =====================
-def load_mappings() -> pd.DataFrame:
-    if Path(MAPPINGS_FILE).exists():
-        return pd.read_csv(MAPPINGS_FILE)
-    content = get_github_file_content(MAPPINGS_FILE)
-    if content:
-        return pd.read_csv(io.StringIO(content))
-    return pd.DataFrame(columns=["vehicle", "year", "make", "model", "trim", "STYLE_ID"])
+# Load vehicle reference
+vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 
-def save_mappings(df: pd.DataFrame):
-    df.to_csv(MAPPINGS_FILE, index=False)
-    push_github_file(MAPPINGS_FILE, df.to_csv(index=False), "Update vehicle mappings")
-
-# ===================== Vehicle Matching =====================
-def smart_vehicle_match(vehicle: str, cads_df: pd.DataFrame) -> pd.DataFrame:
-    vehicle_lower = vehicle.lower()
-    # Exact / close match search
-    mask = cads_df.apply(lambda row: vehicle_lower in str(row["MODEL_NAME"]).lower(), axis=1)
-    matches = cads_df[mask]
-    if not matches.empty:
-        return matches
-    # Fallback: YMM/T match
-    return cads_df[cads_df.apply(lambda row: vehicle_lower in " ".join([str(row.get(col,"")).lower() for col in ["MODEL_YEAR","DIVISION_NAME","MODEL_NAME","STYLE_NAME","TRIM"]]), axis=1)]
-
-# ===================== Session State =====================
+# ---------------- Session State ----------------
+if "vehicle_input" not in st.session_state:
+    st.session_state.vehicle_input = ""
+if "harvested_df" not in st.session_state:
+    st.session_state.harvested_df = pd.DataFrame()
 if "selected_rows" not in st.session_state:
-    st.session_state["selected_rows"] = []
+    st.session_state.selected_rows = []
 
-# ===================== Main App =====================
-cads_df = load_cads(CADS_FILE)
-mappings_df = load_mappings()
+# ---------------- Sidebar ----------------
+st.sidebar.header("Mapping Controls")
+threshold = st.sidebar.slider("Fuzzy Match Threshold", 80, 100, 90)
 
-vehicle_input = st.text_input("Enter Vehicle Name", "")
+# ---------------- Vehicle Input ----------------
+vehicle_input = st.text_input("Enter Vehicle Name", st.session_state.vehicle_input)
+st.session_state.vehicle_input = vehicle_input
 
-if vehicle_input:
-    filtered_df = smart_vehicle_match(vehicle_input, cads_df)
-    st.write(f"Found {len(filtered_df)} matching CADS rows for '{vehicle_input}'")
+# ---------------- Fuzzy Matching ----------------
+def fuzzy_match_vehicle(vehicle_name: str, ref_df: pd.DataFrame, threshold: int=90) -> List[int]:
+    """
+    Returns list of indices in ref_df that match vehicle_name above threshold
+    """
+    matches = []
+    for idx, row in ref_df.iterrows():
+        combined = " ".join([str(row.get(c,"")) for c in ["Year","Make","Model","Trim"]]).strip()
+        score = fuzz.ratio(vehicle_name.lower(), combined.lower())
+        if score >= threshold:
+            matches.append(idx)
+    return matches
 
-    for idx, row in filtered_df.iterrows():
-        key = f"{row['STYLE_ID']}_{idx}"
+# ---------------- Harvest / Selection ----------------
+def harvest_vehicle(vehicle_name: str, threshold: int=90):
+    # Fuzzy match against vehicle reference
+    matched_indices = fuzzy_match_vehicle(vehicle_name, vehicle_ref_df, threshold)
+    harvested = pd.DataFrame()
+    if matched_indices:
+        # Pull CADS rows matching reference
+        for idx in matched_indices:
+            ref_row = vehicle_ref_df.loc[idx]
+            year = ref_row.get("Year")
+            make = ref_row.get("Make")
+            model = ref_row.get("Model")
+            trim = ref_row.get("Trim")
+            cad_rows = cads_df[
+                (cads_df.get("MODEL_YEAR")==year) &
+                (cads_df.get("AD_MAKE", "").str.lower()==str(make).lower()) &
+                (cads_df.get("AD_MODEL", "").str.lower()==str(model).lower())
+            ]
+            if trim:
+                cad_rows = cad_rows[cad_rows.get("AD_TRIM","").str.lower()==str(trim).lower()]
+            harvested = pd.concat([harvested, cad_rows])
+    else:
+        # fallback: ask for full YMM/T input
+        st.info("No close match found. Please enter Year / Make / Model / Trim below.")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            year = st.number_input("Year", min_value=1900, max_value=2100, step=1)
+        with col2:
+            make = st.text_input("Make")
+        with col3:
+            model = st.text_input("Model")
+        with col4:
+            trim = st.text_input("Trim")
+        cad_rows = cads_df[
+            (cads_df.get("MODEL_YEAR")==year) &
+            (cads_df.get("AD_MAKE","").str.lower()==make.lower()) &
+            (cads_df.get("AD_MODEL","").str.lower()==model.lower())
+        ]
+        if trim:
+            cad_rows = cad_rows[cad_rows.get("AD_TRIM","").str.lower()==trim.lower()]
+        harvested = cad_rows
+    harvested = harvested.drop_duplicates()
+    return harvested, matched_indices
+
+# ---------------- Selection Table ----------------
+def render_selection_table(df: pd.DataFrame) -> List[int]:
+    selected_indices = []
+    st.write("CADS Results")
+    if df.empty:
+        st.write("No rows found.")
+        return selected_indices
+    for idx, row in df.iterrows():
+        key = f"row_{idx}"
         if key not in st.session_state:
             st.session_state[key] = False
-        st.session_state[key] = st.checkbox(
-            f"{row['MODEL_YEAR']}-{row['DIVISION_NAME']}-{row['MODEL_NAME']}-{row['STYLE_NAME']}-{row['TRIM']} (STYLE_ID: {row['STYLE_ID']})",
-            value=st.session_state[key]
-        )
+        label = f"{row.get('AD_MAKE','')} {row.get('AD_MODEL','')} {row.get('AD_TRIM','')} ({row.get('MODEL_YEAR','')})"
+        st.session_state[key] = st.checkbox(label, st.session_state[key])
         if st.session_state[key]:
-            if row['STYLE_ID'] not in st.session_state["selected_rows"]:
-                st.session_state["selected_rows"].append(row['STYLE_ID'])
-        else:
-            if row['STYLE_ID'] in st.session_state["selected_rows"]:
-                st.session_state["selected_rows"].remove(row['STYLE_ID'])
+            selected_indices.append(idx)
+    return selected_indices
 
-if st.session_state["selected_rows"]:
-    st.subheader("Selected Mappings:")
-    selected_df = cads_df[cads_df['STYLE_ID'].isin(st.session_state["selected_rows"])].copy()
-    st.dataframe(selected_df)
-    # Merge/update mappings
-    for _, r in selected_df.iterrows():
-        vehicle_name = vehicle_input
-        exists = mappings_df["STYLE_ID"].isin([r["STYLE_ID"]])
-        if not exists.any():
-            mappings_df = pd.concat([mappings_df, pd.DataFrame([{
-                "vehicle": vehicle_name,
-                "year": r["MODEL_YEAR"],
-                "make": r["DIVISION_NAME"],
-                "model": r["MODEL_NAME"],
-                "trim": r["TRIM"],
-                "STYLE_ID": r["STYLE_ID"]
-            }])], ignore_index=True)
-    save_mappings(mappings_df)
-    st.success("Mappings updated and synced to GitHub!")
+# ---------------- Run Harvest ----------------
+if vehicle_input:
+    st.subheader("Harvest Mode Output")
+    harvested_df, matched_indices = harvest_vehicle(vehicle_input, threshold)
+    st.session_state.harvested_df = harvested_df
+    selected_indices = render_selection_table(harvested_df)
+    st.session_state.selected_rows = selected_indices
+    # Save mapping
+    if selected_indices:
+        existing = mappings_df[mappings_df.vehicle_input==vehicle_input]
+        if not existing.empty:
+            mappings_df = mappings_df[mappings_df.vehicle_input!=vehicle_input]
+        mappings_df = pd.concat([mappings_df, pd.DataFrame([{
+            "vehicle_input": vehicle_input,
+            "matched_indices": json.dumps(selected_indices)
+        }])], ignore_index=True)
+        save_mappings_to_csv(mappings_df, MAPPINGS_FILE)
+        push_mappings_to_github(MAPPINGS_FILE)
 
-# ===================== Display Harvest / Debug =====================
-st.subheader("Harvest Mode Output")
-st.write("Harvesting from manual inputs...")
+# ---------------- Display Summary ----------------
+st.subheader("Summary")
 st.write(f"Total CADS rows: {len(cads_df)}")
 st.write(f"Total Mappings: {len(mappings_df)}")
+st.write(f"Selected rows for current vehicle: {len(selected_indices)}")
