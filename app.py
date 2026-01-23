@@ -17,7 +17,7 @@ def load_csv(path, sep='\t'):
         return pd.read_csv(path, sep=sep, dtype=str)
     except Exception as e:
         st.error(f"Error loading {path}: {e}")
-        return pd.DataFrame()  # Return empty DataFrame on error
+        return pd.DataFrame()
 
 vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 cads_df = load_csv(CADS_FILE)
@@ -29,7 +29,7 @@ required_cads_cols = ['AD_VEH_ID','AD_YEAR','AD_MAKE','AD_MODEL','AD_MFGCODE',
 for col in required_cads_cols:
     if col not in cads_df.columns:
         cads_df[col] = ""
-    cads_df[col] = cads_df[col].astype(str)
+    cads_df[col] = cads_df[col].astype(str).fillna('')
 
 # ---------------------------
 # Smart vehicle match function
@@ -47,14 +47,14 @@ def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None
     for col in ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']:
         if col not in df.columns:
             df[col] = ''
-        df[col] = df[col].astype(str)
+        df[col] = df[col].astype(str).fillna('')  # <-- fillna ensures no ValueError
 
     # Combine key fields for fuzzy search
     df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].agg(' '.join, axis=1)
 
     # Fuzzy matching
     matches = process.extract(vehicle_input, df['vehicle_search'].tolist(), scorer=fuzz.token_sort_ratio, limit=50)
-    matched_indices = [idx for _, score, idx in matches if score >= 60]  # threshold
+    matched_indices = [idx for _, score, idx in matches if score >= 60]
     matched_df = df.iloc[matched_indices]
     return matched_df, matches
 
