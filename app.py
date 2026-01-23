@@ -23,7 +23,7 @@ GH_BRANCH = gh_cfg.get("branch", "main")
 # ---------------- File Paths ----------------
 CADS_FILE = "CADS.csv"
 MAPPINGS_FILE = "Mappings.csv"
-VEHICLE_REF_FILE = "vehicle_example.csv"  # Reference file for Make/Model/Trim
+VEHICLE_REF_FILE = "vehicle_example.txt"  # Reference file for Make/Model/Trim
 
 # ---------------- Utils ----------------
 def load_csv(path: str) -> pd.DataFrame:
