@@ -21,13 +21,13 @@ def load_csv(path):
 # Smart Vehicle Match
 # ----------------------
 def smart_vehicle_match(df, vehicle_input):
-    # Create a searchable string combining relevant columns
-    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].astype(str).agg(' '.join, axis=1)
+    # Include STYLE_NAME in search for full trim/tech info
+    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','STYLE_NAME']].astype(str).agg(' '.join, axis=1)
     
     choices = df['vehicle_search'].tolist()
     matches = process.extract(vehicle_input, choices, scorer=fuzz.token_sort_ratio, limit=50)
     
-    matched_indices = [i for i, (val, score, i) in enumerate(matches) if score > 60]
+    matched_indices = [i for i, (val, score, idx) in enumerate(matches) if score > 60]
     
     if matched_indices:
         matches_df = df.iloc[matched_indices].copy()
@@ -35,6 +35,7 @@ def smart_vehicle_match(df, vehicle_input):
         return matches_df, raw_matches
     else:
         return pd.DataFrame(), []
+
 
 # ----------------------
 # Load data
