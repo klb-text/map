@@ -131,16 +131,29 @@ if not matches_df.empty:
 
     display_df.insert(0, "Select", False)
 
-    edited_df = st.data_editor(
-        display_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Select": st.column_config.CheckboxColumn(required=True)
-        }
-    )
+selected_rows = []
 
-    selected = edited_df[edited_df["Select"]]
+st.markdown("### Select applicable vehicle lines")
+
+for idx, row in display_df.iterrows():
+    key = f"select_{idx}"
+
+    cols = st.columns([0.5, 1, 1, 2, 2, 1.2])
+
+    with cols[0]:
+        checked = st.checkbox("", key=key)
+
+    cols[1].write(row["Year"])
+    cols[2].write(row["Make"])
+    cols[3].write(row["Model"])
+    cols[4].write(row["Trim"])
+    cols[5].write(row["Model Code"])
+
+    if checked:
+        selected_rows.append(row)
+
+selected_df = pd.DataFrame(selected_rows)
+
 
     st.write(f"Selected rows: {len(selected)}")
 
