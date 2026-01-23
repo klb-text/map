@@ -210,7 +210,12 @@ if not filtered_df.empty:
         key = f"select_cads_{idx}"
         if key not in st.session_state:
             st.session_state[key] = False
-        st.session_state[key] = st.checkbox(f"{row['vehicle']} ({row['ymmt']})", st.session_state[key])
+        #st.session_state[key] = st.checkbox(f"{row['vehicle']} ({row['ymmt']})", st.session_state[key])
+        st.session_state[key] = st.checkbox(
+    f"{row['AD_YEAR']} {row['AD_MAKE']} {row['AD_MODEL']} {row['AD_TRIM']} ({row['STYLE_ID']})",
+    st.session_state.get(key, False)
+)
+
         if st.session_state[key]:
             selection_keys.append(idx)
     st.session_state.selected_rows = filtered_df.loc[selection_keys]
