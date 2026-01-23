@@ -10,83 +10,69 @@ st.title("AFF Vehicle Mapping")
 # ===================== Files =====================
 BASE_DIR = Path(__file__).parent
 CADS_FILE = BASE_DIR / "CADS.csv"
-VEHICLE_REF_FILE = BASE_DIR / "vehicle_example.txt"  # can be .csv or .txt
-
-FUZZY_THRESHOLD = 90
+VEHICLE_REF_FILE = BASE_DIR / "vehicle_example.txt"
 
 # ===================== Loaders =====================
 @st.cache_data
-def load_cads(path: Path) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    df.columns = [c.strip().upper() for c in df.columns]
-
-    # Canonical working columns
-    df["YEAR"] = df["MODEL_YEAR"]
-    df["MAKE"] = df["DIVISION_NAME"]
-    df["MODEL"] = df["MODEL_NAME"]
-    df["TRIM_CANON"] = df["TRIM"].fillna("")
-    df["MODEL_CODE"] = df["AD_MFGCODE"]
-
-    return df
-
+def load_csv(path):
+    return pd.read_csv(path)
 
 @st.cache_data
-def load_vehicle_ref(path: Path) -> pd.DataFrame:
-    try:
-        return pd.read_csv(path)
-    except Exception:
-        return pd.read_csv(path, sep="\t")
+def load_vehicle_ref(path):
+    return pd.read_csv(path, sep="\t")
 
-
-cads_df = load_cads(CADS_FILE)
+cads_df = load_csv(CADS_FILE)
 vehicle_ref_df = load_vehicle_ref(VEHICLE_REF_FILE)
 
-# ===================== Vehicle Search =====================
-st.subheader("Enter Vehicle (freeform)")
+# Normalize CADS columns
+cads_df.columns = [c.strip() for c in cads_df.columns]
 
-vehicle_input = st.text_input(
-    "Vehicle Name",
-    placeholder="e.g. 2025 TLX TECH 10 Speed Automatic"
-)
+# ===================== Vehicle Input =====================
+st.subheader("Enter Vehicle (freeform)")
+vehicle_input = st.text_input("Vehicle")
 
 search_clicked = st.button("Search")
 
 matches_df = pd.DataFrame()
 
+# ===================== Smart Match =====================
 if search_clicked and vehicle_input.strip():
-    choices = vehicle_ref_df["Vehicle"].dropna().unique().tolist()
+    vehicle_choices = vehicle_ref_df["Vehicle"].dropna().tolist()
 
-    match = process.extractOne(
+    best = process.extractOne(
         vehicle_input,
-        choices,
+        vehicle_choices,
         scorer=fuzz.token_sort_ratio
     )
 
-    if match and match[1] >= FUZZY_THRESHOLD:
-        ref_row = vehicle_ref_df[vehicle_ref_df["Vehicle"] == match[0]].iloc[0]
+    if best and best[1] >= 85:
+        matched_vehicle = best[0]
+        score = best[1]
 
-        st.success(
-            f"Smart match found: {match[0]} (score {match[1]})"
-        )
+        st.success(f"Smart match found: {matched_vehicle} (score {score})")
+
+        ref_row = vehicle_ref_df[vehicle_ref_df["Vehicle"] == matched_vehicle].iloc[0]
 
         year = ref_row.get("Year")
         make = ref_row.get("Make")
         model = ref_row.get("Model")
-        trim = str(ref_row.get("Trim", "")).strip()
+        trim = ref_row.get("Trim")
 
         matches_df = cads_df.copy()
 
         if pd.notna(year):
-            matches_df = matches_df[matches_df["YEAR"] == year]
+            matches_df = matches_df[matches_df["MODEL_YEAR"] == int(year)]
         if pd.notna(make):
-            matches_df = matches_df[matches_df["MAKE"].str.contains(str(make), case=False, na=False)]
+            matches_df = matches_df[matches_df["DIVISION_NAME"].str.contains(str(make), case=False, na=False)]
         if pd.notna(model):
-            matches_df = matches_df[matches_df["MODEL"].str.contains(str(model), case=False, na=False)]
-        if trim:
-            matches_df = matches_df[matches_df["TRIM_CANON"].str.contains(trim, case=False, na=False)]
+            matches_df = matches_df[matches_df["MODEL_NAME"].str.contains(str(model), case=False, na=False)]
+        if pd.notna(trim) and str(trim).strip():
+            matches_df = matches_df[
+                matches_df["STYLE_NAME"].str.contains(str(trim), case=False, na=False)
+            ]
 
     else:
-        st.warning("No strong vehicle match found. Use YMMT filter below.")
+        st.warning("No strong vehicle match found. Use YMMT filters below.")
 
 # ===================== YMMT Fallback =====================
 st.subheader("YMMT Filter (optional)")
@@ -94,51 +80,64 @@ st.subheader("YMMT Filter (optional)")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    year_f = st.text_input("Year")
+    year_filter = st.selectbox("Year", [""] + sorted(cads_df["MODEL_YEAR"].dropna().unique().astype(int).tolist()))
 with col2:
-    make_f = st.text_input("Make")
+    make_filter = st.selectbox("Make", [""] + sorted(cads_df["DIVISION_NAME"].dropna().unique().tolist()))
 with col3:
-    model_f = st.text_input("Model")
+    model_filter = st.selectbox("Model", [""] + sorted(cads_df["MODEL_NAME"].dropna().unique().tolist()))
 with col4:
-    trim_f = st.text_input("Trim")
+    trim_filter = st.text_input("Trim")
 
-apply_ymmt = st.button("Apply YMMT Filter")
+if year_filter or make_filter or model_filter or trim_filter:
+    filtered = cads_df.copy()
 
-if apply_ymmt:
-    matches_df = cads_df.copy()
+    if year_filter:
+        filtered = filtered[filtered["MODEL_YEAR"] == int(year_filter)]
+    if make_filter:
+        filtered = filtered[filtered["DIVISION_NAME"] == make_filter]
+    if model_filter:
+        filtered = filtered[filtered["MODEL_NAME"] == model_filter]
+    if trim_filter:
+        filtered = filtered[filtered["STYLE_NAME"].str.contains(trim_filter, case=False, na=False)]
 
-    if year_f.strip():
-        matches_df = matches_df[matches_df["YEAR"].astype(str) == year_f.strip()]
-    if make_f.strip():
-        matches_df = matches_df[matches_df["MAKE"].str.contains(make_f, case=False, na=False)]
-    if model_f.strip():
-        matches_df = matches_df[matches_df["MODEL"].str.contains(model_f, case=False, na=False)]
-    if trim_f.strip():
-        matches_df = matches_df[matches_df["TRIM_CANON"].str.contains(trim_f, case=False, na=False)]
+    matches_df = filtered
 
 # ===================== Results Table =====================
 st.subheader("Applicable Vehicle Lines")
 
 if not matches_df.empty:
     display_df = matches_df[
-        ["YEAR", "MAKE", "MODEL", "TRIM_CANON", "MODEL_CODE", "STYLE_ID"]
+        [
+            "MODEL_YEAR",
+            "DIVISION_NAME",
+            "MODEL_NAME",
+            "STYLE_NAME",
+            "AD_MFGCODE",
+            "STYLE_ID",
+        ]
     ].copy()
 
-    display_df.rename(columns={
-        "YEAR": "Year",
-        "MAKE": "Make",
-        "MODEL": "Model",
-        "TRIM_CANON": "Trim",
-        "MODEL_CODE": "Model Code",
-        "STYLE_ID": "Style ID"
-    }, inplace=True)
+    display_df.rename(
+        columns={
+            "MODEL_YEAR": "Year",
+            "DIVISION_NAME": "Make",
+            "MODEL_NAME": "Model",
+            "STYLE_NAME": "Trim",
+            "AD_MFGCODE": "Model Code",
+            "STYLE_ID": "Style ID",
+        },
+        inplace=True,
+    )
 
     display_df.insert(0, "Select", False)
 
     edited_df = st.data_editor(
         display_df,
+        use_container_width=True,
         hide_index=True,
-        use_container_width=True
+        column_config={
+            "Select": st.column_config.CheckboxColumn(required=True)
+        }
     )
 
     selected = edited_df[edited_df["Select"]]
@@ -150,5 +149,19 @@ if not matches_df.empty:
             selected.drop(columns=["Select"]),
             use_container_width=True
         )
+
+        # ===================== Submit Mapping =====================
+        st.markdown("---")
+        st.subheader("Submit Mapping")
+
+        if st.button("Submit Mapping"):
+            mapping_payload = {
+                "vehicle_input": vehicle_input,
+                "mapped_rows": selected.drop(columns=["Select"]).to_dict(orient="records")
+            }
+
+            st.success("Mapping submitted successfully.")
+            st.json(mapping_payload)
+
 else:
-    st.info("No vehicle lines to display yet.")
+    st.info("No vehicle lines to display.")
