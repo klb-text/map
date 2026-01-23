@@ -2,130 +2,100 @@ import streamlit as st
 import pandas as pd
 from rapidfuzz import process, fuzz
 import os
-from github import Github
 
-# ------------------------
-# CONFIG
-# ------------------------
+# ----------------------------
+# File paths
+# ----------------------------
 CADS_FILE = "CADS.csv"
 VEHICLE_REF_FILE = "vehicle_example.txt"
-MAPPINGS_FILE = "Mappings.csv"
+MAPPINGS_FILE = "mappings.csv"
 
-# GitHub settings
-GITHUB_TOKEN = "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"
-GITHUB_OWNER = "klb-text"
-GITHUB_REPO = "map"
-GITHUB_BRANCH = "main"
-
-# ------------------------
-# FUNCTIONS
-# ------------------------
+# ----------------------------
+# Utility functions
+# ----------------------------
 @st.cache_data
-def load_csv(path):
-    return pd.read_csv(path, sep="\t")  # tab-separated
-
-def save_mappings_to_github(df):
-    g = Github(GITHUB_TOKEN)
-    repo = g.get_user(GITHUB_OWNER).get_repo(GITHUB_REPO)
-    content_file = MAPPINGS_FILE
-    try:
-        contents = repo.get_contents(content_file, ref=GITHUB_BRANCH)
-        repo.update_file(contents.path, "Update mappings", df.to_csv(index=False), contents.sha, branch=GITHUB_BRANCH)
-    except Exception as e:
-        # If file doesn't exist, create it
-        repo.create_file(content_file, "Create mappings", df.to_csv(index=False), branch=GITHUB_BRANCH)
+def load_csv(path, sep=","):
+    df = pd.read_csv(path, sep=sep)
+    df.columns = df.columns.str.strip()  # remove accidental spaces
+    return df
 
 def smart_vehicle_match(df, vehicle_input, limit=10):
-    choices = df["STYLE_NAME"].astype(str).tolist()
+    """Return top matching rows from CADS based on vehicle_input"""
+    # Combine columns to create search target
+    df['vehicle_search'] = df[['MODEL_YEAR','MAKE','MODEL_NAME','STYLE_NAME']].astype(str).agg(' '.join, axis=1)
+    choices = df['vehicle_search'].tolist()
     results = process.extract(vehicle_input, choices, scorer=fuzz.token_sort_ratio, limit=limit)
-    matched_values = [r[0] for r in results if r[1] > 60]
-    return df[df["STYLE_NAME"].isin(matched_values)]
+    
+    matched_indices = [r[2] for r in results if r[1] > 60]  # keep score > 60
+    return df.iloc[matched_indices].copy(), results
 
-# ------------------------
-# LOAD DATA
-# ------------------------
+# ----------------------------
+# Load data
+# ----------------------------
+try:
+    cads_df = load_csv(CADS_FILE)
+except Exception as e:
+    st.error(f"Failed to load CADS.csv: {e}")
+
+try:
+    vehicle_ref_df = load_csv(VEHICLE_REF_FILE, sep="\t")
+except Exception as e:
+    st.error(f"Failed to load vehicle_example.txt: {e}")
+
+# Ensure mappings file exists
+if not os.path.exists(MAPPINGS_FILE):
+    pd.DataFrame(columns=["vehicle_input","MODEL_YEAR","MAKE","MODEL_NAME","TRIM","AD_MFGCODE","STYLE_ID"]).to_csv(MAPPINGS_FILE, index=False)
+
+mappings_df = load_csv(MAPPINGS_FILE)
+
+# ----------------------------
+# App UI
+# ----------------------------
 st.title("AFF Vehicle Mapping")
 
-cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
-
-if os.path.exists(MAPPINGS_FILE):
-    mappings_df = load_csv(MAPPINGS_FILE)
-else:
-    mappings_df = pd.DataFrame(columns=["VehicleInput","MODEL_YEAR","MAKE","MODEL_NAME","TRIM","AD_MFGCODE","STYLE_ID"])
-
-# ------------------------
-# USER INPUT
-# ------------------------
 vehicle_input = st.text_input("Enter Vehicle (freeform)")
 
-st.subheader("YMMT Filter (optional)")
-col1, col2, col3, col4 = st.columns(4)
-year_input = col1.text_input("Year")
-make_input = col2.text_input("Make")
-model_input = col3.text_input("Model")
-trim_input = col4.text_input("Trim")
+search_button = st.button("Search Vehicle")
 
-search_clicked = st.button("Search Vehicles")
+# Store selected rows in session state
+if "selected_rows" not in st.session_state:
+    st.session_state.selected_rows = []
 
-# ------------------------
-# SEARCH & DISPLAY TABLE
-# ------------------------
-if search_clicked and vehicle_input.strip() != "":
-    # Try smart match first
-    matches_df = smart_vehicle_match(cads_df, vehicle_input)
-
-    # Apply optional YMMT filters
-    if year_input:
-        matches_df = matches_df[matches_df["MODEL_YEAR"].astype(str) == year_input]
-    if make_input:
-        matches_df = matches_df[matches_df["MAKE"].str.contains(make_input, case=False, na=False)]
-    if model_input:
-        matches_df = matches_df[matches_df["MODEL_NAME"].str.contains(model_input, case=False, na=False)]
-    if trim_input:
-        matches_df = matches_df[matches_df["TRIM"].str.contains(trim_input, case=False, na=False)]
-
-    if not matches_df.empty:
-        st.subheader("Applicable Vehicle Lines")
-        # Create a selection dictionary in session state
-        if "selected_vehicles" not in st.session_state:
-            st.session_state.selected_vehicles = {}
-
-        for idx, row in matches_df.iterrows():
-            key = f"{row['STYLE_ID']}_{row['AD_MFGCODE']}"
-            if key not in st.session_state.selected_vehicles:
-                st.session_state.selected_vehicles[key] = False
-            st.session_state.selected_vehicles[key] = st.checkbox(
-                f"{row['MODEL_YEAR']} {row['MAKE']} {row['MODEL_NAME']} {row['TRIM']} (Model Code: {row['AD_MFGCODE']})",
-                st.session_state.selected_vehicles[key]
-            )
-
-        # ------------------------
-        # SUBMIT MAPPING BUTTON
-        # ------------------------
-        if st.button("Submit Mapping"):
-            to_save = []
-            for key, selected in st.session_state.selected_vehicles.items():
-                if selected:
-                    style_id, mfgcode = key.split("_")
-                    row = matches_df[matches_df["STYLE_ID"] == int(style_id)].iloc[0]
-                    to_save.append({
-                        "VehicleInput": vehicle_input,
-                        "MODEL_YEAR": row["MODEL_YEAR"],
-                        "MAKE": row["MAKE"],
-                        "MODEL_NAME": row["MODEL_NAME"],
-                        "TRIM": row["TRIM"],
-                        "AD_MFGCODE": row["AD_MFGCODE"],
-                        "STYLE_ID": row["STYLE_ID"]
-                    })
-            if to_save:
-                new_df = pd.DataFrame(to_save)
-                mappings_df = pd.concat([mappings_df, new_df], ignore_index=True)
-                mappings_df.drop_duplicates(subset=["VehicleInput","STYLE_ID"], inplace=True)
-                mappings_df.to_csv(MAPPINGS_FILE, index=False)
-                save_mappings_to_github(mappings_df)
-                st.success(f"{len(to_save)} mapping(s) saved!")
-                # Reset selections
-                st.session_state.selected_vehicles = {}
-    else:
+if search_button and vehicle_input:
+    matches_df, raw_matches = smart_vehicle_match(cads_df, vehicle_input)
+    
+    if matches_df.empty:
         st.warning("No matching vehicles found.")
+    else:
+        st.write(f"Top matches for: {vehicle_input}")
+        display_df = matches_df[["MODEL_YEAR","MAKE","MODEL_NAME","TRIM","AD_MFGCODE","STYLE_ID"]].copy()
+        display_df.rename(columns={"AD_MFGCODE":"Model Code"}, inplace=True)
+        
+        # Show checkboxes for selection
+        for idx, row in display_df.iterrows():
+            key = f"row_{idx}"
+            if key not in st.session_state:
+                st.session_state[key] = False
+            st.session_state[key] = st.checkbox(f"{row['MODEL_YEAR']} {row['MAKE']} {row['MODEL_NAME']} {row['TRIM']} (Model Code: {row['Model Code']})", value=st.session_state[key])
+        
+        st.session_state.selected_rows = [idx for idx, row in display_df.iterrows() if st.session_state[f"row_{idx}"]]
+
+# ----------------------------
+# Commit mapping
+# ----------------------------
+if st.session_state.selected_rows:
+    if st.button("Submit Mapping"):
+        selected_df = matches_df.loc[st.session_state.selected_rows, ["MODEL_YEAR","MAKE","MODEL_NAME","TRIM","AD_MFGCODE","STYLE_ID"]].copy()
+        selected_df.rename(columns={"AD_MFGCODE":"Model Code"}, inplace=True)
+        # Add original input for mapping
+        selected_df["vehicle_input"] = vehicle_input
+        mappings_df = pd.concat([mappings_df, selected_df], ignore_index=True)
+        mappings_df.to_csv(MAPPINGS_FILE, index=False)
+        st.success(f"Mapping saved for {vehicle_input}")
+        st.dataframe(selected_df)
+
+# ----------------------------
+# Optional: Show full mappings table
+# ----------------------------
+if st.checkbox("Show all mappings"):
+    st.dataframe(mappings_df)
