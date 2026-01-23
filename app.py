@@ -73,17 +73,21 @@ def save_mapping(mapping_df):
         st.warning(f"Failed to sync GitHub: {r.text}")
 
 # --- LOAD FILES ---
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
-cads_df = load_csv(CADS_FILE)
-if os.path.exists(MAPPINGS_FILE):
-    mappings_df = load_csv(MAPPINGS_FILE)
-else:
-    mappings_df = pd.DataFrame(columns=['Vehicle','AD_VEH_ID'])
+# --- LOAD FILES ---
+def load_vehicle_ref(path):
+    try:
+        df = pd.read_csv(path, sep="\t", dtype=str, on_bad_lines='skip')
+        df.columns = df.columns.str.strip()  # remove leading/trailing whitespace
+        # Ensure required columns exist
+        for col in ["Vehicle", "Year", "Make", "Model", "VehicleAttributes", "Trim"]:
+            if col not in df.columns:
+                df[col] = ""
+        return df
+    except Exception as e:
+        st.error(f"Error loading {path}: {e}")
+        return pd.DataFrame()
 
-# Ensure vehicle_example has all columns
-for col in ["VehicleAttributes","Trim","Year","Make","Model"]:
-    if col not in vehicle_ref_df.columns:
-        vehicle_ref_df[col] = ""
+vehicle_ref_df = load_vehicle_ref(VEHICLE_REF_FILE)
 
 # --- STREAMLIT UI ---
 st.title("AFF Vehicle Mapping")
