@@ -2,18 +2,17 @@ import streamlit as st
 import pandas as pd
 from rapidfuzz import process, fuzz
 import os
-import csv
 
-# ------------------------------
-# File paths
-# ------------------------------
+# -----------------------------
+# Config / File Paths
+# -----------------------------
 CADS_FILE = "CADS.csv"
 VEHICLE_REF_FILE = "vehicle_example.txt"
 MAPPINGS_FILE = "mappings.csv"
 
-# ------------------------------
-# Load CSV safely
-# ------------------------------
+# -----------------------------
+# Load CSVs
+# -----------------------------
 @st.cache_data
 def load_csv(path):
     try:
@@ -22,113 +21,124 @@ def load_csv(path):
         st.error(f"Error loading {path}: {e}")
         return pd.DataFrame()
 
-# ------------------------------
-# Load CADS and vehicle reference
-# ------------------------------
+@st.cache_data
+def load_vehicle_example(path):
+    try:
+        # tab-delimited
+        df = pd.read_csv(path, sep="\t", engine="python", on_bad_lines='skip')
+        df.columns = [col.strip() for col in df.columns]
+        return df
+    except Exception as e:
+        st.error(f"Error loading {path}: {e}")
+        return pd.DataFrame()
+
+@st.cache_data
+def load_mappings(path):
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    else:
+        return pd.DataFrame(columns=["VehicleInput","MODEL_YEAR","MAKE","MODEL_NAME","TRIM","AD_MFGCODE","STYLE_ID"])
+
+# -----------------------------
+# Load data
+# -----------------------------
 cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
-if not vehicle_ref_df.empty:
-    vehicle_ref_df.columns = [col.strip() for col in vehicle_ref_df.columns]
+vehicle_ref_df = load_vehicle_example(VEHICLE_REF_FILE)
+mappings_df = load_mappings(MAPPINGS_FILE)
 
-# ------------------------------
-# Load existing mappings
-# ------------------------------
-if os.path.exists(MAPPINGS_FILE):
-    mappings_df = load_csv(MAPPINGS_FILE)
-else:
-    mappings_df = pd.DataFrame(columns=["Vehicle", "AD_VEH_ID", "AD_YEAR", "AD_MAKE", "AD_MODEL", "AD_TRIM", "AD_MFGCODE", "STYLE_ID"])
-
-# ------------------------------
-# Helper functions
-# ------------------------------
-def get_make_model_from_example(vehicle_name):
-    if vehicle_ref_df.empty:
-        return None, None
-    ref_row = vehicle_ref_df[vehicle_ref_df['Vehicle'].str.lower() == vehicle_name.lower()]
-    if not ref_row.empty:
-        return ref_row.iloc[0]['Make'], ref_row.iloc[0]['Model']
-    return None, None
-
-def smart_vehicle_match(df, vehicle_name, limit=10):
+# -----------------------------
+# Helper Functions
+# -----------------------------
+def smart_vehicle_match(df, vehicle_input):
     if df.empty:
         return pd.DataFrame(), []
-
-    # Create a search column combining relevant fields
-    df['vehicle_search'] = df[['AD_YEAR','AD_MAKE','AD_MODEL','AD_TRIM']].astype(str).agg(' '.join, axis=1)
-    choices = df['vehicle_search'].tolist()
-    results = process.extract(vehicle_name, choices, scorer=fuzz.token_sort_ratio, limit=limit)
-    
-    matched_indices = [r[2] for r in results]
+    # create combined search field
+    df = df.copy()
+    df['vehicle_search'] = df[['MODEL_YEAR','MAKE','MODEL_NAME','TRIM']].astype(str).agg(' '.join, axis=1)
+    # fuzzy match
+    matches = process.extract(vehicle_input, df['vehicle_search'], scorer=fuzz.token_sort_ratio, limit=50)
+    if not matches:
+        return pd.DataFrame(), []
+    scores = [m[1] for m in matches]
+    matched_indices = [m[2] for m in matches]
     matched_df = df.iloc[matched_indices].copy()
-    return matched_df, results
+    matched_df['score'] = scores
+    return matched_df.sort_values(by='score', ascending=False), matches
 
-# ------------------------------
+def infer_make(vehicle_input):
+    """Try to find make from vehicle_example"""
+    if vehicle_ref_df.empty:
+        return ""
+    row = vehicle_ref_df[vehicle_ref_df['Vehicle'].str.lower() == vehicle_input.lower()]
+    if not row.empty:
+        return row.iloc[0]['Make']
+    return ""
+
+def save_mapping(selected_rows):
+    global mappings_df
+    new_rows = []
+    for row in selected_rows:
+        new_rows.append({
+            "VehicleInput": vehicle_input,
+            "MODEL_YEAR": row["MODEL_YEAR"],
+            "MAKE": row["MAKE"],
+            "MODEL_NAME": row["MODEL_NAME"],
+            "TRIM": row["TRIM"],
+            "AD_MFGCODE": row["AD_MFGCODE"],
+            "STYLE_ID": row["STYLE_ID"]
+        })
+    mappings_df = pd.concat([mappings_df, pd.DataFrame(new_rows)], ignore_index=True)
+    mappings_df.to_csv(MAPPINGS_FILE, index=False)
+    st.success("Mapping saved!")
+
+# -----------------------------
 # Streamlit UI
-# ------------------------------
+# -----------------------------
 st.title("AFF Vehicle Mapping")
 
 vehicle_input = st.text_input("Enter Vehicle (freeform)")
 
-# YMMT optional filters
-with st.expander("YMMT Filter (optional)"):
-    filter_year = st.text_input("Year")
-    filter_make = st.text_input("Make")
-    filter_model = st.text_input("Model")
-    filter_trim = st.text_input("Trim")
+search_button = st.button("Search")
 
-if st.button("Search Vehicle"):
-    if not vehicle_input:
-        st.warning("Please enter a vehicle name.")
+if search_button and vehicle_input:
+    example_make = infer_make(vehicle_input)
+    matches_df, raw_matches = smart_vehicle_match(cads_df, vehicle_input)
+    
+    if example_make:
+        matches_df = matches_df[matches_df['MAKE'].str.lower() == example_make.lower()]
+
+    if matches_df.empty:
+        st.warning("No matching vehicles found.")
     else:
-        # Try to get make/model from vehicle_example
-        example_make, example_model = get_make_model_from_example(vehicle_input)
+        st.subheader("YMMT Filter (optional)")
+        col1, col2, col3, col4 = st.columns(4)
+        year_filter = col1.text_input("Year")
+        make_filter = col2.text_input("Make")
+        model_filter = col3.text_input("Model")
+        trim_filter = col4.text_input("Trim")
 
-        matches_df, raw_matches = smart_vehicle_match(cads_df, vehicle_input)
+        filtered_df = matches_df.copy()
+        if year_filter:
+            filtered_df = filtered_df[filtered_df['MODEL_YEAR'].astype(str).str.contains(year_filter)]
+        if make_filter:
+            filtered_df = filtered_df[filtered_df['MAKE'].str.contains(make_filter, case=False)]
+        if model_filter:
+            filtered_df = filtered_df[filtered_df['MODEL_NAME'].str.contains(model_filter, case=False)]
+        if trim_filter:
+            filtered_df = filtered_df[filtered_df['TRIM'].str.contains(trim_filter, case=False)]
 
-        # Apply example make/model filter if found
-        if example_make:
-            matches_df = matches_df[matches_df['AD_MAKE'].str.lower() == example_make.lower()]
-        if example_model:
-            matches_df = matches_df[matches_df['AD_MODEL'].str.lower() == example_model.lower()]
+        st.subheader("Matching Vehicles")
+        selected_rows = []
+        for idx, row in filtered_df.iterrows():
+            checkbox = st.checkbox(f"{row['MODEL_YEAR']} {row['MAKE']} {row['MODEL_NAME']} {row['TRIM']} | Model Code: {row['AD_MFGCODE']}", key=f"chk_{idx}")
+            if checkbox:
+                selected_rows.append(row)
 
-        # Apply YMMT filters if entered
-        if filter_year:
-            matches_df = matches_df[matches_df['AD_YEAR'].astype(str).str.contains(filter_year)]
-        if filter_make:
-            matches_df = matches_df[matches_df['AD_MAKE'].str.contains(filter_make, case=False, na=False)]
-        if filter_model:
-            matches_df = matches_df[matches_df['AD_MODEL'].str.contains(filter_model, case=False, na=False)]
-        if filter_trim:
-            matches_df = matches_df[matches_df['AD_TRIM'].str.contains(filter_trim, case=False, na=False)]
+        if st.button("Submit Mapping"):
+            if selected_rows:
+                save_mapping(selected_rows)
+            else:
+                st.warning("Please select at least one vehicle to map.")
 
-        if matches_df.empty:
-            st.info("No matching vehicles found.")
-        else:
-            st.subheader("Matching Vehicles")
-            # Display table with checkboxes for selection
-            matches_df = matches_df.reset_index(drop=True)
-            selected_rows = []
-            for idx, row in matches_df.iterrows():
-                if st.checkbox(f"{row['AD_YEAR']} {row['AD_MAKE']} {row['AD_MODEL']} {row['AD_TRIM']} | Model Code: {row['AD_MFGCODE']}", key=f"chk_{idx}"):
-                    selected_rows.append(row)
-
-            # Submit Mapping
-            if st.button("Submit Mapping"):
-                if not selected_rows:
-                    st.warning("Please select at least one vehicle to map.")
-                else:
-                    for row in selected_rows:
-                        mappings_df = pd.concat([mappings_df, pd.DataFrame([{
-                            "Vehicle": vehicle_input,
-                            "AD_VEH_ID": row.get("AD_VEH_ID",""),
-                            "AD_YEAR": row.get("AD_YEAR",""),
-                            "AD_MAKE": row.get("AD_MAKE",""),
-                            "AD_MODEL": row.get("AD_MODEL",""),
-                            "AD_TRIM": row.get("AD_TRIM",""),
-                            "AD_MFGCODE": row.get("AD_MFGCODE",""),
-                            "STYLE_ID": row.get("STYLE_ID","")
-                        }])], ignore_index=True)
-                    # Save locally
-                    mappings_df.to_csv(MAPPINGS_FILE, index=False)
-                    st.success("Mapping saved!")
-                    st.dataframe(mappings_df.tail(10))
+st.subheader("Current Mappings")
+st.dataframe(mappings_df)
