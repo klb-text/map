@@ -138,14 +138,22 @@ def _strip_object_columns(df: pd.DataFrame) -> pd.DataFrame:
         df[obj_cols] = df[obj_cols].apply(lambda s: s.str.strip())
     return df
 
+
 @st.cache_data(ttl=600)
 def _decode_bytes_to_text(raw: bytes) -> tuple[str, str]:
-    if not raw or raw.strip() == b"": return ("", "empty")
+    if not raw or raw.strip() == b"": 
+        return ("", "empty")
+
+    # Detect BOM via ASCII-safe byte sequences
     encoding = "utf-8"
-    if raw.startswith(b"ÿþ") or raw.startswith(b"þÿ"): encoding = "utf-16"
-    elif raw.startswith(b"ï»¿"): encoding = "utf-8-sig"
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+        encoding = "utf-16"
+    elif raw.startswith(b"\xef\xbb\xbf"):
+        encoding = "utf-8-sig"
+
     text = raw.decode(encoding, errors="replace")
     return (text, encoding)
+
 
 
 @st.cache_data(ttl=600)
