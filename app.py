@@ -37,28 +37,34 @@ for col in required_cads_cols:
 def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None):
     df = df.copy()
 
-    # Optional pre-filter by make/model
-    if example_make:
+    # Pre-filter by make/model if provided
+    if example_make and 'AD_MAKE' in df.columns:
         df = df[df['AD_MAKE'].str.lower() == example_make.lower()]
-    if example_model:
+    if example_model and 'AD_MODEL' in df.columns:
         df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
 
-    # Ensure all columns exist
-    for col in ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']:
+    # Ensure all key columns exist
+    key_cols = ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']
+    for col in key_cols:
         if col not in df.columns:
             df[col] = ''
-    
-    # Convert to string and fillna safely
-    df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].astype(str).fillna('')
+        else:
+            # Convert each column to string and replace NaN with empty string
+            df[col] = df[col].astype(str).fillna('')
 
-    # Combine key fields for fuzzy search
-    df['vehicle_search'] = df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']].agg(lambda x: ' '.join(x), axis=1)
+    # Safely create a combined search string
+    df['vehicle_search'] = df[key_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
 
     # Fuzzy matching
+    from thefuzz import process, fuzz
     matches = process.extract(vehicle_input, df['vehicle_search'].tolist(), scorer=fuzz.token_sort_ratio, limit=50)
+
+    # Select matches with score >= 60
     matched_indices = [idx for _, score, idx in matches if score >= 60]
     matched_df = df.iloc[matched_indices]
+
     return matched_df, matches
+
 
 # ---------------------------
 # Streamlit UI
