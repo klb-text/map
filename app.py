@@ -658,17 +658,20 @@ def _run_harvest():
             plain=plain,
         ); st.stop()
 
+
     elif source == "catalog":
         veh_txt = _get_str("vehicle", "")
         cat_path = _get_str("catalog_path", "data/AFF Vehicles YMMT.csv")
         if not veh_txt:
-            render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="No vehicle provided", plain=plain); st.stop()
+            render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="No vehicle provided", plain=plain)
+            st.stop()
         try:
             df_cat = load_vehicle_catalog(GH_OWNER, GH_REPO, cat_path, GH_TOKEN, ref=ref_branch)
             cat_idx = build_catalog_index(df_cat)
             parsed = parse_vehicle_against_catalog(veh_txt, cat_idx)
             if not parsed:
-                render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="Catalog did not find a close match", plain=plain); st.stop()
+                render_harvest_table(df_cads.iloc[0:0], table_id="cads_catalog_results", caption="Catalog did not find a close match", plain=plain)
+                st.stop()
             y_s, mk_s, md_s, tr_s = parsed["year"], parsed["make"], parsed["model"], parsed["trim"]
             results, _ = filter_cads_generic(
                 df_cads, y_s, mk_s, md_s, tr_s,
@@ -684,12 +687,16 @@ def _run_harvest():
                 include_attr_cols=["AD_YEAR","AD_MAKE","AD_MODEL","Trim","STYLE_ID","AD_VEH_ID","AD_MFGCODE","MODEL_CODE"],
                 caption="CADS – Catalog-accelerated results",
                 plain=plain,
-            ); st.stop()
+            )
+            st.stop()
         except Exception as e:
-            st.markdown(f"<p id='harvest-error'>Catalog harvest failed: {e}</p>", unsafe_allow_html=True); st.stop()
+            st.markdown(f"<p id='harvest-error'>Catalog harvest failed: {e}</p>", unsafe_allow_html=True)
+            st.stop()
 
+    # Default if no source matched
     st.markdown("<p id='harvest-empty'>No harvest source matched or insufficient parameters.</p>", unsafe_allow_html=True)
     st.stop()
+
 
 # If HARVEST_MODE is on, run and stop.
 if HARVEST_MODE:
