@@ -138,7 +138,23 @@ def load_cads_generic(path: str) -> pd.DataFrame:
             df[col] = ""
     return df
 
-cads_df = load_cads_generic(cads_file_path)
+import os
+import pandas as pd
+import requests
+
+# Make sure the path points to the local CADS.csv
+cads_file_path = os.path.join(os.path.dirname(__file__), "CADS.csv")
+
+# If the file doesn't exist locally, download it from GitHub
+if not os.path.exists(cads_file_path):
+    url = "https://raw.githubusercontent.com/map/main/CADS.csv"  # <-- replace with your repo path
+    r = requests.get(url)
+    with open(cads_file_path, "wb") as f:
+        f.write(r.content)
+
+# Load the CADS file
+cads_df = pd.read_csv(cads_file_path)
+
 
 # ===================== Harvest Mode Logic =====================
 st.subheader("Harvest Mode Output")
