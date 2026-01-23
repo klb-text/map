@@ -12,11 +12,12 @@ MAPPINGS_FILE = "Mappings.csv"
 # --- Helper functions ---
 @st.cache_data
 def load_csv(path):
-    return pd.read_csv(path, sep=None, engine='python', encoding='utf-8', error_bad_lines=False)
+    return pd.read_csv(path, engine='python', encoding='utf-8', on_bad_lines='skip')
 
 @st.cache_data
 def load_vehicle_ref(path):
-    return pd.read_csv(path, sep=None, engine='python', encoding='utf-8', error_bad_lines=False)
+    return pd.read_csv(path, engine='python', encoding='utf-8', on_bad_lines='skip')
+
 
 def smart_vehicle_match(cads_df, vehicle_input, ref_make=None):
     df = cads_df.copy()
