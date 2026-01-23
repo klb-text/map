@@ -1,118 +1,107 @@
-import streamlit as st
+# app.py
 import pandas as pd
+import streamlit as st
 from thefuzz import process, fuzz
 
-# --- File paths ---
-CADS_FILE = "CADS.csv"
-VEHICLE_REF_FILE = "vehicle_example.txt"
+# ---------------------------
+# Helper functions
+# ---------------------------
 
-# --- Load CSVs ---
 @st.cache_data
 def load_csv(path):
+    """Load CSV safely with basic cleaning."""
     try:
-        df = pd.read_csv(path, sep=None, engine='python')
+        df = pd.read_csv(path)
+        df.columns = [c.strip() for c in df.columns]  # trim column names
+        df.fillna("", inplace=True)
         return df
     except Exception as e:
         st.error(f"Error loading {path}: {e}")
         return pd.DataFrame()
 
-cads_df = load_csv(CADS_FILE)
-vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
+def normalize_text(s):
+    return str(s).strip().lower()
 
-# --- YMMT Inputs ---
+def filter_by_make_model_year(cads_df, year, make, model):
+    """Deterministically filter CADS by year, make, model."""
+    filtered = cads_df[
+        (cads_df['MODEL_YEAR'].astype(str) == str(year)) &
+        (cads_df['AD_MAKE'].apply(normalize_text) == normalize_text(make)) &
+        (cads_df['AD_MODEL'].apply(normalize_text) == normalize_text(model))
+    ].copy()
+    return filtered
+
+def fuzzy_trim_match(df, user_trim, limit=10):
+    """Apply fuzzy matching on TRIM column only for filtered rows."""
+    if df.empty or not user_trim:
+        return df
+    df['trim_score'] = df['TRIM'].apply(lambda x: fuzz.partial_ratio(user_trim.lower(), str(x).lower()))
+    return df.sort_values('trim_score', ascending=False).head(limit)
+
+# ---------------------------
+# Load data
+# ---------------------------
+
 st.title("AFF Vehicle Mapping")
-st.write("Enter Vehicle (freeform)")
 
-vehicle_input = st.text_input("Vehicle Name")
+vehicle_ref_df = load_csv("vehicle_example.txt")
+cads_df = load_csv("CADS.csv")
 
-st.write("YMMT Filter (optional)")
+# ---------------------------
+# Vehicle input
+# ---------------------------
+
+vehicle_input = st.text_input("Enter Vehicle (freeform)")
+
+# Optional YMMT filters
+st.subheader("YMMT Filters (optional)")
 col1, col2, col3, col4 = st.columns(4)
-year_input = col1.text_input("Year")
-make_input = col2.text_input("Make")
-model_input = col3.text_input("Model")
-trim_input = col4.text_input("Trim")
+filter_year = col1.text_input("Year")
+filter_make = col2.text_input("Make")
+filter_model = col3.text_input("Model")
+filter_trim = col4.text_input("Trim")
 
-# --- Helper: get example make/model from reference file ---
-def get_example_make_model(vehicle_name):
-    if 'Vehicle' not in vehicle_ref_df.columns:
-        return None, None
-    ref_row = vehicle_ref_df[vehicle_ref_df['Vehicle'].str.lower() == vehicle_name.lower()]
+search_button = st.button("Search Vehicles")
+
+# ---------------------------
+# Vehicle search logic
+# ---------------------------
+
+if search_button and vehicle_input:
+    # Try to reference example file for make/model
+    ref_row = vehicle_ref_df[vehicle_ref_df['Vehicle'].apply(normalize_text) == normalize_text(vehicle_input)]
     if not ref_row.empty:
-        make = ref_row['Make'].values[0] if 'Make' in ref_row.columns else None
-        model = ref_row['Model'].values[0] if 'Model' in ref_row.columns else None
-        return make, model
-    return None, None
-
-example_make, example_model = get_example_make_model(vehicle_input)
-
-# --- Smart Match Function ---
-def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None):
-    if df.empty or not vehicle_input:
-        return pd.DataFrame(), []
-
-    # Ensure columns exist
-    for col in ['AD_MAKE','AD_MODEL','TRIM','MODEL_YEAR','AD_MFGCODE','STYLE_ID']:
-        if col not in df.columns:
-            df[col] = ''
-
-    # Filter by year if available
-    if year_input:
-        df_filtered = df[df['MODEL_YEAR'].astype(str) == str(year_input)]
-    elif example_make and example_model:
-        df_filtered = df[(df['AD_MAKE'].str.lower() == example_make.lower()) &
-                         (df['AD_MODEL'].str.lower() == example_model.lower())]
+        example_year = ref_row.iloc[0].get('Year', filter_year) or filter_year
+        example_make = ref_row.iloc[0].get('Make', filter_make) or filter_make
+        example_model = ref_row.iloc[0].get('Model', filter_model) or filter_model
+        example_trim = ref_row.iloc[0].get('Trim', filter_trim) or filter_trim
     else:
-        df_filtered = df.copy()
+        example_year = filter_year
+        example_make = filter_make
+        example_model = filter_model
+        example_trim = filter_trim
 
-    if df_filtered.empty:
-        return pd.DataFrame(), []
+    # Deterministic filter by year/make/model
+    filtered_cads = filter_by_make_model_year(cads_df, example_year, example_make, example_model)
 
-    # Combine columns for fuzzy search
-    def combine_row(row):
-        return ' '.join([str(row.get('MODEL_YEAR','')),
-                         str(row.get('AD_MAKE','')),
-                         str(row.get('AD_MODEL','')),
-                         str(row.get('TRIM',''))]).strip()
+    # Optional fuzzy trim matching
+    if example_trim:
+        filtered_cads = fuzzy_trim_match(filtered_cads, example_trim)
 
-    df_filtered['vehicle_search'] = df_filtered.apply(combine_row, axis=1)
-
-    # Fuzzy match
-    choices = df_filtered['vehicle_search'].tolist()
-    results = process.extract(vehicle_input, choices, scorer=fuzz.token_sort_ratio, limit=20)
-
-    matched_indices = [df_filtered.index[i] for i, choice in enumerate(choices) if choice in [r[0] for r in results]]
-    matched_df = df_filtered.loc[matched_indices].copy()
-
-    return matched_df, results
-
-# --- Search Button ---
-if st.button("Search Vehicles") and vehicle_input:
-    matches_df, raw_matches = smart_vehicle_match(cads_df, vehicle_input, example_make, example_model)
-
-    if matches_df.empty:
+    if filtered_cads.empty:
         st.warning(f"No matching vehicles found for: {vehicle_input}")
     else:
         st.subheader("Matching Vehicles")
+        selected_rows = []
 
-        # --- Initialize session_state for selections ---
-        if 'selected_vehicles' not in st.session_state:
-            st.session_state['selected_vehicles'] = []
-
-        # --- Render checkboxes ---
-        for idx, row in matches_df.iterrows():
+        # Show checkboxes for each row
+        for idx, row in filtered_cads.iterrows():
             label = f"{row['MODEL_YEAR']} {row['AD_MAKE']} {row['AD_MODEL']} {row['TRIM']} | Model Code: {row['AD_MFGCODE']}"
-            checked = idx in st.session_state['selected_vehicles']
-            if st.checkbox(label, key=f"chk_{idx}", value=checked):
-                if idx not in st.session_state['selected_vehicles']:
-                    st.session_state['selected_vehicles'].append(idx)
-            else:
-                if idx in st.session_state['selected_vehicles']:
-                    st.session_state['selected_vehicles'].remove(idx)
+            if st.checkbox(label, key=f"chk_{idx}"):
+                selected_rows.append(idx)
 
-        # --- Submit Mapping ---
-        if st.session_state['selected_vehicles']:
-            if st.button("Submit Mapping"):
-                final_df = matches_df.loc[st.session_state['selected_vehicles'],
-                                          ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']]
-                st.success("Mapping submitted!")
-                st.dataframe(final_df)
+        # Commit mapping button
+        if st.button("Commit Mapping") and selected_rows:
+            mapped_df = filtered_cads.loc[selected_rows, ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']]
+            st.success("Mapping committed for selected vehicles:")
+            st.dataframe(mapped_df.reset_index(drop=True))
