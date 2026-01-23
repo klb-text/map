@@ -22,7 +22,7 @@ GITHUB_BRANCH = "main"
 # ------------------------
 @st.cache_data
 def load_csv(path):
-    return pd.read_csv(path)
+    return pd.read_csv(path, sep="\t")  # tab-separated
 
 def save_mappings_to_github(df):
     g = Github(GITHUB_TOKEN)
