@@ -37,19 +37,21 @@ for col in required_cads_cols:
 def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None):
     df = df.copy()
 
-    # Pre-filter by make/model from vehicle_example if available
-    if example_make and 'AD_MAKE' in df.columns:
-        df = df[df['AD_MAKE'].str.lower() == example_make.lower()]
-    if example_model and 'AD_MODEL' in df.columns:
-        df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
-
-    # Ensure all key columns exist
-    key_cols = ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']
-    for col in key_cols:
+    # Ensure columns exist
+    for col in ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM']:
         if col not in df.columns:
             df[col] = ''
         else:
             df[col] = df[col].astype(str).fillna('')
+
+    # Pre-filter by make/model if provided
+    if example_make:
+        df = df[df['AD_MAKE'].str.lower() == example_make.lower()]
+    if example_model:
+        df = df[df['AD_MODEL'].str.lower() == example_model.lower()]
+
+    # Reset index to prevent assignment errors
+    df = df.reset_index(drop=True)
 
     # Combine columns for search (ignore empty TRIM)
     def combine_row(row):
@@ -62,12 +64,12 @@ def smart_vehicle_match(df, vehicle_input, example_make=None, example_model=None
 
     # Case-insensitive substring match
     matches_mask = df['vehicle_search'].str.lower().str.contains(vehicle_input.lower())
-    matched_df = df[matches_mask]
+    matched_df = df[matches_mask].reset_index(drop=True)
 
-    # If no matches, fallback to make+model only
+    # Fallback: make+model only
     if matched_df.empty and example_make and example_model:
         matched_df = df[(df['AD_MAKE'].str.lower() == example_make.lower()) &
-                        (df['AD_MODEL'].str.lower() == example_model.lower())]
+                        (df['AD_MODEL'].str.lower() == example_model.lower())].reset_index(drop=True)
 
     return matched_df, matched_df['vehicle_search'].tolist()
 
