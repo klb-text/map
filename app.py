@@ -1,6 +1,5 @@
 
 # app.py — Alias → Canonical mapping with Aliases.csv (mapped) and no-data logging
-import os
 import io
 import json
 import base64
@@ -10,7 +9,7 @@ from datetime import datetime
 import streamlit as st
 import pandas as pd
 import requests
-from thefuzz import fuzz  # Tip: add thefuzz[speedup] to requirements
+from thefuzz import fuzz  # Tip: add thefuzz[speedup] to requirements for python-Levenshtein
 
 # =========================
 # --- Configuration ---
@@ -38,6 +37,10 @@ AUTHOR_EMAIL = gh.get("author_email", "aff-bot@example.com")
 # =========================
 @st.cache_data
 def load_csv(path: str) -> pd.DataFrame:
+    """
+    Load CSV/TXT using python engine to auto-detect delimiter.
+    Coerce to string and fill NaNs to stabilize .str ops.
+    """
     try:
         df = pd.read_csv(path, sep=None, engine='python', dtype=str)
         return df.fillna('')
@@ -48,6 +51,7 @@ def load_csv(path: str) -> pd.DataFrame:
 cads_df = load_csv(CADS_FILE)
 vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 
+# Normalize CADS columns that we rely on
 for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']:
     if col not in cads_df.columns:
         cads_df[col] = ''
@@ -57,26 +61,36 @@ cads_df = cads_df.fillna('').astype(str)
 # --- Helpers ---
 # =========================
 def normalize(s: str) -> str:
+    """Lowercase, trim, collapse whitespace, replace common separators."""
     s = str(s or "")
-    s = s.strip().lower().replace("-", " ").replace("/", " ")
-    return " ".join(s.split())
+    s = s.strip().lower()
+    s = s.replace("-", " ").replace("/", " ")
+    s = " ".join(s.split())
+    return s
 
 def get_example_make_model(vehicle_name: str):
+    """Optional hint from a reference file (exact or fuzzy)."""
     if vehicle_ref_df.empty or 'Vehicle' not in vehicle_ref_df.columns:
         return None, None
+
+    # Build normalized column once
     if '_vnorm' not in vehicle_ref_df.columns:
         vehicle_ref_df['_vnorm'] = vehicle_ref_df['Vehicle'].astype(str).map(normalize)
+
     vn = normalize(vehicle_name)
     ref_row = vehicle_ref_df[vehicle_ref_df['_vnorm'] == vn]
     if not ref_row.empty:
         make = ref_row['Make'].values[0] if 'Make' in ref_row.columns else None
         model = ref_row['Model'].values[0] if 'Model' in ref_row.columns else None
         return make, model
+
+    # Fuzzy fallback
     scores = vehicle_ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
     top_idx = scores.idxmax()
     if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
         row = vehicle_ref_df.loc[top_idx]
         return row.get('Make', None), row.get('Model', None)
+
     return None, None
 
 def smart_vehicle_match(
@@ -89,11 +103,18 @@ def smart_vehicle_match(
     top_n: int = 20,
     score_cutoff: int = 60
 ) -> pd.DataFrame:
+    """
+    Score candidates row-by-row using token_set_ratio.
+    Returns a dataframe including 'score' and a stable 'map_key'.
+    """
     if df.empty or not vehicle_q:
         return pd.DataFrame()
+
     work = df.copy()
     for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']:
         work[col] = work[col].astype(str).fillna('')
+
+    # Explicit filters (narrow candidate set first)
     if year:
         work = work[work['MODEL_YEAR'] == str(year)]
     if make:
@@ -102,8 +123,11 @@ def smart_vehicle_match(
         work = work[work['AD_MODEL'].str.lower() == model.lower()]
     if trim:
         work = work[work['TRIM'].str.lower().str.contains(trim.lower())]
+
     if work.empty:
         return pd.DataFrame()
+
+    # Combined search string
     work = work.copy()
     work['vehicle_search'] = (
         work['MODEL_YEAR'].str.strip() + ' ' +
@@ -111,8 +135,11 @@ def smart_vehicle_match(
         work['AD_MODEL'].str.strip() + ' ' +
         work['TRIM'].str.strip()
     ).str.replace(r'\s+', ' ', regex=True).str.strip()
+
     q_norm = normalize(vehicle_q)
     work['score'] = work['vehicle_search'].map(lambda s: fuzz.token_set_ratio(q_norm, normalize(s)))
+
+    # Keep top results above cutoff
     work = (
         work[work['score'] >= score_cutoff]
         .sort_values(['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM'],
@@ -120,6 +147,8 @@ def smart_vehicle_match(
         .head(top_n)
         .copy()
     )
+
+    # Stable key per row for persistent selection across reruns
     work['map_key'] = (
         work['MODEL_YEAR'] + '|' +
         work['AD_MAKE'] + '|' +
@@ -128,6 +157,7 @@ def smart_vehicle_match(
         work['AD_MFGCODE'] + '|' +
         work['STYLE_ID']
     )
+
     cols = ['map_key', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
     for c in cols:
         if c not in work.columns:
@@ -151,11 +181,19 @@ def github_upsert_csv_with_keys(
     dedup_keys: list[str],
     sort_keys: list[str]
 ) -> tuple[bool, str]:
+    """
+    Generic upsert: read existing CSV from GitHub, union with new_rows_df,
+    drop duplicates using dedup_keys, sort by sort_keys, commit via Contents API.
+    """
     if new_rows_df is None or new_rows_df.empty:
         return False, "No rows to commit."
+
     headers = _gh_headers()
+
+    # Read existing
     get_url = _gh_contents_url(file_path_in_repo, GH_BRANCH)
     r = requests.get(get_url, headers=headers, timeout=30)
+
     existing_df = pd.DataFrame(columns=new_rows_df.columns)
     sha = None
     if r.status_code == 200:
@@ -168,9 +206,11 @@ def github_upsert_csv_with_keys(
             existing_df = pd.DataFrame(columns=new_rows_df.columns)
     elif r.status_code not in (404,):
         return False, f"Failed fetching existing file: HTTP {r.status_code} - {r.text}"
-    combined = pd.concat([existing_df, new_rows_df], ignore_index=True)
-    combined = combined.fillna("")
+
+    # Merge & dedupe
+    combined = pd.concat([existing_df, new_rows_df], ignore_index=True).fillna("")
     if dedup_keys:
+        # Ensure dedup key columns exist
         for k in dedup_keys:
             if k not in combined.columns:
                 combined[k] = ""
@@ -182,9 +222,13 @@ def github_upsert_csv_with_keys(
             if k not in combined.columns:
                 combined[k] = ""
         combined = combined.sort_values(by=sort_keys).reset_index(drop=True)
+
+    # Encode CSV
     buf = io.StringIO()
     combined.to_csv(buf, index=False, encoding="utf-8")
     content_b64 = base64.b64encode(buf.getvalue().encode("utf-8")).decode("utf-8")
+
+    # PUT
     put_url = f"https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/contents/{file_path_in_repo}"
     payload = {
         "message": f"chore(mappings): upsert {len(new_rows_df)} row(s) via AFF UI - {time.time()}",
@@ -194,6 +238,7 @@ def github_upsert_csv_with_keys(
     }
     if sha:
         payload["sha"] = sha
+
     r2 = requests.put(put_url, headers=headers, data=json.dumps(payload), timeout=30)
     if r2.status_code in (200, 201):
         return True, f"Committed to {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{file_path_in_repo}"
@@ -208,20 +253,30 @@ def commit_alias_and_canonical(
     selected_canonical_df: pd.DataFrame,  # expects cols: MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE
     source: str = "user"
 ) -> tuple[bool, str]:
+    """
+    Commits:
+      1) Aliases.csv rows with status='mapped'
+      2) Ensures canonical rows exist in Mappings.csv
+    """
     if selected_canonical_df.empty:
         return False, "No rows selected."
+
     alias_norm = normalize(alias_input)
+
+    # Build alias rows
     alias_rows = selected_canonical_df.rename(columns={
         "MODEL_YEAR":"year", "AD_MAKE":"make", "AD_MODEL":"model",
         "TRIM":"trim", "AD_MFGCODE":"model_code"
     })[["year","make","model","trim","model_code"]].copy()
+
     alias_rows["alias"] = alias_input
     alias_rows["alias_norm"] = alias_norm
     alias_rows["source"] = source
-    alias_rows["status"] = "mapped"  # NEW: explicitly tagged
+    alias_rows["status"] = "mapped"  # explicitly tagged
     alias_rows["created_at"] = datetime.utcnow().isoformat() + "Z"
     for c in alias_rows.columns:
         alias_rows[c] = alias_rows[c].astype(str).str.strip()
+
     ok1, msg1 = github_upsert_csv_with_keys(
         file_path_in_repo=ALIASES_PATH,
         new_rows_df=alias_rows,
@@ -230,6 +285,8 @@ def commit_alias_and_canonical(
     )
     if not ok1:
         return False, f"Aliases commit failed: {msg1}"
+
+    # Ensure canonical rows in Mappings.csv
     canonical_rows = alias_rows[["year","make","model","trim","model_code","source"]].drop_duplicates(
         subset=["year","make","model","trim","model_code"]
     )
@@ -241,9 +298,9 @@ def commit_alias_and_canonical(
     )
     if not ok2:
         return False, f"Canonical commit failed: {msg2}"
+
     return True, f"{msg1}; {msg2}"
 
-# NEW: commit a “no data” alias entry (no canonical keys required except optional Y/M/M/T)
 def commit_alias_no_data(
     alias_input: str,
     year: str = "",
@@ -252,6 +309,10 @@ def commit_alias_no_data(
     trim: str = "",
     source: str = "user"
 ) -> tuple[bool, str]:
+    """
+    Writes an alias-only row with status='no_data' to Aliases.csv so basic_app.py
+    can show 'No Vehicle Data' for this alias until CADS is available.
+    """
     alias_norm = normalize(alias_input)
     row = {
         "alias": alias_input,
@@ -268,6 +329,7 @@ def commit_alias_no_data(
     df = pd.DataFrame([row])
     for c in df.columns:
         df[c] = df[c].astype(str).str.strip()
+
     # Dedup by alias_norm + provided Y/M/M/T + status
     ok, msg = github_upsert_csv_with_keys(
         file_path_in_repo=ALIASES_PATH,
@@ -285,7 +347,7 @@ if 'show_results' not in st.session_state:
 if 'matches_df' not in st.session_state:
     st.session_state['matches_df'] = pd.DataFrame()
 if 'selection' not in st.session_state:
-    st.session_state['selection'] = {}
+    st.session_state['selection'] = {}  # map_key -> bool
 if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
 
@@ -298,6 +360,7 @@ st.caption("Map a freeform vehicle (alias) to one or more CADS canonical rows. O
 with st.form("search_form_main"):
     st.subheader("Search")
     vehicle_input = st.text_input("Vehicle (alias, freeform)", placeholder="e.g., 2027 Integra")
+
     st.markdown("**YMMT (optional, useful if CADS not available yet)**")
     c1, c2, c3, c4 = st.columns(4)
     year_input  = c1.text_input("Year")
@@ -310,7 +373,7 @@ with st.form("search_form_main"):
 
     submitted = st.form_submit_button("Search Vehicles")
 
-# Optional hint
+# Optional hint from reference file
 example_make, example_model = (None, None)
 if vehicle_input:
     example_make, example_model = get_example_make_model(vehicle_input)
@@ -331,24 +394,42 @@ if submitted:
         top_n=top_n,
         score_cutoff=score_cutoff
     )
+
     st.session_state['matches_df'] = matches_df
     st.session_state['show_results'] = True
     st.session_state['current_query'] = vehicle_input
+
+    # Reset/preserve selection only for the current results
     prev = st.session_state['selection']
     st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
 
 # =========================
-# --- Results / No Data path ---
+# --- Results / No Data path (updated logic) ---
 # =========================
 if st.session_state['show_results']:
     matches_df = st.session_state['matches_df']
     alias_text = st.session_state.get('current_query', '')
-    has_matches = not matches_df.empty
 
-    if not has_matches:
-        st.warning("No CADS matches found for this alias.")
-        st.info("If you expect this vehicle to arrive in CADS later, log it as **'No Vehicle Data'** so Basic app shows a friendly message.")
-        # Button to log no-data entry
+    # Determine if there is a **strict** match in CADS for the specific Y/M/M/T you provided.
+    # We only enforce strictness on the filters you actually provided (non-empty fields).
+    strict = cads_df.copy()
+    if year_input:
+        strict = strict[strict['MODEL_YEAR'].astype(str) == str(year_input)]
+    if make_input:
+        strict = strict[strict['AD_MAKE'].str.lower() == make_input.lower()]
+    if model_input:
+        strict = strict[strict['AD_MODEL'].str.lower() == model_input.lower()]
+    if trim_input:
+        strict = strict[strict['TRIM'].str.lower() == trim_input.lower()]
+
+    specified_any_filter = any([year_input, make_input, model_input, trim_input])
+    no_data_candidate = specified_any_filter and strict.empty
+    has_any_fuzzy = not matches_df.empty
+
+    # Show the no-data button whenever the specific Y/M/M/T doesn't exist in CADS (even if fuzzy found other years/trims)
+    if no_data_candidate:
+        st.warning("No exact CADS rows found for the specific Y/M/M/T you entered.")
+        st.info("If you expect this vehicle to arrive in CADS later, log it as **'No Vehicle Data'** so the Basic app shows a clear message for this alias.")
         if st.button("Vehicle Data Not Received"):
             ok, msg = commit_alias_no_data(
                 alias_input=alias_text,
@@ -359,11 +440,12 @@ if st.session_state['show_results']:
                 source="user"
             )
             if ok:
-                st.success("Logged as 'No Vehicle Data'. When you search this alias in the basic app, it will show a 'No Vehicle Data' message.")
+                st.success("Logged as 'No Vehicle Data'. When you search this alias in the Basic app, it will show a 'No Vehicle Data' message.")
             else:
                 st.error(msg)
 
-    else:
+    # Still show fuzzy results table (so you can map to what's available today)
+    if has_any_fuzzy:
         st.subheader("Matching Vehicles")
         view = matches_df.copy()
         view['Select'] = view['map_key'].map(st.session_state['selection']).fillna(False).astype(bool)
@@ -403,7 +485,6 @@ if st.session_state['show_results']:
         st.markdown("---")
         st.write(f"Selected: **{len(final_df)}** row(s)")
 
-        # Preview alias+canonical
         if not final_df.empty:
             canonical_preview = final_df.rename(columns={
                 "MODEL_YEAR": "year",
@@ -413,11 +494,13 @@ if st.session_state['show_results']:
                 "AD_MFGCODE": "model_code"
             })[["year","make","model","trim","model_code"]].copy()
             canonical_preview["source"] = "user"
+
             alias_preview = canonical_preview.copy()
             alias_preview.insert(0, "alias", alias_text)
             alias_preview.insert(1, "alias_norm", normalize(alias_text))
             alias_preview["status"] = "mapped"
             alias_preview["created_at"] = datetime.utcnow().isoformat() + "Z"
+
             st.caption("Alias rows to append (status='mapped') → Aliases.csv")
             st.dataframe(alias_preview, use_container_width=True)
             st.caption("Canonical rows ensured → Mappings.csv")
@@ -450,5 +533,23 @@ if st.session_state['show_results']:
                     file_name="vehicle_mapping_selection.csv",
                     mime="text/csv"
                 )
+
+    # If there were no fuzzy matches either, we still provide a no-data pathway
+    if (not has_any_fuzzy) and (not no_data_candidate):
+        st.warning("No CADS matches found for this alias.")
+        st.info("Optionally log it as **'No Vehicle Data'** if you expect CADS to arrive later.")
+        if st.button("Vehicle Data Not Received"):
+            ok, msg = commit_alias_no_data(
+                alias_input=alias_text,
+                year=year_input,
+                make=make_input,
+                model=model_input,
+                trim=trim_input,
+                source="user"
+            )
+            if ok:
+                st.success("Logged as 'No Vehicle Data'. When you search this alias in the Basic app, it will show a 'No Vehicle Data' message.")
+            else:
+                st.error(msg)
 
 # --- EOF ---
