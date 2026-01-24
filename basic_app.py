@@ -1,14 +1,14 @@
 
-# basic_app.py — Read-only Mozenda outlet with alias-only exact lookup (no fuzzy)
+# basic_app.py — Read-only Mozenda outlet with alias-only exact lookup and "No Vehicle Data" handling
 # - Pulls Mappings.csv (canonical) and Aliases.csv (alias -> canonical) from GitHub
 # - Joins canonical mappings to local CADS.csv to add STYLE_ID (and any CADS fields you want)
 # - Search bar + Mozenda endpoints use EXACT alias match (case-insensitive, whitespace-normalized)
-# - Adds Refresh to clear Streamlit caches and force re-fetch
-# - If alias hits but canonical not found in Mappings join, falls back to alias->CADS direct join
+# - If alias exists with status='no_data' but no mapped rows, show "No Vehicle Data"
+# - Includes "Refresh from GitHub" button and ?refresh=1 flag to clear caches immediately
 
 import base64
 import io
-from typing import Optional
+from typing import Optional, Tuple
 import pandas as pd
 import streamlit as st
 import requests
@@ -19,18 +19,18 @@ st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup")
 
 # ---------------- Secrets / GitHub ----------------
 gh = st.secrets.get("github", {})
-GH_TOKEN   = gh.get("token")             # optional if repo is public
-GH_OWNER   = gh.get("owner")             # e.g., "klb-text"
-GH_REPO    = gh.get("repo")              # e.g., "map"
-GH_BRANCH  = gh.get("branch", "main")
-MAP_PATH   = gh.get("path", "Mappings.csv")            # canonical file
-ALIASES_PATH = gh.get("aliases_path", "Aliases.csv")   # alias -> canonical file
+GH_TOKEN     = gh.get("token")                 # optional if repo is public
+GH_OWNER     = gh.get("owner")                 # e.g., "klb-text"
+GH_REPO      = gh.get("repo")                  # e.g., "map"
+GH_BRANCH    = gh.get("branch", "main")
+MAP_PATH     = gh.get("path", "Mappings.csv")            # canonical mappings
+ALIASES_PATH = gh.get("aliases_path", "Aliases.csv")     # alias -> canonical (may include 'status')
 
 # ---------------- Local Files ----------------
 CADS_FILE = "CADS.csv"  # local CADS.csv
 # Expected:
 #   Mappings.csv columns: year,make,model,trim,model_code,source
-#   Aliases.csv  columns: alias,alias_norm,year,make,model,trim,model_code,source,created_at
+#   Aliases.csv  columns: alias,alias_norm,year,make,model,trim,model_code,source,status,created_at
 #   CADS columns: MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE, STYLE_ID
 
 # ---------------- Utils ----------------
@@ -78,7 +78,7 @@ def _fetch_csv_raw(owner: str, repo: str, path: str, ref: str) -> Optional[pd.Da
     except Exception:
         return None
 
-# NOTE: add ttl so updates propagate without manual refresh
+# TTL so updates propagate without manual refresh; refresh button/flag also supported
 @st.cache_data(show_spinner=False, ttl=60)
 def fetch_csv_github(owner: str, repo: str, path: str, ref: str, token: Optional[str]) -> pd.DataFrame:
     """
@@ -94,7 +94,7 @@ def fetch_csv_github(owner: str, repo: str, path: str, ref: str, token: Optional
 @st.cache_data(show_spinner=False, ttl=60)
 def join_mappings_to_cads(mappings_df: pd.DataFrame, cads_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Join canonical Mappings -> CADS on (year,make,model,trim,model_code).
+    Join canonical Mappings -> CADS on (year, make, model, trim, model_code).
     Adds a stable 'canon_key' for fast lookups.
     """
     if mappings_df.empty or cads_df.empty:
@@ -134,85 +134,83 @@ def join_mappings_to_cads(mappings_df: pd.DataFrame, cads_df: pd.DataFrame) -> p
             merged[c] = ""
     return merged[cols].reset_index(drop=True)
 
-def exact_alias_filter_with_fallback(
+def exact_alias_filter_with_no_data(
     aliases_df: pd.DataFrame,
     joined_df: pd.DataFrame,
     cads_df: pd.DataFrame,
     alias_query: str
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, bool]:
     """
-    Exact (normalized) alias-only pipeline:
-      1) Normalize the input alias string.
-      2) Match aliases_df['alias_norm'] == normalized input.
-      3) Collect canonical keys.
-      4) First, try to return rows from joined_df (Mappings->CADS).
-      5) If that yields no rows (e.g., Mappings not yet updated), join alias canonical keys directly to CADS and return that.
+    Exact alias-only:
+      - If alias (normalized) exists with mapped canonical -> return mapped rows from joined_df (or alias->CADS fallback).
+      - If alias exists only with status='no_data' (and no mapped canonical present) -> return (empty, True).
+      - Else -> return (empty, False).
     """
-    if aliases_df.empty or (joined_df.empty and cads_df.empty):
-        return pd.DataFrame()
+    if aliases_df.empty:
+        return pd.DataFrame(), False
 
     qn = normalize(alias_query)
     if not qn:
-        return pd.DataFrame()
+        return pd.DataFrame(), False
 
-    al = aliases_df.copy()
-    # Ensure alias_norm exists and normalized
-    if "alias_norm" not in al.columns:
-        al["alias_norm"] = al["alias"].astype(str).map(normalize)
-    else:
-        al["alias_norm"] = al["alias_norm"].astype(str).map(normalize)
-
-    # Ensure canonical columns exist
-    for c in ["year","make","model","trim","model_code"]:
+    al = aliases_df.rename(columns=str).copy()
+    # Ensure expected columns exist
+    for c in ["alias","alias_norm","year","make","model","trim","model_code","source","status","created_at"]:
         if c not in al.columns:
             al[c] = ""
+    # Normalize alias_norm
+    al["alias_norm"] = al["alias_norm"].astype(str).map(normalize) if "alias_norm" in al.columns else al["alias"].astype(str).map(normalize)
 
-    # Build canon_key in aliases
-    al["canon_key"] = (
-        al["year"].astype(str) + "|" +
-        al["make"].astype(str) + "|" +
-        al["model"].astype(str) + "|" +
-        al["trim"].astype(str) + "|" +
-        al["model_code"].astype(str)
-    )
-
-    # Exact normalized match only (no fuzzy)
     hits = al[al["alias_norm"] == qn]
     if hits.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), False
 
-    keys = set(hits["canon_key"].tolist())
+    # Treat rows with status missing as mapped (back-compat)
+    mapped_hits = hits[(hits["status"].str.lower() == "mapped") | (hits["status"] == "")]
+    if not mapped_hits.empty:
+        # Build keys and try joined_df first
+        mapped_hits["canon_key"] = (
+            mapped_hits["year"].astype(str) + "|" +
+            mapped_hits["make"].astype(str) + "|" +
+            mapped_hits["model"].astype(str) + "|" +
+            mapped_hits["trim"].astype(str) + "|" +
+            mapped_hits["model_code"].astype(str)
+        )
+        keys = set(mapped_hits["canon_key"].tolist())
+        out = joined_df[joined_df["canon_key"].isin(keys)].copy()
+        if not out.empty:
+            return out.reset_index(drop=True), False
 
-    # Option A: return from joined_df (Mappings->CADS)
-    out = joined_df[joined_df["canon_key"].isin(keys)].copy()
-    if not out.empty:
-        return out.reset_index(drop=True)
+        # Fallback: join alias canonical directly to CADS if join hasn't populated yet
+        alias_canon = mapped_hits[["year","make","model","trim","model_code"]].drop_duplicates()
+        if cads_df.empty:
+            return pd.DataFrame(), False
+        direct = alias_canon.merge(
+            cads_df,
+            left_on=["year","make","model","trim","model_code"],
+            right_on=["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE"],
+            how="left"
+        )
+        direct["source"] = "alias"
+        direct["canon_key"] = (
+            direct["year"].astype(str) + "|" +
+            direct["make"].astype(str) + "|" +
+            direct["model"].astype(str) + "|" +
+            direct["trim"].astype(str) + "|" +
+            direct["model_code"].astype(str)
+        )
+        cols = ["year","make","model","trim","model_code","source","STYLE_ID","canon_key"]
+        for c in cols:
+            if c not in direct.columns:
+                direct[c] = ""
+        return direct[cols].reset_index(drop=True), False
 
-    # Option B (fallback): join alias canonical directly to CADS
-    alias_canon = hits[["year","make","model","trim","model_code"]].drop_duplicates()
-    if cads_df.empty:
-        return pd.DataFrame()
+    # If there are any no_data hits AND no mapped hits, show the "No Vehicle Data" state
+    no_data_hits = hits[hits["status"].str.lower() == "no_data"]
+    if not no_data_hits.empty:
+        return pd.DataFrame(), True
 
-    direct = alias_canon.merge(
-        cads_df,
-        left_on=["year","make","model","trim","model_code"],
-        right_on=["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE"],
-        how="left"
-    )
-    # Conform output schema to match joined_df
-    direct["source"] = hits["alias"].iloc[0] if "alias" in hits.columns and not hits["alias"].empty else ""
-    direct["canon_key"] = (
-        direct["year"].astype(str) + "|" +
-        direct["make"].astype(str) + "|" +
-        direct["model"].astype(str) + "|" +
-        direct["trim"].astype(str) + "|" +
-        direct["model_code"].astype(str)
-    )
-    cols = ["year","make","model","trim","model_code","source","STYLE_ID","canon_key"]
-    for c in cols:
-        if c not in direct.columns:
-            direct[c] = ""
-    return direct[cols].reset_index(drop=True)
+    return pd.DataFrame(), False
 
 # ---------------- Load CADS ----------------
 try:
@@ -221,15 +219,13 @@ except Exception as e:
     st.error(f"Failed to load {CADS_FILE}: {e}")
     st.stop()
 
-# ---------------- Query params (support refresh via URL) ----------------
-params     = st.experimental_get_query_params()
-q_param    = params.get("q", [""])[0]                  # the exact alias you mapped in app.py
-refresh_qp = params.get("refresh", ["0"])[0] == "1"    # ?refresh=1 to force cache clear
-is_mozenda = params.get("mozenda", ["0"])[0] == "1"
-out_format = params.get("format", ["csv"])[0].lower()  # csv|html|json (csv default)
-
 # ---------------- Refresh controls ----------------
-# Button in UI + URL flag both trigger full cache clear & re-fetch
+params     = st.experimental_get_query_params()
+q_param    = params.get("q", [""])[0]               # alias string to look up
+refresh_qp = params.get("refresh", ["0"])[0] == "1" # ?refresh=1 to force cache clear
+is_mozenda = params.get("mozenda", ["0"])[0] == "1"
+out_format = params.get("format", ["csv"])[0].lower()  # csv|json|html (csv default)
+
 refresh_clicked = st.button("Refresh from GitHub")
 if refresh_clicked or refresh_qp:
     fetch_csv_github.clear()
@@ -249,59 +245,70 @@ with st.form("search_form"):
     q_input = st.text_input(
         "Alias (paste exactly what you mapped in app.py)",
         value=q_param,
-        placeholder="e.g., 2026 Integra"
+        placeholder="e.g., 2026 Integra or 2026 Integra FWD Continuously Variable Transmission"
     )
     do_search = st.form_submit_button("Search")
 
 clear_clicked = st.button("Clear")
 
-if "search_results" not in st.session_state:
-    st.session_state["search_results"] = pd.DataFrame()
-if "search_alias" not in st.session_state:
-    st.session_state["search_alias"] = q_param
+if "search_alias" not in st.session_state: st.session_state["search_alias"] = q_param
+if "search_results" not in st.session_state: st.session_state["search_results"] = pd.DataFrame()
+if "search_no_data" not in st.session_state: st.session_state["search_no_data"] = False
 
 if clear_clicked:
     st.session_state["search_alias"] = ""
     st.session_state["search_results"] = pd.DataFrame()
+    st.session_state["search_no_data"] = False
     st.experimental_set_query_params()
 elif do_search:
     st.session_state["search_alias"] = q_input
-    st.session_state["search_results"] = exact_alias_filter_with_fallback(
-        aliases_df, joined_df, cads_df, q_input
-    )
+    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_input)
+    st.session_state["search_results"] = res_df
+    st.session_state["search_no_data"] = is_no_data
     st.experimental_set_query_params(q=q_input)
 
 # ---------------- Mozenda Mode: API-like outlet ----------------
 if is_mozenda:
-    out_df = exact_alias_filter_with_fallback(
-        aliases_df, joined_df, cads_df, q_param
-    )
-    payload_df = out_df  # already minimal schema; add/remove columns as needed
+    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
+    if is_no_data:
+        # HTML shows message; CSV/JSON return empty for schema stability
+        if out_format == "html":
+            st.warning("No Vehicle Data")
+        elif out_format == "json":
+            st.write("[]")
+        else:
+            st.write("")
+        st.stop()
+
+    # Return mapped rows (joined to CADS)
     if out_format == "json":
-        st.write(payload_df.to_json(orient="records"))
+        st.write(res_df.to_json(orient="records"))
     elif out_format == "html":
-        st.dataframe(payload_df, hide_index=True, use_container_width=True)
+        st.dataframe(res_df, hide_index=True, use_container_width=True)
     else:
-        st.write(payload_df.to_csv(index=False))
+        st.write(res_df.to_csv(index=False))
     st.stop()
 
 # ---------------- Human-friendly Preview ----------------
 if mappings_df.empty:
-    st.warning(f"Mappings.csv not found (or unauthorized): {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
+    st.warning(f"Mappings.csv not found or unauthorized: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
 else:
-    st.success(f"Loaded {len(mappings_df)} canonical mappings from GitHub: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
+    st.success(f"Loaded {len(mappings_df)} canonical mappings from GitHub.")
 
 if aliases_df.empty:
-    st.warning(f"Aliases.csv not found (or unauthorized): {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{ALIASES_PATH}")
+    st.warning(f"Aliases.csv not found or unauthorized: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{ALIASES_PATH}")
 else:
     st.caption(f"Aliases available: {len(aliases_df)}")
 
 st.subheader("Results")
-results_df = st.session_state["search_results"]
-if results_df.empty and st.session_state["search_alias"]:
-    st.info("No results for that alias. Click **Refresh from GitHub** after mapping, or verify the alias exists in Aliases.csv.")
-elif not results_df.empty:
-    st.dataframe(results_df, hide_index=True, use_container_width=True)
+if st.session_state["search_no_data"]:
+    st.warning("No Vehicle Data")
+else:
+    results_df = st.session_state["search_results"]
+    if results_df.empty and st.session_state["search_alias"]:
+        st.info("No results for that alias.")
+    elif not results_df.empty:
+        st.dataframe(results_df, hide_index=True, use_container_width=True)
 
 # Helpful endpoints
 st.markdown("---")
