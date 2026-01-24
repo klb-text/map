@@ -85,7 +85,8 @@ def fetch_csv_github(owner: str, repo: str, path: str, ref: str, token: Optional
     """
     df = _fetch_csv_contents_api(owner, repo, path, ref, token)
     if df is None:
-        df = _fetch_csv_raw(owner, repo, path, ref) or pd.DataFrame()
+        raw_df = _fetch_csv_raw(owner, repo, path, ref)
+        df = raw_df if raw_df is not None else pd.DataFrame()
     return df
 
 @st.cache_data(show_spinner=False)
@@ -150,14 +151,18 @@ def exact_alias_filter(
     if not qn:
         return pd.DataFrame()
 
-    # Normalize alias_norm column (derive if missing)
     al = aliases_df.copy()
+    # Ensure alias_norm exists and normalized
     if "alias_norm" not in al.columns:
         al["alias_norm"] = al["alias"].astype(str).map(normalize)
     else:
         al["alias_norm"] = al["alias_norm"].astype(str).map(normalize)
 
     # Build canon_key in aliases
+    required_cols = ["year","make","model","trim","model_code"]
+    for c in required_cols:
+        if c not in al.columns:
+            al[c] = ""
     al["canon_key"] = (
         al["year"].astype(str) + "|" +
         al["make"].astype(str) + "|" +
@@ -173,9 +178,6 @@ def exact_alias_filter(
 
     keys = set(hits["canon_key"].tolist())
     out = joined_df[joined_df["canon_key"].isin(keys)].copy()
-
-    # If you want to strictly preserve alias order, you could join back on alias rows;
-    # but for harvesting, this set is typically sufficient.
     return out.reset_index(drop=True)
 
 # ---------------- Load CADS ----------------
