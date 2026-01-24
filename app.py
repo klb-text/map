@@ -4,6 +4,7 @@ import io
 import json
 import base64
 import time
+import re
 from datetime import datetime
 
 import streamlit as st
@@ -68,6 +69,52 @@ def normalize(s: str) -> str:
     s = " ".join(s.split())
     return s
 
+def infer_from_alias(alias: str, ref_df: pd.DataFrame, fallback_make: str = "", fallback_model: str = ""):
+    """
+    Infer (year, make, model, trim_guess) from the freeform alias.
+    - Year: first 4-digit 19xx/20xx in text
+    - Make/Model: from vehicle_example.txt exact/fuzzy row if available; else fallbacks (form inputs)
+    - Trim guess: alias minus inferred tokens (best-effort; not used for strictness unless user filled Trim)
+    """
+    year = ""
+    m = re.search(r"\b(19|20)\d{2}\b", str(alias))
+    if m:
+        year = m.group(0)
+
+    make = fallback_make or ""
+    model = fallback_model or ""
+    trim_guess = ""
+
+    if not ref_df.empty and 'Vehicle' in ref_df.columns:
+        if '_vnorm' not in ref_df.columns:
+            ref_df['_vnorm'] = ref_df['Vehicle'].astype(str).map(normalize)
+        vn = normalize(alias)
+        exact = ref_df[ref_df['_vnorm'] == vn]
+        if not exact.empty:
+            make = make or exact['Make'].astype(str).fillna('').values[0] if 'Make' in exact.columns else make
+            model = model or exact['Model'].astype(str).fillna('').values[0] if 'Model' in exact.columns else model
+        else:
+            # fuzzy fallback to suggest make/model
+            try:
+                scores = ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
+                top_idx = scores.idxmax()
+                if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
+                    row = ref_df.loc[top_idx]
+                    make = make or str(row.get('Make', "")) or make
+                    model = model or str(row.get('Model', "")) or model
+            except Exception:
+                pass
+
+    # Remove found tokens from alias to guess trim (not strictly needed)
+    tokens = [year, make, model]
+    rem = normalize(alias)
+    for t in tokens:
+        if t:
+            rem = rem.replace(normalize(t), " ")
+    trim_guess = " ".join(rem.split()).strip()
+
+    return str(year), make, model, trim_guess
+
 def get_example_make_model(vehicle_name: str):
     """Optional hint from a reference file (exact or fuzzy)."""
     if vehicle_ref_df.empty or 'Vehicle' not in vehicle_ref_df.columns:
@@ -85,12 +132,14 @@ def get_example_make_model(vehicle_name: str):
         return make, model
 
     # Fuzzy fallback
-    scores = vehicle_ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
-    top_idx = scores.idxmax()
-    if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
-        row = vehicle_ref_df.loc[top_idx]
-        return row.get('Make', None), row.get('Model', None)
-
+    try:
+        scores = vehicle_ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
+        top_idx = scores.idxmax()
+        if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
+            row = vehicle_ref_df.loc[top_idx]
+            return row.get('Make', None), row.get('Model', None)
+    except Exception:
+        pass
     return None, None
 
 def smart_vehicle_match(
@@ -164,6 +213,23 @@ def smart_vehicle_match(
             work[c] = ""
     return work[cols]
 
+def strict_filter(df: pd.DataFrame, year: str = "", make: str = "", model: str = "", trim: str = "") -> pd.DataFrame:
+    """
+    Apply strict equality on only the fields provided (non-empty).
+    """
+    if df.empty:
+        return df
+    work = df.copy()
+    if year:
+        work = work[work['MODEL_YEAR'].astype(str) == str(year)]
+    if make:
+        work = work[work['AD_MAKE'].str.lower() == make.lower()]
+    if model:
+        work = work[work['AD_MODEL'].str.lower() == model.lower()]
+    if trim:
+        work = work[work['TRIM'].str.lower() == trim.lower()]
+    return work
+
 # =========================
 # --- GitHub helpers ---
 # =========================
@@ -210,7 +276,6 @@ def github_upsert_csv_with_keys(
     # Merge & dedupe
     combined = pd.concat([existing_df, new_rows_df], ignore_index=True).fillna("")
     if dedup_keys:
-        # Ensure dedup key columns exist
         for k in dedup_keys:
             if k not in combined.columns:
                 combined[k] = ""
@@ -350,6 +415,8 @@ if 'selection' not in st.session_state:
     st.session_state['selection'] = {}  # map_key -> bool
 if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
+if 'inferred' not in st.session_state:
+    st.session_state['inferred'] = {"year":"", "make":"", "model":"", "trim":""}
 
 # =========================
 # --- Main Page: Search Form ---
@@ -384,13 +451,27 @@ if vehicle_input:
 # --- Handle Search Submit ---
 # =========================
 if submitted:
+    # Infer Y/M/M/T from alias + hints if not supplied
+    inf_year, inf_make, inf_model, inf_trim_guess = infer_from_alias(
+        vehicle_input, vehicle_ref_df,
+        fallback_make=make_input or (example_make or ""),
+        fallback_model=model_input or (example_model or "")
+    )
+    # Use explicit inputs if provided; otherwise fallback to inferred/hints
+    eff_year  = year_input or inf_year
+    eff_make  = make_input or (example_make or inf_make)
+    eff_model = model_input or (example_model or inf_model)
+    eff_trim  = trim_input  # do not auto-apply trim_guess strictly; keep user-driven
+
+    st.session_state['inferred'] = {"year":eff_year, "make":eff_make, "model":eff_model, "trim":eff_trim}
+
     matches_df = smart_vehicle_match(
         cads_df,
         vehicle_input,
-        year=year_input,
-        make=make_input,
-        model=model_input,
-        trim=trim_input,
+        year=eff_year,      # note: used as a pre-filter for speed
+        make=eff_make,
+        model=eff_model,
+        trim="",            # keep fuzzy trim out; strict trim handled separately
         top_n=top_n,
         score_cutoff=score_cutoff
     )
@@ -404,39 +485,35 @@ if submitted:
     st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
 
 # =========================
-# --- Results / No Data path (updated logic) ---
+# --- Results / No Data path (with inference) ---
 # =========================
 if st.session_state['show_results']:
     matches_df = st.session_state['matches_df']
     alias_text = st.session_state.get('current_query', '')
+    eff = st.session_state.get('inferred', {"year":"", "make":"", "model":"", "trim":""})
+    eff_year, eff_make, eff_model, eff_trim = eff["year"], eff["make"], eff["model"], eff["trim"]
 
-    # Determine if there is a **strict** match in CADS for the specific Y/M/M/T you provided.
-    # We only enforce strictness on the filters you actually provided (non-empty fields).
-    strict = cads_df.copy()
-    if year_input:
-        strict = strict[strict['MODEL_YEAR'].astype(str) == str(year_input)]
-    if make_input:
-        strict = strict[strict['AD_MAKE'].str.lower() == make_input.lower()]
-    if model_input:
-        strict = strict[strict['AD_MODEL'].str.lower() == model_input.lower()]
-    if trim_input:
-        strict = strict[strict['TRIM'].str.lower() == trim_input.lower()]
-
-    specified_any_filter = any([year_input, make_input, model_input, trim_input])
-    no_data_candidate = specified_any_filter and strict.empty
+    # Compute strict subset using provided or inferred fields (only those that are non-empty)
+    strict_subset = strict_filter(cads_df, year=eff_year, make=eff_make, model=eff_model, trim=eff_trim)
+    specified_any_filter = any([eff_year, eff_make, eff_model, eff_trim])
+    no_data_candidate = specified_any_filter and strict_subset.empty
     has_any_fuzzy = not matches_df.empty
 
-    # Show the no-data button whenever the specific Y/M/M/T doesn't exist in CADS (even if fuzzy found other years/trims)
+    # Surface the no-data button if specific (provided or inferred) Y/M/M/T doesn't exist in CADS
     if no_data_candidate:
-        st.warning("No exact CADS rows found for the specific Y/M/M/T you entered.")
+        st.warning(
+            "No exact CADS rows found for the specific Y/M/M/T you entered or I inferred "
+            f"(Year={eff_year or '—'}, Make={eff_make or '—'}, Model={eff_model or '—'}"
+            f"{', Trim='+eff_trim if eff_trim else ''})."
+        )
         st.info("If you expect this vehicle to arrive in CADS later, log it as **'No Vehicle Data'** so the Basic app shows a clear message for this alias.")
         if st.button("Vehicle Data Not Received"):
             ok, msg = commit_alias_no_data(
                 alias_input=alias_text,
-                year=year_input,
-                make=make_input,
-                model=model_input,
-                trim=trim_input,
+                year=eff_year,
+                make=eff_make,
+                model=eff_model,
+                trim=eff_trim,
                 source="user"
             )
             if ok:
@@ -444,7 +521,7 @@ if st.session_state['show_results']:
             else:
                 st.error(msg)
 
-    # Still show fuzzy results table (so you can map to what's available today)
+    # Show fuzzy results table (so you can map to what's available today)
     if has_any_fuzzy:
         st.subheader("Matching Vehicles")
         view = matches_df.copy()
@@ -534,17 +611,17 @@ if st.session_state['show_results']:
                     mime="text/csv"
                 )
 
-    # If there were no fuzzy matches either, we still provide a no-data pathway
+    # If there were no fuzzy matches either, still provide a no-data pathway
     if (not has_any_fuzzy) and (not no_data_candidate):
         st.warning("No CADS matches found for this alias.")
         st.info("Optionally log it as **'No Vehicle Data'** if you expect CADS to arrive later.")
         if st.button("Vehicle Data Not Received"):
             ok, msg = commit_alias_no_data(
                 alias_input=alias_text,
-                year=year_input,
-                make=make_input,
-                model=model_input,
-                trim=trim_input,
+                year=eff_year,
+                make=eff_make,
+                model=eff_model,
+                trim=eff_trim,
                 source="user"
             )
             if ok:
