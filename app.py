@@ -1,5 +1,11 @@
 
 # app.py
+import os
+import io
+import json
+import base64
+from datetime import datetime
+
 import streamlit as st
 import pandas as pd
 from thefuzz import fuzz  # Tip: use thefuzz[speedup] in requirements for faster scoring
@@ -35,9 +41,7 @@ vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 # --- Helpers ---
 # =========================
 def normalize(s: str) -> str:
-    """
-    Lowercase, trim, collapse whitespace, replace common separators.
-    """
+    """Lowercase, trim, collapse whitespace, replace common separators."""
     s = str(s or "")
     s = s.strip().lower()
     s = s.replace("-", " ").replace("/", " ")
@@ -158,6 +162,111 @@ def smart_vehicle_match(
     return work[cols]
 
 # =========================
+# --- Build Mappings.csv rows from selection ---
+# =========================
+def build_mappings_from_selection(final_df: pd.DataFrame, source: str = "user") -> pd.DataFrame:
+    """
+    Convert selected matches to the canonical Mappings.csv schema and dedupe.
+    Output columns: year, make, model, trim, model_code, source
+    """
+    if final_df is None or final_df.empty:
+        return pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
+
+    out = final_df.rename(columns={
+        "MODEL_YEAR": "year",
+        "AD_MAKE": "make",
+        "AD_MODEL": "model",
+        "TRIM": "trim",
+        "AD_MFGCODE": "model_code"
+    })[["year","make","model","trim","model_code"]].copy()
+
+    out["source"] = source
+    for c in ["year","make","model","trim","model_code","source"]:
+        out[c] = out[c].astype(str).str.strip()
+
+    out.drop_duplicates(inplace=True)
+    return out
+
+# =========================
+# --- GitHub API Commit (uses st.secrets['github']) ---
+# =========================
+def github_api_commit_mappings(new_rows_df: pd.DataFrame) -> tuple[bool, str]:
+    """
+    Upsert into Mappings.csv in GitHub using the Contents API:
+    - Read existing file (if present)
+    - Append new rows, dedupe, sort
+    - PUT updated file with commit message
+    Secrets required:
+      [github]
+      token, owner, repo, branch
+      (optional) path, author_name, author_email
+    """
+    import requests
+
+    gh = st.secrets.get("github", {})
+    token    = gh.get("token")
+    owner    = gh.get("owner")
+    repo     = gh.get("repo")
+    branch   = gh.get("branch", "main")
+    file_path= gh.get("path", "Mappings.csv")  # default to repo root
+    author_n = gh.get("author_name", "AFF Bot")
+    author_e = gh.get("author_email", "aff-bot@example.com")
+
+    if not token or not owner or not repo:
+        return False, "GitHub token/owner/repo not configured in st.secrets['github']."
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json"
+    }
+
+    # 1) Get current file (if exists) to obtain sha and content
+    get_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}?ref={branch}"
+    r = requests.get(get_url, headers=headers)
+    sha = None
+    existing_df = pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
+
+    if r.status_code == 200:
+        content_b64 = r.json().get("content", "")
+        sha = r.json().get("sha")
+        decoded = base64.b64decode(content_b64).decode("utf-8", errors="replace")
+        existing_df = pd.read_csv(io.StringIO(decoded), dtype=str).fillna("")
+    elif r.status_code == 404:
+        # file doesn't exist yet; that's OK
+        pass
+    else:
+        return False, f"Failed to read existing file: HTTP {r.status_code} - {r.text}"
+
+    # 2) Merge, dedupe, sort (optional)
+    combined = pd.concat([existing_df, new_rows_df], ignore_index=True).fillna("")
+    combined.drop_duplicates(inplace=True)
+    combined = combined[["year","make","model","trim","model_code","source"]]
+    combined = combined.sort_values(by=["year","make","model","trim","model_code"]).reset_index(drop=True)
+
+    # 3) Re-encode as CSV (utf-8)
+    csv_buffer = io.StringIO()
+    combined.to_csv(csv_buffer, index=False, encoding="utf-8")
+    content_b64 = base64.b64encode(csv_buffer.getvalue().encode("utf-8")).decode("utf-8")
+
+    # 4) Commit via PUT
+    put_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}"
+    commit_message = f"chore(mappings): upsert {len(new_rows_df)} row(s) via AFF UI - {datetime.utcnow().isoformat()}Z"
+    payload = {
+        "message": commit_message,
+        "content": content_b64,
+        "branch": branch,
+        "committer": {"name": author_n, "email": author_e}
+    }
+    if sha:
+        payload["sha"] = sha
+
+    r2 = requests.put(put_url, headers=headers, data=json.dumps(payload))
+    if r2.status_code in (200, 201):
+        return True, f"Committed to {owner}/{repo}@{branch}:{file_path}"
+    else:
+        return False, f"Commit failed: HTTP {r2.status_code} - {r2.text}"
+
+# =========================
 # --- Session State ---
 # =========================
 if 'show_results' not in st.session_state:
@@ -178,7 +287,7 @@ st.caption("Select one or more CADS rows that match your freeform vehicle input.
 
 with st.form("search_form_main"):
     st.subheader("Search")
-    vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2024 Toyota RAV4 XLE")
+    vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2025 Land Rover Range Rover P400 SE SWB")
 
     st.markdown("**YMMT Filter (optional)**")
     c1, c2, c3, c4 = st.columns(4)
@@ -273,7 +382,7 @@ if st.session_state['show_results']:
             disabled=['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
         )
 
-        # Persist checkbox edits back to session_state using index alignment
+        # Persist checkbox edits back to session_state (align by index)
         for i, row in edited.iterrows():
             mk = matches_df.loc[i, 'map_key']
             st.session_state['selection'][mk] = bool(row['Select'])
@@ -285,7 +394,13 @@ if st.session_state['show_results']:
         st.markdown("---")
         st.write(f"Selected: **{len(final_df)}** row(s)")
 
-        cA, cB = st.columns([1, 1])
+        # Preview mappings to be committed
+        mappings_df = build_mappings_from_selection(final_df, source="user")
+        if not mappings_df.empty:
+            st.caption("Preview of rows to commit to Mappings.csv")
+            st.dataframe(mappings_df, use_container_width=True)
+
+        cA, cB, cC = st.columns([1, 1, 1])
         with cA:
             if st.button("Submit Mapping"):
                 if final_df.empty:
@@ -304,15 +419,27 @@ if st.session_state['show_results']:
                     mime="text/csv"
                 )
 
+        with cC:
+            commit_btn = st.button("Commit to GitHub")
+            if commit_btn:
+                if mappings_df.empty:
+                    st.warning("No rows selected to commit.")
+                else:
+                    ok, msg = github_api_commit_mappings(mappings_df)
+                    if ok:
+                        st.success(msg)
+                    else:
+                        st.error(msg)
+
 # =========================
 # --- Footer / Tips ---
 # =========================
 with st.expander("Tips & Notes", expanded=False):
     st.markdown(
         """
-- Enter a freeform vehicle (e.g., `2024 Toyota RAV4 XLE`) and optional YMMT filters, then click **Search Vehicles**.
-- The results table stays open while you click the **Select** checkboxes.
-- This UI supports mapping **one input to many** CADS rows; download or submit your selection.
+- Enter a freeform vehicle (e.g., `2025 Land Rover Range Rover P400 SE SWB`) and optional YMMT filters, then click **Search Vehicles**.
+- The results table stays open while you click the **Select** checkboxes (supports 1→many).
+- **Commit to GitHub** appends/dedupes into `Mappings.csv` on your configured branch.
 - For performance on large CADS, install `thefuzz[speedup]` to enable `python-Levenshtein`.
         """
     )
