@@ -1,18 +1,25 @@
 
+# app.py
 import streamlit as st
 import pandas as pd
-from thefuzz import fuzz  # if you want speed: pip install "thefuzz[speedup]"
+from thefuzz import fuzz  # Tip: use thefuzz[speedup] in requirements for faster scoring
 
-# --- File paths ---
+# =========================
+# --- Configuration ---
+# =========================
 CADS_FILE = "CADS.csv"
 VEHICLE_REF_FILE = "vehicle_example.txt"
 
-# --- Data loading ---
+st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+
+# =========================
+# --- Data Loading ---
+# =========================
 @st.cache_data
 def load_csv(path: str) -> pd.DataFrame:
     """
     Load CSV/TXT using python engine to auto-detect delimiter.
-    Coerce all fields to string and fill NaNs to stabilize .str ops.
+    Coerce to string and fill NaNs to stabilize .str ops.
     """
     try:
         df = pd.read_csv(path, sep=None, engine='python', dtype=str)
@@ -24,11 +31,12 @@ def load_csv(path: str) -> pd.DataFrame:
 cads_df = load_csv(CADS_FILE)
 vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 
-# --- Text normalization helpers ---
+# =========================
+# --- Helpers ---
+# =========================
 def normalize(s: str) -> str:
     """
-    Lowercase, trim, collapse whitespace, and replace common separators
-    so fuzzy match is more forgiving.
+    Lowercase, trim, collapse whitespace, replace common separators.
     """
     s = str(s or "")
     s = s.strip().lower()
@@ -36,60 +44,34 @@ def normalize(s: str) -> str:
     s = " ".join(s.split())
     return s
 
-# --- Helper: get example make/model from reference file (exact or fuzzy) ---
 def get_example_make_model(vehicle_name: str):
+    """
+    Try to find Make/Model hints in the VEHICLE_REF_FILE.
+    First exact normalized match, then fuzzy fallback (>=80).
+    """
     if vehicle_ref_df.empty or 'Vehicle' not in vehicle_ref_df.columns:
         return None, None
 
-    vn = normalize(vehicle_name)
-    # Build a normalized column once (safe even if re-run)
-    vehicle_ref_df['_vnorm'] = vehicle_ref_df['Vehicle'].astype(str).map(normalize)
+    # Build normalized column once
+    if '_vnorm' not in vehicle_ref_df.columns:
+        vehicle_ref_df['_vnorm'] = vehicle_ref_df['Vehicle'].astype(str).map(normalize)
 
-    # Try exact normalized match first
+    vn = normalize(vehicle_name)
     ref_row = vehicle_ref_df[vehicle_ref_df['_vnorm'] == vn]
     if not ref_row.empty:
         make = ref_row['Make'].values[0] if 'Make' in ref_row.columns else None
         model = ref_row['Model'].values[0] if 'Model' in ref_row.columns else None
         return make, model
 
-    # Fuzzy fallback if no exact reference match
-    if not vehicle_ref_df.empty:
-        scores = vehicle_ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
-        top_idx = scores.idxmax()
-        if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
-            row = vehicle_ref_df.loc[top_idx]
-            return row.get('Make', None), row.get('Model', None)
+    # Fuzzy fallback
+    scores = vehicle_ref_df['_vnorm'].map(lambda x: fuzz.token_set_ratio(vn, x))
+    top_idx = scores.idxmax()
+    if pd.notna(top_idx) and scores.loc[top_idx] >= 80:
+        row = vehicle_ref_df.loc[top_idx]
+        return row.get('Make', None), row.get('Model', None)
 
     return None, None
 
-# --- Page ---
-st.title("AFF Vehicle Mapping")
-st.caption("Type a vehicle (e.g., '2024 Toyota RAV4 XLE') and optionally filter by Year/Make/Model/Trim.")
-
-# --- Inputs in a form to avoid mid-typing reruns ---
-with st.form("search_form"):
-    vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2024 Toyota RAV4 XLE")
-
-    st.write("YMMT Filter (optional)")
-    col1, col2, col3, col4 = st.columns(4)
-    year_input = col1.text_input("Year")
-    make_input = col2.text_input("Make")
-    model_input = col3.text_input("Model")
-    trim_input = col4.text_input("Trim")
-
-    top_n = st.slider("How many matches to show", min_value=5, max_value=50, value=20, step=5)
-    score_cutoff = st.slider("Minimum match score", min_value=0, max_value=100, value=60, step=5)
-
-    submitted = st.form_submit_button("Search Vehicles")
-
-# --- Show reference suggestion if available ---
-example_make, example_model = (None, None)
-if vehicle_input:
-    example_make, example_model = get_example_make_model(vehicle_input)
-    if example_make or example_model:
-        st.info(f"Example Make/Model from reference: {example_make or '—'} / {example_model or '—'}")
-
-# --- Smart Match Function ---
 def smart_vehicle_match(
     df: pd.DataFrame,
     vehicle_q: str,
@@ -103,53 +85,52 @@ def smart_vehicle_match(
     score_cutoff: int = 60
 ) -> pd.DataFrame:
     """
-    Returns a dataframe of top candidates with a fuzzy 'score' column.
+    Score candidates row-by-row using token_set_ratio.
+    Returns a dataframe including 'score' and a stable 'map_key'.
     """
     if df.empty or not vehicle_q:
         return pd.DataFrame()
 
-    # Ensure required columns exist (avoid KeyErrors downstream)
     needed = ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']
+    base = df.copy()
     for col in needed:
-        if col not in df.columns:
-            df[col] = ""
+        if col not in base.columns:
+            base[col] = ""
 
-    work = df.copy()
-    # Normalize text columns to strings
-    for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']:
-        work[col] = work[col].astype(str).fillna('')
+    # Ensure strings
+    for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']:
+        base[col] = base[col].astype(str).fillna('')
 
-    # Apply explicit filters first (narrow the candidate space)
+    # Explicit filters (narrow candidate set first)
+    work = base
     if year:
-        work = work[work['MODEL_YEAR'].astype(str) == str(year)]
+        work = work[work['MODEL_YEAR'] == str(year)]
     if make:
         work = work[work['AD_MAKE'].str.lower() == make.lower()]
     if model:
         work = work[work['AD_MODEL'].str.lower() == model.lower()]
     if trim:
-        # contains allows partial matches for trim
         work = work[work['TRIM'].str.lower().str.contains(trim.lower())]
 
-    # If nothing found and we have example make/model, try that as a fallback
+    # Fallback to example make/model if nothing matches the filters
     if work.empty and example_make and example_model:
-        work = df[
-            (df['AD_MAKE'].astype(str).str.lower() == example_make.lower()) &
-            (df['AD_MODEL'].astype(str).str.lower() == example_model.lower())
-        ].copy()
+        work = base[
+            (base['AD_MAKE'].str.lower() == example_make.lower()) &
+            (base['AD_MODEL'].str.lower() == example_model.lower())
+        ]
 
     if work.empty:
         return pd.DataFrame()
 
-    # Build a combined search string per row
+    # Combined search string
     work = work.copy()
     work['vehicle_search'] = (
-        work['MODEL_YEAR'].astype(str).str.strip() + ' ' +
-        work['AD_MAKE'].astype(str).str.strip() + ' ' +
-        work['AD_MODEL'].astype(str).str.strip() + ' ' +
-        work['TRIM'].astype(str).str.strip()
+        work['MODEL_YEAR'].str.strip() + ' ' +
+        work['AD_MAKE'].str.strip() + ' ' +
+        work['AD_MODEL'].str.strip() + ' ' +
+        work['TRIM'].str.strip()
     ).str.replace(r'\s+', ' ', regex=True).str.strip()
 
-    # Normalize and score per-row (keeps 1:1 mapping)
     q_norm = normalize(vehicle_q)
     work['vs_norm'] = work['vehicle_search'].map(normalize)
     work['score'] = work['vs_norm'].map(lambda s: fuzz.token_set_ratio(q_norm, s))
@@ -160,16 +141,65 @@ def smart_vehicle_match(
         .sort_values(['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM'],
                      ascending=[False, False, True, True, True])
         .head(top_n)
+        .copy()
     )
 
-    cols = ['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+    # Stable key per row for persistent selection across reruns
+    work['map_key'] = (
+        work['MODEL_YEAR'] + '|' +
+        work['AD_MAKE'] + '|' +
+        work['AD_MODEL'] + '|' +
+        work['TRIM'] + '|' +
+        work['AD_MFGCODE'] + '|' +
+        work['STYLE_ID']
+    )
+
+    cols = ['map_key', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
     return work[cols]
 
-# --- Search & Results ---
-if submitted:
-    # Reset selection on every new search
-    st.session_state['selected_vehicles'] = []
+# =========================
+# --- Session State ---
+# =========================
+if 'show_results' not in st.session_state:
+    st.session_state['show_results'] = False
+if 'matches_df' not in st.session_state:
+    st.session_state['matches_df'] = pd.DataFrame()
+if 'selection' not in st.session_state:
+    # map_key -> bool
+    st.session_state['selection'] = {}
+if 'current_query' not in st.session_state:
+    st.session_state['current_query'] = ""
 
+# =========================
+# --- Sidebar Search Form ---
+# =========================
+with st.sidebar.form("search_form"):
+    st.subheader("Search")
+    vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2024 Toyota RAV4 XLE")
+
+    st.caption("YMMT Filter (optional)")
+    c1, c2, c3, c4 = st.columns(4)
+    year_input = c1.text_input("Year")
+    make_input = c2.text_input("Make")
+    model_input = c3.text_input("Model")
+    trim_input = c4.text_input("Trim")
+
+    top_n = st.slider("How many matches to show", min_value=5, max_value=50, value=20, step=5)
+    score_cutoff = st.slider("Minimum match score", min_value=0, max_value=100, value=60, step=5)
+
+    submitted = st.form_submit_button("Search Vehicles")
+
+# Optional hint from reference file
+example_make, example_model = (None, None)
+if vehicle_input:
+    example_make, example_model = get_example_make_model(vehicle_input)
+    if example_make or example_model:
+        st.sidebar.caption(f"Ref hint → Make: {example_make or '—'}, Model: {example_model or '—'}")
+
+# =========================
+# --- Handle Search Submit ---
+# =========================
+if submitted:
     matches_df = smart_vehicle_match(
         cads_df,
         vehicle_input,
@@ -183,34 +213,110 @@ if submitted:
         score_cutoff=score_cutoff
     )
 
+    st.session_state['matches_df'] = matches_df
+    st.session_state['show_results'] = not matches_df.empty
+    st.session_state['current_query'] = vehicle_input
+
+    # Reset or preserve selection only for keys in current results
+    prev = st.session_state['selection']
+    st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
+
+# =========================
+# --- Main Area: Results ---
+# =========================
+st.title("AFF Vehicle Mapping")
+st.caption("Select one or more CADS rows that match your freeform vehicle input. Supports 1→many mapping.")
+
+if st.session_state['show_results']:
+    matches_df = st.session_state['matches_df']
+
     if matches_df.empty:
-        st.warning(f"No matching vehicles found for: {vehicle_input}")
+        st.warning(f"No matching vehicles found for: {st.session_state.get('current_query','(blank)')}")
     else:
         st.subheader("Matching Vehicles")
-        st.dataframe(matches_df.reset_index(drop=True))
 
-        st.write("Select vehicles to map:")
-        select_all = st.checkbox("Select all shown")
+        # Build a view with a Select checkbox column bound to session_state
+        view = matches_df.copy()
+        view['Select'] = view['map_key'].map(st.session_state['selection']).fillna(False).astype(bool)
 
-        selected = []
-        for idx, row in matches_df.iterrows():
-            label = f"[{row['score']}] {row['MODEL_YEAR']} {row['AD_MAKE']} {row['AD_MODEL']} {row['TRIM']} | Model Code: {row['AD_MFGCODE']} | Style ID: {row['STYLE_ID']}"
-            checked = st.checkbox(label, key=f"chk_{idx}", value=select_all)
-            if checked:
-                selected.append(idx)
+        # Bulk actions row
+        a1, a2, a3 = st.columns([1, 1, 1])
+        with a1:
+            select_all_clicked = st.checkbox("Select all shown", value=all(view['Select']) and len(view) > 0, key="select_all_shown")
+        with a2:
+            if st.button("Clear selections"):
+                view['Select'] = False
+        with a3:
+            if st.button("Close results"):
+                st.session_state['show_results'] = False
 
-        st.session_state['selected_vehicles'] = selected
+        if select_all_clicked:
+            view['Select'] = True
 
-        if selected:
-            final_df = matches_df.loc[selected, ['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']].copy()
-            st.success(f"{len(final_df)} row(s) ready.")
-            st.dataframe(final_df.reset_index(drop=True))
+        # Single editable table with the checkbox inside
+        # (This avoids a second checkbox list and prevents the "closing" effect)
+        display_cols = ['Select', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+        edited = st.data_editor(
+            view[display_cols],
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Select": st.column_config.CheckboxColumn(help="Include this row in the mapping"),
+                "score": st.column_config.NumberColumn(format="%d", help="Fuzzy match score (0–100)"),
+                "MODEL_YEAR": st.column_config.TextColumn(),
+                "AD_MAKE": st.column_config.TextColumn(),
+                "AD_MODEL": st.column_config.TextColumn(),
+                "TRIM": st.column_config.TextColumn(),
+                "AD_MFGCODE": st.column_config.TextColumn(help="Model Code"),
+                "STYLE_ID": st.column_config.TextColumn(),
+                "vehicle_search": st.column_config.TextColumn(help="Combined search string")
+            },
+            disabled=['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+        )
 
-            csv = final_df.to_csv(index=False)
-            st.download_button(
-                "Download mapping as CSV",
-                data=csv,
-                file_name="vehicle_mapping.csv",
-                mime="text/csv"
-            )
+        # Persist checkbox edits back to session_state using index alignment
+        # (edited has same index order as view/matches_df)
+        for i, row in edited.iterrows():
+            mk = matches_df.loc[i, 'map_key']
+            st.session_state['selection'][mk] = bool(row['Select'])
+
+        # Build final selection
+        selected_keys = [k for k, v in st.session_state['selection'].items() if v]
+        final_df = matches_df[matches_df['map_key'].isin(selected_keys)].copy()
+
+        st.markdown("---")
+        st.write(f"Selected: **{len(final_df)}** row(s)")
+
+        cA, cB = st.columns([1, 1])
+        with cA:
+            if st.button("Submit Mapping"):
+                if final_df.empty:
+                    st.warning("No rows selected.")
+                else:
+                    st.success("Mapping submitted!")
+                    st.dataframe(final_df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']].reset_index(drop=True))
+
+        with cB:
+            if not final_df.empty:
+                csv = final_df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']].to_csv(index=False)
+                st.download_button(
+                    "Download mapping as CSV",
+                    data=csv,
+                    file_name="vehicle_mapping.csv",
+                    mime="text/csv"
+                )
+
+# =========================
+# --- Footer / Tips ---
+# =========================
+with st.expander("Tips & Notes", expanded=False):
+    st.markdown(
+        """
+- Use the sidebar to enter a freeform vehicle (e.g., `2024 Toyota RAV4 XLE`) and optional YMMT filters.
+- The results table stays open while you click the **Select** checkboxes.
+- This UI supports mapping **one input to many** CADS rows; download or submit your selection.
+- For performance on large CADS, install `thefuzz[speedup]` to enable `python-Levenshtein`.
+        """
+    )
+
 # --- EOF ---
