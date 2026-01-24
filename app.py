@@ -1,22 +1,37 @@
 
-# app.py
+# app.py — Alias → Canonical mapping, committing Mappings.csv (canonical) and Aliases.csv (aliases)
 import os
 import io
 import json
 import base64
+import time
 from datetime import datetime
 
 import streamlit as st
 import pandas as pd
-from thefuzz import fuzz  # Tip: use thefuzz[speedup] in requirements for faster scoring
+import requests
+from thefuzz import fuzz  # Tip: add thefuzz[speedup] to requirements for python-Levenshtein
 
 # =========================
 # --- Configuration ---
 # =========================
 CADS_FILE = "CADS.csv"
-VEHICLE_REF_FILE = "vehicle_example.txt"
+VEHICLE_REF_FILE = "vehicle_example.txt"  # optional hinting file
 
 st.set_page_config(page_title="AFF Vehicle Mapping", layout="wide")
+
+# =========================
+# --- GitHub secrets ---
+# =========================
+gh = st.secrets.get("github", {})
+GH_TOKEN   = gh.get("token")
+GH_OWNER   = gh.get("owner")
+GH_REPO    = gh.get("repo")
+GH_BRANCH  = gh.get("branch", "main")
+CANON_PATH = gh.get("path", "Mappings.csv")        # canonical file
+ALIASES_PATH = gh.get("aliases_path", "Aliases.csv")  # alias file
+AUTHOR_NAME  = gh.get("author_name", "AFF Bot")
+AUTHOR_EMAIL = gh.get("author_email", "aff-bot@example.com")
 
 # =========================
 # --- Data Loading ---
@@ -37,6 +52,12 @@ def load_csv(path: str) -> pd.DataFrame:
 cads_df = load_csv(CADS_FILE)
 vehicle_ref_df = load_csv(VEHICLE_REF_FILE)
 
+# Normalize CADS columns that we rely on
+for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']:
+    if col not in cads_df.columns:
+        cads_df[col] = ''
+cads_df = cads_df.fillna('').astype(str)
+
 # =========================
 # --- Helpers ---
 # =========================
@@ -49,10 +70,7 @@ def normalize(s: str) -> str:
     return s
 
 def get_example_make_model(vehicle_name: str):
-    """
-    Try to find Make/Model hints in the VEHICLE_REF_FILE.
-    First exact normalized match, then fuzzy fallback (>=80).
-    """
+    """Optional hint from a reference file (exact or fuzzy)."""
     if vehicle_ref_df.empty or 'Vehicle' not in vehicle_ref_df.columns:
         return None, None
 
@@ -83,8 +101,6 @@ def smart_vehicle_match(
     make: str = "",
     model: str = "",
     trim: str = "",
-    example_make: str | None = None,
-    example_model: str | None = None,
     top_n: int = 20,
     score_cutoff: int = 60
 ) -> pd.DataFrame:
@@ -95,18 +111,11 @@ def smart_vehicle_match(
     if df.empty or not vehicle_q:
         return pd.DataFrame()
 
-    needed = ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']
-    base = df.copy()
-    for col in needed:
-        if col not in base.columns:
-            base[col] = ""
+    work = df.copy()
+    for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']:
+        work[col] = work[col].astype(str).fillna('')
 
-    # Ensure strings
-    for col in ['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID']:
-        base[col] = base[col].astype(str).fillna('')
-
-    # Explicit filters (narrow candidate set first)
-    work = base
+    # Explicit filters
     if year:
         work = work[work['MODEL_YEAR'] == str(year)]
     if make:
@@ -116,17 +125,10 @@ def smart_vehicle_match(
     if trim:
         work = work[work['TRIM'].str.lower().str.contains(trim.lower())]
 
-    # Fallback to example make/model if nothing matches the filters
-    if work.empty and example_make and example_model:
-        work = base[
-            (base['AD_MAKE'].str.lower() == example_make.lower()) &
-            (base['AD_MODEL'].str.lower() == example_model.lower())
-        ]
-
     if work.empty:
         return pd.DataFrame()
 
-    # Combined search string
+    # Combined string and scoring
     work = work.copy()
     work['vehicle_search'] = (
         work['MODEL_YEAR'].str.strip() + ' ' +
@@ -136,10 +138,8 @@ def smart_vehicle_match(
     ).str.replace(r'\s+', ' ', regex=True).str.strip()
 
     q_norm = normalize(vehicle_q)
-    work['vs_norm'] = work['vehicle_search'].map(normalize)
-    work['score'] = work['vs_norm'].map(lambda s: fuzz.token_set_ratio(q_norm, s))
+    work['score'] = work['vehicle_search'].map(lambda s: fuzz.token_set_ratio(q_norm, normalize(s)))
 
-    # Keep top results above cutoff
     work = (
         work[work['score'] >= score_cutoff]
         .sort_values(['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM'],
@@ -159,112 +159,139 @@ def smart_vehicle_match(
     )
 
     cols = ['map_key', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+    for c in cols:
+        if c not in work.columns:
+            work[c] = ""
     return work[cols]
 
 # =========================
-# --- Build Mappings.csv rows from selection ---
+# --- GitHub helpers ---
 # =========================
-def build_mappings_from_selection(final_df: pd.DataFrame, source: str = "user") -> pd.DataFrame:
+def _gh_headers():
+    if not GH_TOKEN:
+        return {"Accept": "application/vnd.github+json"}
+    return {"Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github+json"}
+
+def _gh_contents_url(path: str, ref: str):
+    return f"https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/contents/{path}?ref={ref}"
+
+def github_upsert_csv_with_keys(
+    file_path_in_repo: str,
+    new_rows_df: pd.DataFrame,
+    dedup_keys: list[str],
+    sort_keys: list[str]
+) -> tuple[bool, str]:
     """
-    Convert selected matches to the canonical Mappings.csv schema and dedupe.
-    Output columns: year, make, model, trim, model_code, source
+    Generic upsert: read existing CSV from GitHub, union with new_rows_df,
+    drop duplicates using dedup_keys, sort by sort_keys, commit via Contents API.
     """
-    if final_df is None or final_df.empty:
-        return pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
+    if new_rows_df is None or new_rows_df.empty:
+        return False, "No rows to commit."
 
-    out = final_df.rename(columns={
-        "MODEL_YEAR": "year",
-        "AD_MAKE": "make",
-        "AD_MODEL": "model",
-        "TRIM": "trim",
-        "AD_MFGCODE": "model_code"
-    })[["year","make","model","trim","model_code"]].copy()
+    headers = _gh_headers()
 
-    out["source"] = source
-    for c in ["year","make","model","trim","model_code","source"]:
-        out[c] = out[c].astype(str).str.strip()
+    # Read existing
+    get_url = _gh_contents_url(file_path_in_repo, GH_BRANCH)
+    r = requests.get(get_url, headers=headers, timeout=30)
 
-    out.drop_duplicates(inplace=True)
-    return out
-
-# =========================
-# --- GitHub API Commit (uses st.secrets['github']) ---
-# =========================
-def github_api_commit_mappings(new_rows_df: pd.DataFrame) -> tuple[bool, str]:
-    """
-    Upsert into Mappings.csv in GitHub using the Contents API:
-    - Read existing file (if present)
-    - Append new rows, dedupe, sort
-    - PUT updated file with commit message
-    Secrets required:
-      [github]
-      token, owner, repo, branch
-      (optional) path, author_name, author_email
-    """
-    import requests
-
-    gh = st.secrets.get("github", {})
-    token    = gh.get("token")
-    owner    = gh.get("owner")
-    repo     = gh.get("repo")
-    branch   = gh.get("branch", "main")
-    file_path= gh.get("path", "Mappings.csv")  # default to repo root
-    author_n = gh.get("author_name", "AFF Bot")
-    author_e = gh.get("author_email", "aff-bot@example.com")
-
-    if not token or not owner or not repo:
-        return False, "GitHub token/owner/repo not configured in st.secrets['github']."
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json"
-    }
-
-    # 1) Get current file (if exists) to obtain sha and content
-    get_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}?ref={branch}"
-    r = requests.get(get_url, headers=headers)
+    existing_df = pd.DataFrame(columns=new_rows_df.columns)
     sha = None
-    existing_df = pd.DataFrame(columns=["year","make","model","trim","model_code","source"])
-
     if r.status_code == 200:
-        content_b64 = r.json().get("content", "")
-        sha = r.json().get("sha")
-        decoded = base64.b64decode(content_b64).decode("utf-8", errors="replace")
-        existing_df = pd.read_csv(io.StringIO(decoded), dtype=str).fillna("")
-    elif r.status_code == 404:
-        # file doesn't exist yet; that's OK
-        pass
-    else:
-        return False, f"Failed to read existing file: HTTP {r.status_code} - {r.text}"
+        js = r.json()
+        sha = js.get("sha")
+        decoded = base64.b64decode(js.get("content", "")).decode("utf-8", errors="replace")
+        try:
+            existing_df = pd.read_csv(io.StringIO(decoded), dtype=str).fillna("")
+        except Exception:
+            existing_df = pd.DataFrame(columns=new_rows_df.columns)
+    elif r.status_code not in (404,):
+        return False, f"Failed fetching existing file: HTTP {r.status_code} - {r.text}"
 
-    # 2) Merge, dedupe, sort (optional)
+    # Merge & dedupe
     combined = pd.concat([existing_df, new_rows_df], ignore_index=True).fillna("")
-    combined.drop_duplicates(inplace=True)
-    combined = combined[["year","make","model","trim","model_code","source"]]
-    combined = combined.sort_values(by=["year","make","model","trim","model_code"]).reset_index(drop=True)
+    if dedup_keys:
+        combined = combined.drop_duplicates(subset=dedup_keys)
+    else:
+        combined = combined.drop_duplicates()
+    if sort_keys:
+        combined = combined.sort_values(by=sort_keys).reset_index(drop=True)
 
-    # 3) Re-encode as CSV (utf-8)
-    csv_buffer = io.StringIO()
-    combined.to_csv(csv_buffer, index=False, encoding="utf-8")
-    content_b64 = base64.b64encode(csv_buffer.getvalue().encode("utf-8")).decode("utf-8")
+    # Encode CSV
+    buf = io.StringIO()
+    combined.to_csv(buf, index=False, encoding="utf-8")
+    content_b64 = base64.b64encode(buf.getvalue().encode("utf-8")).decode("utf-8")
 
-    # 4) Commit via PUT
-    put_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}"
-    commit_message = f"chore(mappings): upsert {len(new_rows_df)} row(s) via AFF UI - {datetime.utcnow().isoformat()}Z"
+    # PUT
+    put_url = f"https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/contents/{file_path_in_repo}"
     payload = {
-        "message": commit_message,
+        "message": f"chore(mappings): upsert {len(new_rows_df)} row(s) via AFF UI - {time.time()}",
         "content": content_b64,
-        "branch": branch,
-        "committer": {"name": author_n, "email": author_e}
+        "branch": GH_BRANCH,
+        "committer": {"name": AUTHOR_NAME, "email": AUTHOR_EMAIL}
     }
     if sha:
         payload["sha"] = sha
 
-    r2 = requests.put(put_url, headers=headers, data=json.dumps(payload))
+    r2 = requests.put(put_url, headers=headers, data=json.dumps(payload), timeout=30)
     if r2.status_code in (200, 201):
-        return True, f"Committed to {owner}/{repo}@{branch}:{file_path}"
-    else:
-        return False, f"Commit failed: HTTP {r2.status_code} - {r2.text}"
+        return True, f"Committed to {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{file_path_in_repo}"
+    if r2.status_code == 403:
+        return False, "403 Forbidden on commit. Check PAT Contents: Read/Write and branch protections."
+    if r2.status_code == 401:
+        return False, "401 Unauthorized. Rotate PAT and authorize SSO."
+    return False, f"Commit failed: HTTP {r2.status_code} - {r2.text}"
+
+def commit_alias_and_canonical(
+    alias_input: str,
+    selected_canonical_df: pd.DataFrame,  # expects columns: MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE
+    source: str = "user"
+) -> tuple[bool, str]:
+    """
+    1) Append alias rows to Aliases.csv (dedup on alias_norm + canonical)
+    2) Ensure canonical rows exist in Mappings.csv (dedup on canonical only)
+    """
+    if selected_canonical_df.empty:
+        return False, "No rows selected."
+
+    alias_norm = normalize(alias_input)
+
+    # Build alias rows
+    alias_rows = selected_canonical_df.rename(columns={
+        "MODEL_YEAR":"year", "AD_MAKE":"make", "AD_MODEL":"model",
+        "TRIM":"trim", "AD_MFGCODE":"model_code"
+    })[["year","make","model","trim","model_code"]].copy()
+
+    alias_rows["alias"] = alias_input
+    alias_rows["alias_norm"] = alias_norm
+    alias_rows["source"] = source
+    alias_rows["created_at"] = datetime.utcnow().isoformat() + "Z"
+    for c in alias_rows.columns:
+        alias_rows[c] = alias_rows[c].astype(str).str.strip()
+
+    # 1) Upsert alias rows
+    ok1, msg1 = github_upsert_csv_with_keys(
+        file_path_in_repo=ALIASES_PATH,
+        new_rows_df=alias_rows,
+        dedup_keys=["alias_norm","year","make","model","trim","model_code"],
+        sort_keys=["alias_norm","year","make","model","trim","model_code","created_at"]
+    )
+    if not ok1:
+        return False, f"Aliases commit failed: {msg1}"
+
+    # 2) Ensure canonical rows in Mappings.csv
+    canonical_rows = alias_rows[["year","make","model","trim","model_code","source"]].drop_duplicates(
+        subset=["year","make","model","trim","model_code"]
+    )
+    ok2, msg2 = github_upsert_csv_with_keys(
+        file_path_in_repo=CANON_PATH,
+        new_rows_df=canonical_rows,
+        dedup_keys=["year","make","model","trim","model_code"],
+        sort_keys=["year","make","model","trim","model_code"]
+    )
+    if not ok2:
+        return False, f"Canonical commit failed: {msg2}"
+
+    return True, f"{msg1}; {msg2}"
 
 # =========================
 # --- Session State ---
@@ -274,8 +301,7 @@ if 'show_results' not in st.session_state:
 if 'matches_df' not in st.session_state:
     st.session_state['matches_df'] = pd.DataFrame()
 if 'selection' not in st.session_state:
-    # map_key -> bool
-    st.session_state['selection'] = {}
+    st.session_state['selection'] = {}  # map_key -> bool
 if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
 
@@ -283,11 +309,11 @@ if 'current_query' not in st.session_state:
 # --- Main Page: Search Form ---
 # =========================
 st.title("AFF Vehicle Mapping")
-st.caption("Select one or more CADS rows that match your freeform vehicle input. Supports 1→many mapping.")
+st.caption("Map a freeform vehicle (alias) to one or more CADS canonical rows. Commits both Aliases.csv and Mappings.csv.")
 
 with st.form("search_form_main"):
     st.subheader("Search")
-    vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2025 Land Rover Range Rover P400 SE SWB")
+    vehicle_input = st.text_input("Vehicle (alias, freeform)", placeholder="e.g., 2026 Integra FWD Continuously Variable Transmission")
 
     st.markdown("**YMMT Filter (optional)**")
     c1, c2, c3, c4 = st.columns(4)
@@ -301,7 +327,7 @@ with st.form("search_form_main"):
 
     submitted = st.form_submit_button("Search Vehicles")
 
-# Optional hint from reference file (still on main page)
+# Optional hint from reference file
 example_make, example_model = (None, None)
 if vehicle_input:
     example_make, example_model = get_example_make_model(vehicle_input)
@@ -319,8 +345,6 @@ if submitted:
         make=make_input,
         model=model_input,
         trim=trim_input,
-        example_make=example_make,
-        example_model=example_model,
         top_n=top_n,
         score_cutoff=score_cutoff
     )
@@ -329,7 +353,7 @@ if submitted:
     st.session_state['show_results'] = not matches_df.empty
     st.session_state['current_query'] = vehicle_input
 
-    # Reset or preserve selection only for keys in current results
+    # Reset/preserve selection only for the current results
     prev = st.session_state['selection']
     st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
 
@@ -371,18 +395,12 @@ if st.session_state['show_results']:
             column_config={
                 "Select": st.column_config.CheckboxColumn(help="Include this row in the mapping"),
                 "score": st.column_config.NumberColumn(format="%d", help="Fuzzy match score (0–100)"),
-                "MODEL_YEAR": st.column_config.TextColumn(),
-                "AD_MAKE": st.column_config.TextColumn(),
-                "AD_MODEL": st.column_config.TextColumn(),
-                "TRIM": st.column_config.TextColumn(),
-                "AD_MFGCODE": st.column_config.TextColumn(help="Model Code"),
-                "STYLE_ID": st.column_config.TextColumn(),
-                "vehicle_search": st.column_config.TextColumn(help="Combined search string")
+                "AD_MFGCODE": st.column_config.TextColumn(label="Model Code"),
             },
             disabled=['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
         )
 
-        # Persist checkbox edits back to session_state (align by index)
+        # Persist checkbox edits back to session_state using index alignment
         for i, row in edited.iterrows():
             mk = matches_df.loc[i, 'map_key']
             st.session_state['selection'][mk] = bool(row['Select'])
@@ -394,42 +412,55 @@ if st.session_state['show_results']:
         st.markdown("---")
         st.write(f"Selected: **{len(final_df)}** row(s)")
 
-        # Preview mappings to be committed
-        mappings_df = build_mappings_from_selection(final_df, source="user")
-        if not mappings_df.empty:
-            st.caption("Preview of rows to commit to Mappings.csv")
-            st.dataframe(mappings_df, use_container_width=True)
+        # Build canonical preview (for clarity)
+        canonical_preview = final_df.rename(columns={
+            "MODEL_YEAR": "year",
+            "AD_MAKE": "make",
+            "AD_MODEL": "model",
+            "TRIM": "trim",
+            "AD_MFGCODE": "model_code"
+        })[["year","make","model","trim","model_code"]].copy()
+        canonical_preview["source"] = "user"
 
-        cA, cB, cC = st.columns([1, 1, 1])
+        # Build alias preview (alias → canonical)
+        alias_preview = canonical_preview.copy()
+        alias_preview.insert(0, "alias", st.session_state.get("current_query", ""))
+        alias_preview.insert(1, "alias_norm", normalize(st.session_state.get("current_query", "")))
+        alias_preview["created_at"] = datetime.utcnow().isoformat() + "Z"
+
+        if not final_df.empty:
+            st.caption("Alias rows to be appended to Aliases.csv")
+            st.dataframe(alias_preview, use_container_width=True)
+            st.caption("Canonical rows ensured in Mappings.csv")
+            st.dataframe(canonical_preview, use_container_width=True)
+
+        cA, cB = st.columns([1, 1])
         with cA:
-            if st.button("Submit Mapping"):
+            if st.button("Commit to GitHub (Aliases + Mappings)"):
                 if final_df.empty:
-                    st.warning("No rows selected.")
-                else:
-                    st.success("Mapping submitted!")
-                    st.dataframe(final_df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']].reset_index(drop=True))
-
-        with cB:
-            if not final_df.empty:
-                csv = final_df[['MODEL_YEAR','AD_MAKE','AD_MODEL','TRIM','AD_MFGCODE','STYLE_ID']].to_csv(index=False)
-                st.download_button(
-                    "Download mapping as CSV",
-                    data=csv,
-                    file_name="vehicle_mapping.csv",
-                    mime="text/csv"
-                )
-
-        with cC:
-            commit_btn = st.button("Commit to GitHub")
-            if commit_btn:
-                if mappings_df.empty:
                     st.warning("No rows selected to commit.")
+                elif not GH_TOKEN or not GH_OWNER or not GH_REPO:
+                    st.error("GitHub secrets not configured. Cannot commit.")
                 else:
-                    ok, msg = github_api_commit_mappings(mappings_df)
+                    ok, msg = commit_alias_and_canonical(
+                        alias_input=st.session_state.get("current_query", ""),
+                        selected_canonical_df=final_df[["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE"]],
+                        source="user"
+                    )
                     if ok:
                         st.success(msg)
                     else:
                         st.error(msg)
+
+        with cB:
+            if not final_df.empty:
+                csv_blob = final_df[["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE","STYLE_ID"]].to_csv(index=False)
+                st.download_button(
+                    "Download Selected (CSV)",
+                    data=csv_blob,
+                    file_name="vehicle_mapping_selection.csv",
+                    mime="text/csv"
+                )
 
 # =========================
 # --- Footer / Tips ---
@@ -437,10 +468,11 @@ if st.session_state['show_results']:
 with st.expander("Tips & Notes", expanded=False):
     st.markdown(
         """
-- Enter a freeform vehicle (e.g., `2025 Land Rover Range Rover P400 SE SWB`) and optional YMMT filters, then click **Search Vehicles**.
-- The results table stays open while you click the **Select** checkboxes (supports 1→many).
-- **Commit to GitHub** appends/dedupes into `Mappings.csv` on your configured branch.
-- For performance on large CADS, install `thefuzz[speedup]` to enable `python-Levenshtein`.
+- This UI supports **many aliases → one canonical** mapping.  
+  - **Aliases.csv** stores every freeform input you commit (dedup on alias_norm + canonical).  
+  - **Mappings.csv** remains canonical, deduped by (year, make, model, trim, model_code).
+- Mozenda should continue reading **Mappings.csv** (canonical). When joined to CADS, it may fan out 1→many per canonical—this is expected and correct.
+- Ensure your GitHub token has **Contents: Read/Write** permissions and is **SSO-authorized** if your org enforces SSO.
         """
     )
 
