@@ -171,13 +171,16 @@ if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
 
 # =========================
-# --- Sidebar Search Form ---
+# --- Main Page: Search Form ---
 # =========================
-with st.sidebar.form("search_form"):
+st.title("AFF Vehicle Mapping")
+st.caption("Select one or more CADS rows that match your freeform vehicle input. Supports 1→many mapping.")
+
+with st.form("search_form_main"):
     st.subheader("Search")
     vehicle_input = st.text_input("Vehicle (freeform)", placeholder="e.g., 2024 Toyota RAV4 XLE")
 
-    st.caption("YMMT Filter (optional)")
+    st.markdown("**YMMT Filter (optional)**")
     c1, c2, c3, c4 = st.columns(4)
     year_input = c1.text_input("Year")
     make_input = c2.text_input("Make")
@@ -189,12 +192,12 @@ with st.sidebar.form("search_form"):
 
     submitted = st.form_submit_button("Search Vehicles")
 
-# Optional hint from reference file
+# Optional hint from reference file (still on main page)
 example_make, example_model = (None, None)
 if vehicle_input:
     example_make, example_model = get_example_make_model(vehicle_input)
     if example_make or example_model:
-        st.sidebar.caption(f"Ref hint → Make: {example_make or '—'}, Model: {example_model or '—'}")
+        st.caption(f"Ref hint → Make: {example_make or '—'}, Model: {example_model or '—'}")
 
 # =========================
 # --- Handle Search Submit ---
@@ -222,11 +225,8 @@ if submitted:
     st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
 
 # =========================
-# --- Main Area: Results ---
+# --- Results ---
 # =========================
-st.title("AFF Vehicle Mapping")
-st.caption("Select one or more CADS rows that match your freeform vehicle input. Supports 1→many mapping.")
-
 if st.session_state['show_results']:
     matches_df = st.session_state['matches_df']
 
@@ -254,7 +254,6 @@ if st.session_state['show_results']:
             view['Select'] = True
 
         # Single editable table with the checkbox inside
-        # (This avoids a second checkbox list and prevents the "closing" effect)
         display_cols = ['Select', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
         edited = st.data_editor(
             view[display_cols],
@@ -275,7 +274,6 @@ if st.session_state['show_results']:
         )
 
         # Persist checkbox edits back to session_state using index alignment
-        # (edited has same index order as view/matches_df)
         for i, row in edited.iterrows():
             mk = matches_df.loc[i, 'map_key']
             st.session_state['selection'][mk] = bool(row['Select'])
@@ -312,7 +310,7 @@ if st.session_state['show_results']:
 with st.expander("Tips & Notes", expanded=False):
     st.markdown(
         """
-- Use the sidebar to enter a freeform vehicle (e.g., `2024 Toyota RAV4 XLE`) and optional YMMT filters.
+- Enter a freeform vehicle (e.g., `2024 Toyota RAV4 XLE`) and optional YMMT filters, then click **Search Vehicles**.
 - The results table stays open while you click the **Select** checkboxes.
 - This UI supports mapping **one input to many** CADS rows; download or submit your selection.
 - For performance on large CADS, install `thefuzz[speedup]` to enable `python-Levenshtein`.
