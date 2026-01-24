@@ -1,39 +1,41 @@
 
-# basic_app.py — Read-only Mozenda outlet with Search + Clear and tiered matching
-# - Pulls Mappings.csv from GitHub (Contents API; falls back to raw if needed)
-# - Joins with local CADS.csv to add STYLE_ID (and optional attributes if present)
-# - Top search bar with "Search" and "Clear" buttons
-# - Tiered fuzzy: FULL (YMMT + model_code + attrs) then LENIENT (ignores drivetrain/trans tokens)
-# - Mozenda mode: ?mozenda=1&format=csv|html|json[&q=...][&score=...][&limit=...][&lenient=0|1]
+# basic_app.py — Read-only Mozenda outlet with alias-only exact lookup (no fuzzy)
+# - Pulls Mappings.csv (canonical) and Aliases.csv (alias -> canonical) from GitHub
+# - Joins canonical mappings to local CADS.csv to add STYLE_ID (and any CADS fields you want)
+# - Search bar + Mozenda endpoints use EXACT alias match (case-insensitive, whitespace-normalized)
+# - If alias isn't found, returns no results
 
-import base64, io
-from typing import Optional, List
+import base64
+import io
+from typing import Optional
 import pandas as pd
 import streamlit as st
 import requests
-from rapidfuzz import fuzz
 
 # ---------------- Page Config ----------------
-st.set_page_config(page_title="AFF Vehicle Mapping - Read Only", layout="wide")
-st.title("AFF Vehicle Mapping (Read Only)")
+st.set_page_config(page_title="AFF Vehicle Mapping - Read Only (Alias Exact)", layout="wide")
+st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup")
 
 # ---------------- Secrets / GitHub ----------------
 gh = st.secrets.get("github", {})
-GH_TOKEN  = gh.get("token")            # optional if repo is public
-GH_OWNER  = gh.get("owner")            # e.g., "klb-text"
-GH_REPO   = gh.get("repo")             # e.g., "map"
-GH_BRANCH = gh.get("branch", "main")
-MAP_PATH  = gh.get("path", "Mappings.csv")  # default Mappings.csv at repo root
+GH_TOKEN   = gh.get("token")             # optional if repo is public
+GH_OWNER   = gh.get("owner")             # e.g., "klb-text"
+GH_REPO    = gh.get("repo")              # e.g., "map"
+GH_BRANCH  = gh.get("branch", "main")
+MAP_PATH   = gh.get("path", "Mappings.csv")            # canonical file
+ALIASES_PATH = gh.get("aliases_path", "Aliases.csv")   # alias -> canonical file
 
 # ---------------- Local Files ----------------
 CADS_FILE = "CADS.csv"  # local CADS.csv
-# Expected Mappings.csv columns: year,make,model,trim,model_code,source
-# Expected CADS columns: MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE, STYLE_ID
-# Optional CADS columns (if available): DRIVETRAIN/DRIVE_TYPE, TRANSMISSION/TRANS_DESC
+# Expected:
+#   Mappings.csv columns: year,make,model,trim,model_code,source
+#   Aliases.csv  columns: alias,alias_norm,year,make,model,trim,model_code,source,created_at
+#   CADS columns: MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE, STYLE_ID
 
 # ---------------- Utils ----------------
 @st.cache_data
 def load_local_csv(path: str) -> pd.DataFrame:
+    """Robust CSV loader that auto-detects delimiter and returns strings."""
     return pd.read_csv(path, sep=None, engine="python", dtype=str).fillna("")
 
 def _gh_headers(token: Optional[str]):
@@ -49,71 +51,48 @@ def _gh_raw_url(owner: str, repo: str, path: str, ref: str):
     return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
 
 def normalize(s: str) -> str:
+    """Case-insensitive, collapses whitespace and common separators for exact-ish equality."""
     s = str(s or "")
     s = s.strip().lower().replace("-", " ").replace("/", " ")
     return " ".join(s.split())
 
-# domain tokens we may ignore for lenient match
-DRIVETRAIN_TOKENS = {
-    "fwd","front wheel drive","front-wheel drive","front wheel-drive",
-    "awd","all wheel drive","all-wheel drive","all wheel-drive",
-    "4wd","4x4","four wheel drive","four-wheel drive",
-    "rwd","rear wheel drive","rear-wheel drive","rear wheel-drive",
-    "2wd","two wheel drive","two-wheel drive"
-}
-TRANSMISSION_TOKENS = {
-    "cvt","continuously variable transmission",
-    "automatic","auto","at","a/t",
-    "manual","mt","m/t","stick",
-    "dct","dual clutch","dual-clutch"
-}
-
-def strip_attr_tokens(text: str) -> str:
-    """Remove drivetrain/transmission tokens for lenient matching."""
-    t = " " + normalize(text) + " "
-    # remove multi-word first to avoid partial overlaps
-    multi = sorted([x for x in DRIVETRAIN_TOKENS | TRANSMISSION_TOKENS if " " in x], key=len, reverse=True)
-    single = sorted([x for x in DRIVETRAIN_TOKENS | TRANSMISSION_TOKENS if " " not in x], key=len, reverse=True)
-    for w in multi:
-        t = t.replace(f" {w} ", " ")
-    for w in single:
-        t = t.replace(f" {w} ", " ")
-    return " ".join(t.split())
-
-@st.cache_data(show_spinner=False)
-def fetch_mappings_github(owner: str, repo: str, path: str, ref: str, token: Optional[str]) -> pd.DataFrame:
-    """
-    Try Contents API (supports private) with PAT; on 401/403 or missing token,
-    fallback to raw.githubusercontent.com (works for public repos).
-    Returns empty DF if not found or error.
-    """
-    # 1) Contents API attempt
+def _fetch_csv_contents_api(owner: str, repo: str, path: str, ref: str, token: Optional[str]) -> Optional[pd.DataFrame]:
     try:
         r = requests.get(_gh_contents_url(owner, repo, path, ref), headers=_gh_headers(token), timeout=20)
         if r.status_code == 200:
             content_b64 = r.json().get("content", "")
             decoded = base64.b64decode(content_b64).decode("utf-8", errors="replace")
             return pd.read_csv(io.StringIO(decoded), dtype=str).fillna("")
-        # else: fall back
+        return None
     except Exception:
-        pass
+        return None
 
-    # 2) Raw fallback (public only)
+def _fetch_csv_raw(owner: str, repo: str, path: str, ref: str) -> Optional[pd.DataFrame]:
     try:
         raw_url = _gh_raw_url(owner, repo, path, ref)
-        r2 = requests.get(raw_url, timeout=20)
-        if r2.status_code == 200:
-            return pd.read_csv(io.StringIO(r2.text), dtype=str).fillna("")
-        else:
-            return pd.DataFrame()
+        r = requests.get(raw_url, timeout=20)
+        if r.status_code == 200:
+            return pd.read_csv(io.StringIO(r.text), dtype=str).fillna("")
+        return None
     except Exception:
-        return pd.DataFrame()
+        return None
+
+@st.cache_data(show_spinner=False)
+def fetch_csv_github(owner: str, repo: str, path: str, ref: str, token: Optional[str]) -> pd.DataFrame:
+    """
+    Try Contents API first (handles private repos with PAT), fallback to raw (for public).
+    Returns empty DF if not found or error.
+    """
+    df = _fetch_csv_contents_api(owner, repo, path, ref, token)
+    if df is None:
+        df = _fetch_csv_raw(owner, repo, path, ref) or pd.DataFrame()
+    return df
 
 @st.cache_data(show_spinner=False)
 def join_mappings_to_cads(mappings_df: pd.DataFrame, cads_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Join Mappings -> CADS on (year, make, model, trim, model_code) -> (MODEL_YEAR, AD_MAKE, AD_MODEL, TRIM, AD_MFGCODE).
-    Add search_text_full (includes attrs) and search_text_lenient (attrs removed) per row.
+    Join canonical Mappings -> CADS on (year,make,model,trim,model_code).
+    Adds a stable 'canon_key' for fast lookups.
     """
     if mappings_df.empty or cads_df.empty:
         return pd.DataFrame()
@@ -125,15 +104,9 @@ def join_mappings_to_cads(mappings_df: pd.DataFrame, cads_df: pd.DataFrame) -> p
     for c in ["year","make","model","trim","model_code","source"]:
         if c not in md.columns:
             md[c] = ""
-
     for c in ["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE","STYLE_ID"]:
         if c not in cd.columns:
             cd[c] = ""
-
-    # Optional CADS attributes that may help match variants
-    drive_cols = [c for c in cd.columns if c.upper() in {"DRIVETRAIN","DRIVE_TRAIN","DRIVE TYPE","DRIVE_TYPE"}]
-    trans_cols = [c for c in cd.columns if c.upper() in {"TRANS","TRANSMISSION","TRANS_DESC","TRANS_DESCRIPTION","TRANSMISSION_DESCRIPTION"}]
-    attr_cols = drive_cols + trans_cols
 
     merged = md.merge(
         cd,
@@ -143,68 +116,67 @@ def join_mappings_to_cads(mappings_df: pd.DataFrame, cads_df: pd.DataFrame) -> p
         suffixes=("","_cad")
     )
 
-    # Build search strings
-    base_text = (
-        merged["year"].astype(str).str.strip() + " " +
-        merged["make"].astype(str).str.strip() + " " +
-        merged["model"].astype(str).str.strip() + " " +
-        merged["trim"].astype(str).str.strip() + " " +
-        merged["model_code"].astype(str).str.strip()
+    merged["canon_key"] = (
+        merged["year"].astype(str) + "|" +
+        merged["make"].astype(str) + "|" +
+        merged["model"].astype(str) + "|" +
+        merged["trim"].astype(str) + "|" +
+        merged["model_code"].astype(str)
     )
 
-    if attr_cols:
-        attrs_text = merged[attr_cols].apply(lambda r: " ".join([str(x) for x in r if str(x).strip() != ""]), axis=1)
-    else:
-        attrs_text = ""
-
-    merged["search_text_full"] = (
-        (base_text + " " + attrs_text).astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
-    )
-    merged["search_text_lenient"] = merged["search_text_full"].map(strip_attr_tokens)
-
-    # Keep stable schema for Mozenda & display
-    cols = ["year","make","model","trim","model_code","source","STYLE_ID","search_text_full","search_text_lenient"]
+    # Keep a compact, stable schema; add more CADS fields here if needed
+    cols = ["year","make","model","trim","model_code","source","STYLE_ID","canon_key"]
     for c in cols:
         if c not in merged.columns:
             merged[c] = ""
     return merged[cols].reset_index(drop=True)
 
-def fuzzy_filter_tiered(df: pd.DataFrame, query: str, score_cutoff: int = 70, limit: int = 50, force_lenient: bool = False) -> pd.DataFrame:
+def exact_alias_filter(
+    aliases_df: pd.DataFrame,
+    joined_df: pd.DataFrame,
+    alias_query: str
+) -> pd.DataFrame:
     """
-    Tiered matching:
-      - FULL score: token_set_ratio(query, search_text_full)
-      - LENIENT score: token_set_ratio(query, search_text_lenient)  (ignores drivetrain/trans tokens)
-    Final score = max(FULL, LENIENT).
-    If force_lenient=True, use only LENIENT for matching (useful when you *know* input has extra attrs).
+    Exact (normalized) alias-only pipeline:
+      - Normalize the input alias string.
+      - Match aliases_df['alias_norm'] == normalized input.
+      - Collect canonical keys; constrain joined_df to those canonical keys.
+      - If no alias match -> return empty.
     """
-    if df.empty:
-        return df
-    if not query:
-        out = df.copy()
-        out["score_full"] = 0
-        out["score_lenient"] = 0
-        out["score"] = 0
-        out["matched_mode"] = ""
-        return out.head(limit)
+    if joined_df.empty or aliases_df.empty:
+        return pd.DataFrame()
 
-    qn = normalize(query)
-    tmp = df.copy()
+    qn = normalize(alias_query)
+    if not qn:
+        return pd.DataFrame()
 
-    if force_lenient:
-        tmp["score_full"] = 0
-        tmp["score_lenient"] = tmp["search_text_lenient"].map(lambda s: fuzz.token_set_ratio(qn, normalize(s)))
-        tmp["score"] = tmp["score_lenient"]
-        tmp["matched_mode"] = "lenient"
+    # Normalize alias_norm column (derive if missing)
+    al = aliases_df.copy()
+    if "alias_norm" not in al.columns:
+        al["alias_norm"] = al["alias"].astype(str).map(normalize)
     else:
-        tmp["score_full"] = tmp["search_text_full"].map(lambda s: fuzz.token_set_ratio(qn, normalize(s)))
-        tmp["score_lenient"] = tmp["search_text_lenient"].map(lambda s: fuzz.token_set_ratio(qn, normalize(s)))
-        tmp["score"] = tmp[["score_full","score_lenient"]].max(axis=1)
-        tmp["matched_mode"] = tmp.apply(lambda r: "full" if r["score_full"] >= r["score_lenient"] else "lenient", axis=1)
+        al["alias_norm"] = al["alias_norm"].astype(str).map(normalize)
 
-    tmp = tmp[tmp["score"] >= score_cutoff].sort_values(
-        ["score","matched_mode","year","make","model","trim"], ascending=[False, True, False, True, True, True]
+    # Build canon_key in aliases
+    al["canon_key"] = (
+        al["year"].astype(str) + "|" +
+        al["make"].astype(str) + "|" +
+        al["model"].astype(str) + "|" +
+        al["trim"].astype(str) + "|" +
+        al["model_code"].astype(str)
     )
-    return tmp.head(limit)
+
+    # Exact normalized match only (no fuzzy)
+    hits = al[al["alias_norm"] == qn]
+    if hits.empty:
+        return pd.DataFrame()
+
+    keys = set(hits["canon_key"].tolist())
+    out = joined_df[joined_df["canon_key"].isin(keys)].copy()
+
+    # If you want to strictly preserve alias order, you could join back on alias rows;
+    # but for harvesting, this set is typically sufficient.
+    return out.reset_index(drop=True)
 
 # ---------------- Load CADS ----------------
 try:
@@ -213,99 +185,49 @@ except Exception as e:
     st.error(f"Failed to load {CADS_FILE}: {e}")
     st.stop()
 
-# ---------------- Pull Mappings (read-only) ----------------
-mappings_df = fetch_mappings_github(GH_OWNER, GH_REPO, MAP_PATH, GH_BRANCH, GH_TOKEN)
+# ---------------- Pull GitHub CSVs (read-only) ----------------
+mappings_df = fetch_csv_github(GH_OWNER, GH_REPO, MAP_PATH, GH_BRANCH, GH_TOKEN)
+aliases_df  = fetch_csv_github(GH_OWNER, GH_REPO, ALIASES_PATH, GH_BRANCH, GH_TOKEN)
 
 # ---------------- Build joined dataset ----------------
 joined_df = join_mappings_to_cads(mappings_df, cads_df)
 
 # ---------------- Query params (for Mozenda and deep links) ----------------
-params      = st.experimental_get_query_params()
-q_param     = params.get("q", [""])[0]                  # freeform q
-score_param = int(params.get("score", [70])[0])         # min score
-limit_param = int(params.get("limit", [50])[0])         # top N
-lenient_qp  = params.get("lenient", ["0"])[0] == "1"    # force lenient matching
-is_mozenda  = params.get("mozenda", ["0"])[0] == "1"
-out_format  = params.get("format", ["csv"])[0].lower()  # csv|html|json (csv default)
+params     = st.experimental_get_query_params()
+q_param    = params.get("q", [""])[0]                  # the exact alias you mapped in app.py
+is_mozenda = params.get("mozenda", ["0"])[0] == "1"
+out_format = params.get("format", ["csv"])[0].lower()  # csv|html|json (csv default)
 
-# ---------------- Session state for interactive search ----------------
-if "search_query" not in st.session_state:
-    st.session_state["search_query"] = q_param
-if "search_score" not in st.session_state:
-    st.session_state["search_score"] = score_param
-if "search_limit" not in st.session_state:
-    st.session_state["search_limit"] = limit_param
-if "force_lenient" not in st.session_state:
-    st.session_state["force_lenient"] = lenient_qp
-if "search_results" not in st.session_state:
-    st.session_state["search_results"] = pd.DataFrame()
-
-# ---------------- Top Search + Buttons ----------------
-st.header("Search Already-Mapped Vehicles")
-
+# ---------------- Search UI (Exact alias) ----------------
+st.header("Search by Alias (Exact, case-insensitive)")
 with st.form("search_form"):
-    colA, colB, colC, colD = st.columns([2, 1, 1, 1])
-    with colA:
-        q_input = st.text_input(
-            "Vehicle (freeform)",
-            value=st.session_state["search_query"],
-            placeholder="e.g., 2026 Integra FWD Continuously Variable Transmission"
-        )
-    with colB:
-        score_input = st.slider("Min score", 0, 100, st.session_state["search_score"], 5)
-    with colC:
-        limit_input = st.number_input("Max rows", min_value=1, max_value=200, value=st.session_state["search_limit"], step=1)
-    with colD:
-        force_lenient = st.checkbox("Force lenient (ignore drive/trans)", value=st.session_state["force_lenient"],
-                                    help="When on, matching ignores drivetrain & transmission tokens (FWD/AWD/RWD, CVT/AT/MT/DCT).")
-
+    q_input = st.text_input(
+        "Alias (paste exactly what you mapped in app.py)",
+        value=q_param,
+        placeholder="e.g., 2026 Integra FWD Continuously Variable Transmission"
+    )
     do_search = st.form_submit_button("Search")
 
-# Clear button outside the form so it fires immediately
 clear_clicked = st.button("Clear")
 
-if clear_clicked:
-    st.session_state["search_query"] = ""
-    st.session_state["search_score"] = 70
-    st.session_state["search_limit"] = 50
-    st.session_state["force_lenient"] = False
+if "search_results" not in st.session_state:
     st.session_state["search_results"] = pd.DataFrame()
-    # Clear query params
+if "search_alias" not in st.session_state:
+    st.session_state["search_alias"] = q_param
+
+if clear_clicked:
+    st.session_state["search_alias"] = ""
+    st.session_state["search_results"] = pd.DataFrame()
     st.experimental_set_query_params()
 elif do_search:
-    # Persist inputs
-    st.session_state["search_query"] = q_input
-    st.session_state["search_score"] = int(score_input)
-    st.session_state["search_limit"] = int(limit_input)
-    st.session_state["force_lenient"] = bool(force_lenient)
-
-    # Compute results with tiered matching
-    st.session_state["search_results"] = fuzzy_filter_tiered(
-        joined_df,
-        query=q_input,
-        score_cutoff=int(score_input),
-        limit=int(limit_input),
-        force_lenient=bool(force_lenient)
-    )
-
-    # Set query params for shareable link / Mozenda parity
-    st.experimental_set_query_params(
-        q=q_input,
-        score=int(score_input),
-        limit=int(limit_input),
-        lenient=int(bool(force_lenient))
-    )
+    st.session_state["search_alias"] = q_input
+    st.session_state["search_results"] = exact_alias_filter(aliases_df, joined_df, q_input)
+    st.experimental_set_query_params(q=q_input)
 
 # ---------------- Mozenda Mode: API-like outlet ----------------
 if is_mozenda:
-    out_df = fuzzy_filter_tiered(
-        joined_df,
-        query=q_param,
-        score_cutoff=score_param,
-        limit=limit_param,
-        force_lenient=lenient_qp
-    )
-    payload_df = out_df.drop(columns=["search_text_full","search_text_lenient","score_full","score_lenient","score","matched_mode"], errors="ignore")
+    out_df = exact_alias_filter(aliases_df, joined_df, q_param)
+    payload_df = out_df  # already minimal schema; add/remove columns as needed
     if out_format == "json":
         st.write(payload_df.to_json(orient="records"))
     elif out_format == "html":
@@ -316,28 +238,28 @@ if is_mozenda:
 
 # ---------------- Human-friendly Preview ----------------
 if mappings_df.empty:
-    st.warning(
-        "Mappings.csv not found (or unauthorized). This page lists only vehicles that have already been mapped. "
-        "If your repo is private, make sure your token has Contents: Read and is SSO-authorized, or make the repo/file public."
-    )
+    st.warning("Mappings.csv not found (or unauthorized).")
 else:
-    st.success(f"Loaded {len(mappings_df)} mapped rows from GitHub: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
+    st.success(f"Loaded {len(mappings_df)} canonical mappings from GitHub: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
+
+if aliases_df.empty:
+    st.warning("Aliases.csv not found. Searches require alias entries created in app.py.")
+else:
+    st.caption(f"Aliases available: {len(aliases_df)}")
 
 st.subheader("Results")
 results_df = st.session_state["search_results"]
-if results_df.empty and st.session_state["search_query"]:
-    st.info("No mapped rows matched your search. Try lowering the score, increasing the limit, or turning on 'Force lenient'.")
+if results_df.empty and st.session_state["search_alias"]:
+    st.info("No results for that alias. Ensure you pasted the exact title you mapped in app.py.")
 elif not results_df.empty:
-    # Show the table without internal search columns
-    show_cols = [c for c in results_df.columns if c not in {"search_text_full","search_text_lenient","score_full","score_lenient"}]
-    st.dataframe(results_df[show_cols], hide_index=True, use_container_width=True)
+    st.dataframe(results_df, hide_index=True, use_container_width=True)
 
 # Helpful endpoints
 st.markdown("---")
-st.subheader("Mozenda Endpoints (copy & use in your agent)")
+st.subheader("Mozenda Endpoints")
 base_url = st.request.url.split("?")[0] if hasattr(st, "request") else ""
-st.code(f"{base_url}?mozenda=1&format=csv&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission&score=70&limit=50&lenient=1", language="text")
-st.code(f"{base_url}?mozenda=1&format=json&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission&score=70&limit=50&lenient=1", language="text")
-st.code(f"{base_url}?mozenda=1&format=html&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission&score=70&limit=50&lenient=1", language="text")
+st.code(f"{base_url}?mozenda=1&format=csv&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission", language="text")
+st.code(f"{base_url}?mozenda=1&format=json&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission", language="text")
+st.code(f"{base_url}?mozenda=1&format=html&q=2026%20Integra%20FWD%20Continuously%20Variable%20Transmission", language="text")
 
 # --- EOF ---
