@@ -1,4 +1,7 @@
 year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
+2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
+2026,Cadillac,VISTIQ,Premium Luxury,6MB56/1SE,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
+2026,Cadillac,VISTIQ,Sport,6MC56/1SF,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
 2026,Acura,Integra,Type S,DE5G9TEW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
 2026,Acura,Integra,w/A-Spec Package,DE4H3TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
