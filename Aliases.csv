@@ -140,6 +140,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Escape,ST-Line,U9M/300A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,ST-Line Elite,U9P/500A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,ST-Line Select,U9N/400A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
+2025,Ford,Escape,PHEV,U0E/700A,2025 Ford Escape PHEV,2025 ford escape phev,user,2026-01-27T19:52:03.827839Z,mapped
 2025,Ford,Expedition,Active,U1J/200A,2025 Ford Expedition Active 4x4,2025 ford expedition active 4x4,user,2026-01-27T19:48:48.707596Z,mapped
 2025,Ford,Explorer,Active,K7D/200A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
