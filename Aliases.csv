@@ -120,6 +120,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,Integra,,DE4H2SJW,2025 INTEGRA Exclude Type S,2025 integra exclude type s,user,2026-01-27T16:07:16.286941Z,mapped
 2025,Acura,Integra,Type S,DE5G9SEW,2025 INTEGRA Type S,2025 integra type s,user,2026-01-27T16:08:51.626754Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-01-27T15:25:39.100368Z,mapped
+2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
 2025,Mazda,CX-30,2.5 Carbon Turbo,C30 CE TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
