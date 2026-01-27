@@ -33,6 +33,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,Q5,S line Premium Plus,FYTCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
 2025,Audi,Q5,S line Prestige,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
 2025,Audi,Q5,S line Prestige,FYTCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,SQ5,Premium,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
+2025,Audi,SQ5,Premium,FYTS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
+2025,Audi,SQ5,Premium Plus,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
+2025,Audi,SQ5,Premium Plus,FYTS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
+2025,Audi,SQ5,Prestige,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
+2025,Audi,SQ5,Prestige,FYTS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ Premium,2025 brz premium,user,2026-01-27T15:17:55.043212Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
