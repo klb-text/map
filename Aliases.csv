@@ -7,6 +7,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
 2025,Fiat,FIAT 500e,,,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T18:20:20.998215Z,no_data
 2025,Honda,Accord Hybrid,Sport,CY2F5SJW,2025 Accord Hybrid Sport,2025 accord hybrid sport,user,2026-01-27T18:41:32.495491Z,mapped
+2025,Honda,Accord Sedan,,,2025 Accord LX,2025 accord lx,user,2026-01-27T18:43:05.054595Z,no_data
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Advance Package,SA1H7SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Package,SA1H5SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
