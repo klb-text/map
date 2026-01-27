@@ -291,6 +291,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD 1.5L Gas,2026 ford escape active awd 1.5l gas,user,2026-01-27T19:21:11.444920Z,mapped
 2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape PHEV,2026 ford escape phev,user,2026-01-27T19:21:46.748771Z,mapped
+2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,Platinum,K7H/600A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,Platinum,K8H/600A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,ST,K7G/400A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,ST,K8G/400A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
