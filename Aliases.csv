@@ -140,6 +140,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Explorer,ST,K8G/400A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,ST-Line,K7K/300A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,ST-Line,K8K/300A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
+2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Package,2025 ford explorer active 4wd with comfort package,user,2026-01-27T19:47:37.049427Z,mapped
 2025,Ford,Mustang,Dark Horse,P8R/600A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
