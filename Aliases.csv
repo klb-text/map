@@ -248,6 +248,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
+2025,Kia,Niro,LX,G4222,2025 Niro LX FWD,2025 niro lx fwd,user,2026-01-27T19:55:06.134279Z,mapped
 2025,Hyundai,Palisade,Calligraphy,J1472A65/01,2025 PALISADE CALLIGRAPHY AWD,2025 palisade calligraphy awd,user,2026-01-27T19:12:05.992768Z,mapped
 2025,Hyundai,Palisade,Calligraphy,J1472F65/01,2025 PALISADE CALLIGRAPHY FWD,2025 palisade calligraphy fwd,user,2026-01-27T19:11:56.225835Z,mapped
 2025,Hyundai,Palisade,Calligraphy Night Edition,J1492A65/01,2025 PALISADE CALLIGRAPHY NIGHT,2025 palisade calligraphy night,user,2026-01-27T19:12:14.905612Z,mapped
