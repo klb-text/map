@@ -34,6 +34,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,Integra,w/A-Spec Technology Package,DE4G7TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
 2026,Acura,Integra,w/A-Spec Technology Package,DE4G7TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
 2026,Acura,Integra,,DE4H2TJW,2026 Integra FWD Continuously Variable Transmission,2026 integra fwd continuously variable transmission,user,2026-01-24T18:40:49.132210Z,
+2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
+2026,Volkswagen,Jetta GLI,Autobahn,BU59VZ,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,Type S w/Advance Package,YD8H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/A-Spec Advance Package,YE1H9TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
