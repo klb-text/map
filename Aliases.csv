@@ -109,6 +109,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang,GT,P8C/300A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,GT Premium,P8C/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,GT Premium,P8F/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang Coupe EcoBoost Auto Transmission,2025 ford mustang coupe ecoboost auto transmission,user,2026-01-27T19:19:19.389526Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
