@@ -231,6 +231,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,IONIQ 5 N,,5N4A2AEZ/01,2025 IONIQ 5 N N,2025 ioniq 5 n n,user,2026-01-27T19:03:26.759279Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-01-27T15:25:39.100368Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:02:52.423384Z,mapped
+2025,Lexus,IS 350,IS 350 F SPORT Design,9504/FM,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:03:02.841378Z,mapped
 2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
