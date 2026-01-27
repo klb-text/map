@@ -43,9 +43,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,Q5,S line Premium Plus,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
 2025,Audi,Q5,S line Prestige,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
 2025,Audi,Q7,Premium,4MQAC1,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
-2025,Audi,Q7,Premium,4MQAX2,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
 2025,Audi,Q7,Premium Plus,4MQAC1,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
-2025,Audi,Q7,Premium Plus,4MQAX2,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
 2025,Audi,Q7,Prestige,4MQAX2,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
 2025,Audi,SQ5,Premium,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Audi,SQ5,Premium Plus,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
@@ -139,6 +137,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,AUDI,Q7,,,2026 Audi Q7 55 TFSI quattro,2026 audi q7 55 tfsi quattro,user,2026-01-27T17:35:56.884317Z,no_data
 2026,AUDI,Q7,,,2026 Audi Q7 55 TFSI quattro Premium Plus,2026 audi q7 55 tfsi quattro premium plus,user,2026-01-27T17:01:18.726282Z,no_data
 2026,AUDI,Q8,,,2026 Audi Q8 55 TFSI quattro Premium Plus,2026 audi q8 55 tfsi quattro premium plus,user,2026-01-27T17:01:49.679175Z,no_data
+2026,AUDI,SQ7,,,2026 Audi SQ7 quattro,2026 audi sq7 quattro,user,2026-01-27T17:38:17.037149Z,no_data
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
