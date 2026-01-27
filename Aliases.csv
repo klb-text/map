@@ -258,6 +258,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chrysler,PACIFICA PLUG-IN HYBRID,,,2026 PACIFICA PLUG-IN HYBRID SELECT PREMIUM,2026 pacifica plug in hybrid select premium,user,2026-01-27T17:52:29.223680Z,no_data
 2026,Chrysler,Pacifica,Select,RUCH53/27L,2026 PACIFICA SELECT,2026 pacifica select,user,2026-01-27T17:48:04.202470Z,mapped
 2026,Chrysler,Pacifica,Select,RUFH53/27L,2026 PACIFICA SELECT awd,2026 pacifica select awd,user,2026-01-27T17:48:25.706831Z,mapped
+2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SE FWD,2026 palisade se fwd,user,2026-01-27T19:06:22.821327Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
 2026,Land Rover,Range Rover Evoque,Dynamic SE,HM551/551EZ,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque S,2026 range rover evoque s,user,2026-01-27T16:14:00.307388Z,mapped
