@@ -33,6 +33,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-5,2.5 S Preferred Package,CX5 PF XA,2025 MAZDA CX-5 2.5 S PREFERRED,2025 mazda cx 5 2.5 s preferred,user,2026-01-27T15:21:21.001066Z,mapped
 2025,Mazda,CX-5,2.5 S Select Package,CX5 SE XA,2025 MAZDA CX-5 2.5 S SELECT,2025 mazda cx 5 2.5 s select,user,2026-01-27T15:20:58.586853Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
+2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Tradesman,DT1L41/23A,"2025 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-27T15:35:18.494960Z,mapped
 2025,Acura,TLX,w/Technology Package,UB5F4SGNW,2025 TLX TECH 10 Speed Automatic,2025 tlx tech 10 speed automatic,user,2026-01-27T15:06:22.353088Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 TLX TECH 12025 ADX FWD Continuously Variable Transmission0 Speed Automatic,2025 tlx tech 12025 adx fwd continuously variable transmission0 speed automatic,user,2026-01-27T15:32:26.784123Z,mapped
