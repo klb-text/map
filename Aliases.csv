@@ -101,6 +101,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SEL Convenience,494H2F4S/01,2025 ELANTRA SEL CONVENIENCE,2025 elantra sel convenience,user,2026-01-27T19:05:08.299743Z,mapped
 2025,Hyundai,Elantra,SEL Sport,494G2F4S/01,2025 ELANTRA SEL SPORT,2025 elantra sel sport,user,2026-01-27T19:04:55.442008Z,mapped
+2025,Ford,Bronco Sport,Big Bend,R9B/200A,2025 Ford Bronco Sport Big Bend Black Diamond,2025 ford bronco sport big bend black diamond,user,2026-01-27T19:20:54.120917Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active AWD 1.5L Gas,2025 ford escape active awd 1.5l gas,user,2026-01-27T19:20:41.355048Z,mapped
 2025,Ford,Mustang,Dark Horse,P8R/600A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
