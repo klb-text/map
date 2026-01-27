@@ -353,6 +353,14 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
+2026,Ford,Maverick,LARIAT,W8S/501A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,Lobo High,W8P/702A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,Lobo Standard,W8T/402A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,Tremor,W8N/602A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,XL,W8A/100A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,XL,W8B/101A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,XLT,W8H/300A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Maverick,XLT,W8J/301A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Mustang Mach-E,GT,K4S/400A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
