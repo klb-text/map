@@ -39,6 +39,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-5,2.5 S Select Package,CX5 SE XA,2025 MAZDA CX-5 2.5 S SELECT,2025 mazda cx 5 2.5 s select,user,2026-01-27T15:20:58.586853Z,mapped
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,,YE1H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
+2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
