@@ -272,6 +272,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL 7P,J2442F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-01-27T19:08:39.431294Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM FWD,2026 palisade sel premium fwd,user,2026-01-27T19:08:30.988058Z,mapped
+2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO,2026 palisade xrt pro,user,2026-01-27T19:09:16.185767Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
 2026,Land Rover,Range Rover Evoque,Dynamic SE,HM551/551EZ,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque S,2026 range rover evoque s,user,2026-01-27T16:14:00.307388Z,mapped
