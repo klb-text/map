@@ -183,6 +183,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Land Rover,Discovery Sport,Landmark,HQ550/353BT,2026 Discovery Sport Models,2026 discovery sport models,user,2026-01-27T16:30:37.496090Z,mapped
 2026,Dodge,Durango,GT,WDEH75/2BD,2026 DURANGO GT AWD,2026 durango gt awd,user,2026-01-27T17:57:13.098284Z,mapped
 2026,Dodge,Durango,GT HEMI V8,WDES75/22S,2026 DURANGO GT AWD HEMI® V8,2026 durango gt awd hemi® v8,user,2026-01-27T18:04:17.415313Z,mapped
+2026,Dodge,Durango,GT Plus,WDEH75/2BD,2026 DURANGO GT PLUS AWD,2026 durango gt plus awd,user,2026-01-27T18:04:48.999179Z,mapped
 2026,Dodge,Durango,GT,WDDH75/2BD,2026 DURANGO GT RWD,2026 durango gt rwd,user,2026-01-27T17:58:02.176837Z,mapped
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
