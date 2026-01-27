@@ -176,6 +176,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Land Rover,Range Rover,SE,AB460/460AZ,2025 Range Rover V8 models,2025 range rover v8 models,user,2026-01-27T16:25:30.837039Z,mapped
 2025,Land Rover,Range Rover,SV,AB460/460EP,2025 Range Rover V8 models,2025 range rover v8 models,user,2026-01-27T16:25:30.837039Z,mapped
 2025,Hyundai,Sonata,N Line,29472FT5/01,2025 SONATA N LINE,2025 sonata n line,user,2026-01-27T19:13:26.210138Z,mapped
+2025,Hyundai,Sonata,SEL Convenience,29452F4S/01,2025 SONATA SEL CONVENIENCE,2025 sonata sel convenience,user,2026-01-27T19:13:35.645832Z,mapped
 2025,Alfa Romeo,Stelvio,,GUGL74/22M,2025 STELVIO AWD,2025 stelvio awd,user,2026-01-27T16:34:36.476323Z,mapped
 2025,Alfa Romeo,Stelvio,Special Edition,GUGT74/22Y,2025 STELVIO AWD,2025 stelvio awd,user,2026-01-27T16:34:36.476323Z,mapped
 2025,Alfa Romeo,Stelvio,Intensa,GUGM74/22F,2025 STELVIO INTENSA AWD,2025 stelvio intensa awd,user,2026-01-27T16:35:05.275984Z,mapped
