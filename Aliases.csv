@@ -258,6 +258,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chrysler,PACIFICA PLUG-IN HYBRID,,,2026 PACIFICA PLUG-IN HYBRID SELECT PREMIUM,2026 pacifica plug in hybrid select premium,user,2026-01-27T17:52:29.223680Z,no_data
 2026,Chrysler,Pacifica,Select,RUCH53/27L,2026 PACIFICA SELECT,2026 pacifica select,user,2026-01-27T17:48:04.202470Z,mapped
 2026,Chrysler,Pacifica,Select,RUFH53/27L,2026 PACIFICA SELECT awd,2026 pacifica select awd,user,2026-01-27T17:48:25.706831Z,mapped
+2026,Hyundai,Palisade,Limited,J2472F65/01,2026 PALISADE LIMITED FWD,2026 palisade limited fwd,user,2026-01-27T19:08:54.116439Z,mapped
+2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE LIMITED FWD,2026 palisade limited fwd,user,2026-01-27T19:08:54.116439Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SE AWD,2026 palisade se awd,user,2026-01-27T19:06:33.235351Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SE FWD,2026 palisade se fwd,user,2026-01-27T19:06:22.821327Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SEL AWD,2026 palisade sel awd,user,2026-01-27T19:07:34.396883Z,mapped
