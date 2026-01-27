@@ -360,6 +360,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
+2026,Ford,F-150 Lightning,Flash,W3L/312A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
+2026,Ford,F-150 Lightning,LARIAT,W5L/511A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
+2026,Ford,F-150 Lightning,Platinum,W7L/710A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
+2026,Ford,F-150 Lightning,Pro,W1B/110A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
+2026,Ford,F-150 Lightning,STX,W3J/310A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
 2026,Ford,Maverick,LARIAT,W8S/501A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,Lobo High,W8P/702A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,Lobo Standard,W8T/402A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
