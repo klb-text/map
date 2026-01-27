@@ -4,7 +4,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
-2025,Acura,ADX,,SA2H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:47:26.284539Z,mapped
 2025,Acura,ADX,w/A-Spec Advance Package,SA1H7SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Package,SA1H5SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX FWD Continuously Variable Transmission,2025 adx fwd continuously variable transmission,user,2026-01-27T15:07:34.960617Z,mapped
@@ -40,7 +39,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
-2025,RAM,1500,Limited,DT6M98/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
 2025,RAM,1500,Rebel,DT6X98/21W,"2025 RAM 1500 REBEL CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rebel crew cab 4x4 5'7"" box",user,2026-01-27T15:36:40.741855Z,mapped
 2025,RAM,1500,RHO,DT6S98/22Y,"2025 RAM 1500 RHO CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rho crew cab 4x4 5'7"" box",user,2026-01-27T15:37:20.595406Z,mapped
 2025,RAM,1500,Tradesman,DT1L41/23A,"2025 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-27T15:35:18.494960Z,mapped
@@ -48,7 +46,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,TLX,Type S,UB7F0SGW,2025 TLX,2025 tlx,user,2026-01-27T16:04:06.740821Z,mapped
 2025,Acura,TLX,w/Technology Package,UB5F4SGNW,2025 TLX TECH 10 Speed Automatic,2025 tlx tech 10 speed automatic,user,2026-01-27T15:06:22.353088Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 TLX TECH 12025 ADX FWD Continuously Variable Transmission0 Speed Automatic,2025 tlx tech 12025 adx fwd continuously variable transmission0 speed automatic,user,2026-01-27T15:32:26.784123Z,mapped
-2025,Acura,ADX,,SA2H3SJNW,2025 TLX TECH 12025 ADX FWD Continuously Variable Transmission0 Speed Automatic,2025 tlx tech 12025 adx fwd continuously variable transmission0 speed automatic,user,2026-01-27T15:32:26.784123Z,mapped
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
@@ -56,6 +53,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Cadillac,VISTIQ,Premium Luxury,6MB56/1SE,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Sport,6MC56/1SF,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ AWD Luxury,2026 cadillac vistiq awd luxury,user,2026-01-26T16:45:26.157028Z,mapped
+2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
@@ -73,14 +71,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,MAZDA,MAZDA3 SEDAN,,,2026 MAZDA3 SEDAN,2026 mazda3 sedan,user,2026-01-27T15:20:07.218694Z,no_data
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
-2026,Acura,MDX,,YE1H3TJNW,2026 MDX,2026 mdx,user,2026-01-27T15:49:56.059747Z,mapped
 2026,Acura,MDX,Type S w/Advance Package,YD8H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/A-Spec Advance Package,YE1H9TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/A-Spec Package,YE1H0TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/Advance Package,YE1H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/Technology Package,YD9H4TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
-2026,Acura,MDX,,YE1H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque S,2026 range rover evoque s,user,2026-01-27T16:14:00.307388Z,mapped
 2026,Land Rover,Range Rover Velar,S,HB560/560CE,2026 Range Rover Velar P250 S,2026 range rover velar p250 s,user,2026-01-27T16:13:23.384489Z,mapped
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX,2026 rdx,user,2026-01-27T15:56:06.526789Z,mapped
