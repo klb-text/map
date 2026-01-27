@@ -213,6 +213,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Dodge,Durango,SRT Jailbreak,WDEM75/2XP,2026 DURANGO SRT HELLCAT JAILBREAK AWD,2026 durango srt hellcat jailbreak awd,user,2026-01-27T18:17:06.165713Z,mapped
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT SILVER BULLET AWD,2026 durango srt hellcat silver bullet awd,user,2026-01-27T18:16:03.612794Z,mapped
 2026,Hyundai,Elantra,Limited,494M2F4S/01,2026 ELANTRA LIMITED,2026 elantra limited,user,2026-01-27T19:04:18.657583Z,mapped
+2026,Hyundai,Elantra,N Line,494L2FT5/01,2026 ELANTRA N LINE,2026 elantra n line,user,2026-01-27T19:04:31.480738Z,mapped
 2026,Hyundai,Elantra,SE,494E2F4S/01,2026 ELANTRA SE,2026 elantra se,user,2026-01-27T19:03:37.744327Z,mapped
 2026,Hyundai,Elantra,SEL Sport,494G2F4S/01,2026 ELANTRA SEL SPORT,2026 elantra sel sport,user,2026-01-27T19:03:52.222790Z,mapped
 2026,Hyundai,Elantra,SEL Sport Premium,494K2F4S/01,2026 ELANTRA SEL SPORT PREMIUM,2026 elantra sel sport premium,user,2026-01-27T19:04:06.088100Z,mapped
