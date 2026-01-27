@@ -150,6 +150,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,SE,J1412F65/01,2025 PALISADE SE FWD,2025 palisade se fwd,user,2026-01-27T19:09:53.287447Z,mapped
 2025,Hyundai,Palisade,SEL,J1442A65/01,2025 PALISADE SEL AWD,2025 palisade sel awd,user,2026-01-27T19:10:32.370990Z,mapped
 2025,Hyundai,Palisade,SEL,J1442F65/01,2025 PALISADE SEL FWD,2025 palisade sel fwd,user,2026-01-27T19:10:16.071885Z,mapped
+2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
