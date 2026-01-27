@@ -201,6 +201,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chrysler,Pacifica,Limited,RUFT53/27P,2026 PACIFICA LIMITED awd,2026 pacifica limited awd,user,2026-01-27T17:49:32.657203Z,mapped
 2026,Chrysler,Pacifica,Pinnacle,RUCS53/27S,2026 PACIFICA PINNACLE,2026 pacifica pinnacle,user,2026-01-27T17:50:10.699412Z,mapped
 2026,Chrysler,Pacifica,Pinnacle,RUFS53/27S,2026 PACIFICA PINNACLE awd,2026 pacifica pinnacle awd,user,2026-01-27T17:50:42.940735Z,mapped
+2026,Chrysler,PACIFICA PLUG-IN HYBRID,,,2026 PACIFICA PLUG-IN HYBRID PINNACLE,2026 pacifica plug in hybrid pinnacle,user,2026-01-27T17:52:46.683673Z,no_data
 2026,Chrysler,PACIFICA PLUG-IN HYBRID,,,2026 PACIFICA PLUG-IN HYBRID SELECT,2026 pacifica plug in hybrid select,user,2026-01-27T17:52:07.629951Z,no_data
 2026,Chrysler,PACIFICA PLUG-IN HYBRID,,,2026 PACIFICA PLUG-IN HYBRID SELECT PREMIUM,2026 pacifica plug in hybrid select premium,user,2026-01-27T17:52:29.223680Z,no_data
 2026,Chrysler,Pacifica,Select,RUCH53/27L,2026 PACIFICA SELECT,2026 pacifica select,user,2026-01-27T17:48:04.202470Z,mapped
