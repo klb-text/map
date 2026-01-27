@@ -51,6 +51,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,SQ5,Premium,FYGS4A,2025 Audi SQ5 Sportback,2025 audi sq5 sportback,user,2026-01-27T17:10:25.240694Z,mapped
 2025,Audi,SQ5,Premium Plus,FYGS4A,2025 Audi SQ5 Sportback,2025 audi sq5 sportback,user,2026-01-27T17:10:25.240694Z,mapped
 2025,Audi,SQ5,Prestige,FYGS4A,2025 Audi SQ5 Sportback,2025 audi sq5 sportback,user,2026-01-27T17:10:25.240694Z,mapped
+2025,Audi,SQ7,Premium Plus,4MQSW1,2025 Audi SQ7 quattro,2025 audi sq7 quattro,user,2026-01-27T17:38:50.853799Z,mapped
+2025,Audi,SQ7,Prestige,4MQSW1,2025 Audi SQ7 quattro,2025 audi sq7 quattro,user,2026-01-27T17:38:50.853799Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ Premium,2025 brz premium,user,2026-01-27T15:17:55.043212Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
