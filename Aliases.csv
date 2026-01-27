@@ -3,6 +3,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
+2025,Acura,ADX,,SA2H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:47:26.284539Z,mapped
 2025,Acura,ADX,w/A-Spec Advance Package,SA1H7SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Package,SA1H5SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX FWD Continuously Variable Transmission,2025 adx fwd continuously variable transmission,user,2026-01-27T15:07:34.960617Z,mapped
