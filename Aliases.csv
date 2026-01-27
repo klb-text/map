@@ -410,6 +410,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,MDX,w/Advance Package,YE1H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/Technology Package,YD9H4TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
+2026,Kia,Niro,EX,G4242,2026 Niro EX FWD,2026 niro ex fwd,user,2026-01-27T19:55:36.222221Z,mapped
 2026,Kia,Niro,LX,G4222,2026 Niro LX FWD,2026 niro lx fwd,user,2026-01-27T19:55:25.786501Z,mapped
 2026,Chrysler,Pacifica,Limited,RUCT53/27P,2026 PACIFICA LIMITED,2026 pacifica limited,user,2026-01-27T17:48:53.465952Z,mapped
 2026,Chrysler,Pacifica,Limited,RUFT53/27P,2026 PACIFICA LIMITED awd,2026 pacifica limited awd,user,2026-01-27T17:49:32.657203Z,mapped
