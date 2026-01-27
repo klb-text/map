@@ -18,6 +18,14 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Volkswagen,ID.4,Pro S,E814MN,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Volkswagen,ID.4,Pro S Plus,E815SN,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Volkswagen,ID.4,S Limited,E813LJ,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
+2025,Mazda,CX-30,2.5 Carbon Turbo,C30 CE TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 S,C30 25S XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 S Carbon Edition,C30 CE XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 S Preferred Package,C30 PF XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 S Premium Package,C30 PR XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 S Select Sport,C30 SES XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 Turbo Premium Package,C30 PR TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
+2025,Mazda,CX-30,2.5 Turbo Premium Plus Package,C30 PP TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
 2025,Acura,TLX,w/Technology Package,UB5F4SGNW,2025 TLX TECH 10 Speed Automatic,2025 tlx tech 10 speed automatic,user,2026-01-27T15:06:22.353088Z,mapped
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
