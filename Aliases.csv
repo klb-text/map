@@ -17,6 +17,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Land Rover,Discovery Sport,Dynamic SE,HQ550/352VP,2025 Discovery Sport Models,2025 discovery sport models,user,2026-01-27T16:30:17.034624Z,mapped
 2025,Land Rover,Discovery Sport,S,HQ550/351LB,2025 Discovery Sport Models,2025 discovery sport models,user,2026-01-27T16:30:17.034624Z,mapped
 2025,Land Rover,Discovery Sport,S,HQ550/351LB,2025 Discovery Sport S P250,2025 discovery sport s p250,user,2026-01-27T16:17:01.565016Z,mapped
+2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
+2025,Alfa Romeo,Giulia,,GAGL41/22M,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
+2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
+2025,Alfa Romeo,Giulia,Special Edition,GAGT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Acura,MDX,,YD9H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
