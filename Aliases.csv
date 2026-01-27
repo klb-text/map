@@ -101,6 +101,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,MDX,w/Advance Package,YE1H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,w/Technology Package,YD9H4TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
+2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
+2026,Land Rover,Range Rover Evoque,Dynamic SE,HM551/551EZ,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque S,2026 range rover evoque s,user,2026-01-27T16:14:00.307388Z,mapped
 2026,Land Rover,Range Rover Sport,Autobiography,AP461/351ZW,2026 Range Rover Sport models,2026 range rover sport models,user,2026-01-27T16:27:34.697205Z,mapped
 2026,Land Rover,Range Rover Sport,Autobiography,AW461/351YG,2026 Range Rover Sport models,2026 range rover sport models,user,2026-01-27T16:27:34.697205Z,mapped
