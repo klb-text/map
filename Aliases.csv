@@ -90,6 +90,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Tonale,Intensa,GCGL74/23M,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Intensa,GC9S74/28Y,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Tributo Italiano,GC9S74/28Y,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
+2025,Alfa Romeo,Tonale,,GC9L74/28B,2025 TONALE HYBRID EAWD,2025 tonale hybrid eawd,user,2026-01-27T16:44:32.122350Z,mapped
 2025,Alfa Romeo,Tonale,Intensa,GCGL74/23M,2025 TONALE INTENSA AWD,2025 tonale intensa awd,user,2026-01-27T16:42:59.357503Z,mapped
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
