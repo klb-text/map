@@ -167,6 +167,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD,2025 ford explorer active 4wd,user,2026-01-27T19:49:42.702572Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Package,2025 ford explorer active 4wd with comfort package,user,2026-01-27T19:47:37.049427Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Pkg,2025 ford explorer active 4wd with comfort pkg,user,2026-01-27T19:51:35.250983Z,mapped
+2025,Ford,F-150 Lightning,Flash,W3L/312A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
+2025,Ford,F-150 Lightning,LARIAT,W5L/511A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
+2025,Ford,F-150 Lightning,Platinum,W7L/710A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
+2025,Ford,F-150 Lightning,Pro,W1B/110A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
+2025,Ford,F-150 Lightning,XLT,W3L/311A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
 2025,Ford,Maverick,LARIAT,W8S/501A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,Lobo High,W8P/702A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,Lobo Standard,W8T/402A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
