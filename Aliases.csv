@@ -8,8 +8,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Cadillac,VISTIQ,Sport,6MC56/1SF,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ AWD Luxury,2026 cadillac vistiq awd luxury,user,2026-01-26T16:45:26.157028Z,mapped
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
+2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
 2026,Acura,Integra,Type S,DE5G9TEW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
+2026,Acura,Integra,Type S,DE5G9TEW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
 2026,Acura,Integra,w/A-Spec Package,DE4H3TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
+2026,Acura,Integra,w/A-Spec Package,DE4H3TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
 2026,Acura,Integra,w/A-Spec Technology Package,DE4G7TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
+2026,Acura,Integra,w/A-Spec Technology Package,DE4G7TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
+2026,Acura,Integra,w/A-Spec Technology Package,DE4H6TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
 2026,Acura,Integra,,DE4H2TJW,2026 Integra FWD Continuously Variable Transmission,2026 integra fwd continuously variable transmission,user,2026-01-24T18:40:49.132210Z,
 2027,Acura,Integra,,,2027 Integra,2027 integra,user,2026-01-24T19:10:21.375861Z,no_data
