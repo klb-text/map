@@ -8,12 +8,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Ford,F-150 Lightning,Pro,W1B/110A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
 2024,Ford,F-150 Lightning,XLT,W3L/311A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
 2024,Ford,Maverick,LARIAT,W8M/500A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
-2024,Ford,Maverick,LARIAT,W8S/500A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,LARIAT Advanced,W8R/500A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XL,W8A/100A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
-2024,Ford,Maverick,XL,W8B/100A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT,W8H/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
-2024,Ford,Maverick,XLT,W8J/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT Advanced,W8C/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
@@ -110,7 +107,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 ELANTRA LIMITED,2025 elantra limited,user,2026-01-27T19:05:20.862277Z,mapped
 2025,Hyundai,Elantra,N Line,49452FT5/01,2025 ELANTRA N LINE,2025 elantra n line,user,2026-01-27T19:05:34.365712Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
-2025,Hyundai,Elantra N,,4N4A3FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SEL Convenience,494H2F4S/01,2025 ELANTRA SEL CONVENIENCE,2025 elantra sel convenience,user,2026-01-27T19:05:08.299743Z,mapped
 2025,Hyundai,Elantra,SEL Sport,494G2F4S/01,2025 ELANTRA SEL SPORT,2025 elantra sel sport,user,2026-01-27T19:04:55.442008Z,mapped
@@ -118,9 +114,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Kia,EV6,Light Long Range,N5442,2025 EV6 Light Long Range AWD,2025 ev6 light long range awd,user,2026-01-27T19:54:57.314500Z,mapped
 2025,Kia,EV6,Light Long Range,N4342,2025 EV6 Light Long Range RWD,2025 ev6 light long range rwd,user,2026-01-27T19:54:46.512680Z,mapped
 2025,Ford,Bronco,Badlands,E9A/331A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
-2025,Ford,Bronco,Badlands,E9B/331A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
 2025,Ford,Bronco,Base,E6A/101A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
-2025,Ford,Bronco,Base,E6B/101A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
 2025,Ford,Bronco,Big Bend,E7B/221A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
 2025,Ford,Bronco,Heritage Edition,E4D/662A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
 2025,Ford,Bronco,Outer Banks,E8B/312A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
@@ -138,35 +132,25 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Bronco Sport,Big Bend,R9B/200A,2025 Ford Bronco Sport Big Bend 4x4,2025 ford bronco sport big bend 4x4,user,2026-01-27T19:22:04.797857Z,mapped
 2025,Ford,Bronco Sport,Big Bend,R9B/200A,2025 Ford Bronco Sport Big Bend Black Diamond,2025 ford bronco sport big bend black diamond,user,2026-01-27T19:20:54.120917Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
-2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,PHEV,U0E/700A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,Platinum,U0J/600A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
-2025,Ford,Escape,Platinum,U9J/600A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,ST-Line,U0M/300A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
-2025,Ford,Escape,ST-Line,U9M/300A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,ST-Line Elite,U9P/500A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,ST-Line Select,U9N/400A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active AWD,2025 ford escape active awd,user,2026-01-27T19:50:17.590929Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active AWD 1.5L Gas,2025 ford escape active awd 1.5l gas,user,2026-01-27T19:20:41.355048Z,mapped
 2025,Ford,Escape,Active,U0G/200A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
-2025,Ford,Escape,Active,U9G/200A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,PHEV,U0E/700A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,Platinum,U0J/600A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
-2025,Ford,Escape,Platinum,U9J/600A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,ST-Line,U0M/300A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
-2025,Ford,Escape,ST-Line,U9M/300A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,ST-Line Elite,U9P/500A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,ST-Line Select,U9N/400A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,PHEV,U0E/700A,2025 Ford Escape PHEV,2025 ford escape phev,user,2026-01-27T19:52:03.827839Z,mapped
 2025,Ford,Expedition,Active,U1J/200A,2025 Ford Expedition Active 4x4,2025 ford expedition active 4x4,user,2026-01-27T19:48:48.707596Z,mapped
 2025,Ford,Explorer,Active,K7D/200A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
-2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,Platinum,K7H/600A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
-2025,Ford,Explorer,Platinum,K8H/600A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,ST,K7G/400A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
-2025,Ford,Explorer,ST,K8G/400A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,ST-Line,K7K/300A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
-2025,Ford,Explorer,ST-Line,K8K/300A,2025 Ford Explorer,2025 ford explorer,user,2026-01-27T19:23:09.985777Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD,2025 ford explorer active 4wd,user,2026-01-27T19:49:42.702572Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Package,2025 ford explorer active 4wd with comfort package,user,2026-01-27T19:47:37.049427Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Pkg,2025 ford explorer active 4wd with comfort pkg,user,2026-01-27T19:51:35.250983Z,mapped
@@ -180,29 +164,19 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Maverick,Lobo Standard,W8T/402A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,Tremor,W8N/602A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,XL,W8A/100A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
-2025,Ford,Maverick,XL,W8B/101A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,XLT,W8H/300A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
-2025,Ford,Maverick,XLT,W8J/301A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Mustang,Dark Horse,P8R/600A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
-2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost Premium,P8T/200A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
-2025,Ford,Mustang,EcoBoost Premium,P8U/200A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,GT,P8C/300A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,GT Premium,P8C/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
-2025,Ford,Mustang,GT Premium,P8F/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang Coupe EcoBoost Auto Transmission,2025 ford mustang coupe ecoboost auto transmission,user,2026-01-27T19:19:19.389526Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
-2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost Premium,P8T/200A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
-2025,Ford,Mustang,EcoBoost Premium,P8U/200A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang EcoBoost Coupe,2025 ford mustang ecoboost coupe,user,2026-01-27T19:50:47.939326Z,mapped
-2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang EcoBoost Coupe,2025 ford mustang ecoboost coupe,user,2026-01-27T19:50:47.939326Z,mapped
 2025,Ford,Mustang Mach-E,GT,K4S/400A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
-2025,Ford,Mustang Mach-E,Premium,K3S/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
-2025,Ford,Mustang Mach-E,Select,K1S/100A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E Premium AWD Extended Battery,2025 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:10.969672Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
@@ -353,7 +327,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Elantra,Limited,494M2F4S/01,2026 ELANTRA LIMITED,2026 elantra limited,user,2026-01-27T19:04:18.657583Z,mapped
 2026,Hyundai,Elantra,N Line,494L2FT5/01,2026 ELANTRA N LINE,2026 elantra n line,user,2026-01-27T19:04:31.480738Z,mapped
 2026,Hyundai,Elantra N,,4N4A2FT5/01,2026 ELANTRA N N,2026 elantra n n,user,2026-01-27T19:05:48.374638Z,mapped
-2026,Hyundai,Elantra N,,4N4A3FT5/01,2026 ELANTRA N N,2026 elantra n n,user,2026-01-27T19:05:48.374638Z,mapped
 2026,Hyundai,Elantra,SE,494E2F4S/01,2026 ELANTRA SE,2026 elantra se,user,2026-01-27T19:03:37.744327Z,mapped
 2026,Hyundai,Elantra,SEL Sport,494G2F4S/01,2026 ELANTRA SEL SPORT,2026 elantra sel sport,user,2026-01-27T19:03:52.222790Z,mapped
 2026,Hyundai,Elantra,SEL Sport Premium,494K2F4S/01,2026 ELANTRA SEL SPORT PREMIUM,2026 elantra sel sport premium,user,2026-01-27T19:04:06.088100Z,mapped
@@ -362,20 +335,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD 1.5L Gas,2026 ford escape active awd 1.5l gas,user,2026-01-27T19:21:11.444920Z,mapped
 2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape PHEV,2026 ford escape phev,user,2026-01-27T19:21:46.748771Z,mapped
 2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
-2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Platinum,K7H/600A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
-2026,Ford,Explorer,Platinum,K8H/600A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,ST,K7G/400A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
-2026,Ford,Explorer,ST,K8G/400A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
-2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD,2026 ford explorer active 4wd,user,2026-01-27T19:53:15.638065Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD with Comfort Package,2026 ford explorer active 4wd with comfort package,user,2026-01-27T19:48:36.466930Z,mapped
 2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer Active RWD,2026 ford explorer active rwd,user,2026-01-27T19:51:45.073331Z,mapped
 2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer ST-Line 4WD,2026 ford explorer st line 4wd,user,2026-01-27T19:51:01.248158Z,mapped
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
-2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,F-150 Lightning,Flash,W3L/312A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
 2026,Ford,F-150 Lightning,LARIAT,W5L/511A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
@@ -387,14 +355,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Maverick,Lobo Standard,W8T/402A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,Tremor,W8N/602A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,XL,W8A/100A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
-2026,Ford,Maverick,XL,W8B/101A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,XLT,W8H/300A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
-2026,Ford,Maverick,XLT,W8J/301A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Mustang Mach-E,GT,K4S/400A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
-2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
-2026,Ford,Mustang Mach-E,Select,K1S/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
@@ -411,7 +375,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,IONIQ 5,SEL,51442REZ/01,2026 IONIQ 5 SEL RWD,2026 ioniq 5 sel rwd,user,2026-01-27T15:27:03.301600Z,mapped
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
-2026,Lexus,LC 500,LC 500,9262,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
+2026,Lexus,LS,,,2026 LS,2026 ls,user,2026-01-27T21:06:55.567000Z,no_data
 2026,MAZDA,MAZDA3 SEDAN,,,2026 MAZDA3 SEDAN,2026 mazda3 sedan,user,2026-01-27T15:20:07.218694Z,no_data
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,MDX,Type S w/Advance Package,YD8H8TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
@@ -442,7 +406,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL 7P,J2442A65/01,2026 PALISADE SEL AWD,2026 palisade sel awd,user,2026-01-27T19:07:34.396883Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE AWD,2026 palisade sel convenience awd,user,2026-01-27T19:08:16.383388Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-01-27T19:08:00.329542Z,mapped
-2026,Hyundai,Palisade,SEL Convenience,J2422F65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-01-27T19:08:00.329542Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL 7P,J2442F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-01-27T19:08:39.431294Z,mapped
