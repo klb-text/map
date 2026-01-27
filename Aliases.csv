@@ -161,6 +161,14 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD,2025 ford explorer active 4wd,user,2026-01-27T19:49:42.702572Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Package,2025 ford explorer active 4wd with comfort package,user,2026-01-27T19:47:37.049427Z,mapped
 2025,Ford,Explorer,Active,K8D/200A,2025 Ford Explorer Active 4WD with Comfort Pkg,2025 ford explorer active 4wd with comfort pkg,user,2026-01-27T19:51:35.250983Z,mapped
+2025,Ford,Maverick,LARIAT,W8S/501A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,Lobo High,W8P/702A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,Lobo Standard,W8T/402A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,Tremor,W8N/602A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,XL,W8A/100A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,XL,W8B/101A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,XLT,W8H/300A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
+2025,Ford,Maverick,XLT,W8J/301A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Mustang,Dark Horse,P8R/600A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
