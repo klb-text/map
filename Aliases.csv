@@ -13,7 +13,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,Q5,Premium Plus,FYGBZY,2025 Audi Q5 quattro Premium Plus,2025 audi q5 quattro premium plus,user,2026-01-27T17:00:32.495164Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ Premium,2025 brz premium,user,2026-01-27T15:17:55.043212Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
-2025,Land Rover,Discovery,Dynamic SE,HC462/462AF,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,S,HC462/351QG,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,S,HC462/351QG,2025 Discovery P300 S,2025 discovery p300 s,user,2026-01-27T16:18:11.754829Z,mapped
@@ -21,19 +20,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Land Rover,Discovery Sport,S,HQ550/351LB,2025 Discovery Sport Models,2025 discovery sport models,user,2026-01-27T16:30:17.034624Z,mapped
 2025,Land Rover,Discovery Sport,S,HQ550/351LB,2025 Discovery Sport S P250,2025 discovery sport s p250,user,2026-01-27T16:17:01.565016Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
-2025,Alfa Romeo,Giulia,Special Edition,GAGT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
-2025,Alfa Romeo,Giulia,,GAGL41/22M,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
-2025,Alfa Romeo,Giulia,Special Edition,GAGT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA intensa,2025 giulia intensa,user,2026-01-27T16:40:29.170540Z,mapped
-2025,Alfa Romeo,Giulia,Intensa,GAGM41/22F,2025 GIULIA intensa,2025 giulia intensa,user,2026-01-27T16:40:29.170540Z,mapped
 2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA INTENSA AWD,2025 giulia intensa awd,user,2026-01-27T16:34:12.227813Z,mapped
-2025,Alfa Romeo,Giulia,Intensa,GAGM41/22F,2025 GIULIA INTENSA AWD,2025 giulia intensa awd,user,2026-01-27T16:34:12.227813Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
-2025,Alfa Romeo,Giulia,,GAGL41/22M,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
 2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
-2025,Alfa Romeo,Giulia,Intensa,GAGM41/22F,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Acura,MDX,,YD9H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
@@ -89,13 +81,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,ADX,,SA1H3SJNW,2025 TLX TECH 12025 ADX FWD Continuously Variable Transmission0 Speed Automatic,2025 tlx tech 12025 adx fwd continuously variable transmission0 speed automatic,user,2026-01-27T15:32:26.784123Z,mapped
 2025,Acura,TLX,Type S,UB7F0SGW,2025 TLX Type S,2025 tlx type s,user,2026-01-27T16:29:11.688901Z,mapped
 2025,Alfa Romeo,Tonale,,GC9L74/28B,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
-2025,Alfa Romeo,Tonale,,GCGL74/23M,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,Intensa,GCGL74/23M,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Intensa,GC9S74/28Y,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Tributo Italiano,GC9S74/28Y,2025 TONALE AWD,2025 tonale awd,user,2026-01-27T16:35:31.581643Z,mapped
 2025,Alfa Romeo,Tonale,,GC9L74/28B,2025 TONALE HYBRID EAWD,2025 tonale hybrid eawd,user,2026-01-27T16:44:32.122350Z,mapped
 2025,Alfa Romeo,Tonale,Intensa,GCGL74/23M,2025 TONALE INTENSA AWD,2025 tonale intensa awd,user,2026-01-27T16:42:59.357503Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Tributo Italiano,GC9S74/28Y,2025 TONALE TRIBUTO ITALIANO EAWD,2025 tonale tributo italiano eawd,user,2026-01-27T16:45:54.114654Z,mapped
+2026,AUDI,Q7,,,2026 Audi Q7 45 TFSI quattro Premium,2026 audi q7 45 tfsi quattro premium,user,2026-01-27T17:00:53.603171Z,no_data
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
