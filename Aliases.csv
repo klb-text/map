@@ -23,6 +23,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Giulia,Special Edition,GAGT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA INTENSA AWD,2025 giulia intensa awd,user,2026-01-27T16:34:12.227813Z,mapped
 2025,Alfa Romeo,Giulia,Intensa,GAGM41/22F,2025 GIULIA INTENSA AWD,2025 giulia intensa awd,user,2026-01-27T16:34:12.227813Z,mapped
+2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
+2025,Alfa Romeo,Giulia,,GAGL41/22M,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
+2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
+2025,Alfa Romeo,Giulia,Intensa,GAGM41/22F,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Acura,MDX,,YD9H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
