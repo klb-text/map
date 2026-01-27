@@ -146,6 +146,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
+2025,Hyundai,Palisade,Limited,J1462F65/01,2025 PALISADE LIMITED FWD,2025 palisade limited fwd,user,2026-01-27T19:11:31.106662Z,mapped
 2025,Hyundai,Palisade,SE,J1412A65/01,2025 PALISADE SE AWD,2025 palisade se awd,user,2026-01-27T19:10:05.555050Z,mapped
 2025,Hyundai,Palisade,SE,J1412F65/01,2025 PALISADE SE FWD,2025 palisade se fwd,user,2026-01-27T19:09:53.287447Z,mapped
 2025,Hyundai,Palisade,SEL,J1442A65/01,2025 PALISADE SEL AWD,2025 palisade sel awd,user,2026-01-27T19:10:32.370990Z,mapped
