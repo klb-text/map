@@ -103,6 +103,14 @@ year,make,model,trim,model_code,source
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,user
 2025,Ford,Bronco Sport,Big Bend,R9B/200A,user
 2025,Ford,Escape,Active,U0G/200A,user
+2025,Ford,Escape,Active,U9G/200A,user
+2025,Ford,Escape,PHEV,U0E/700A,user
+2025,Ford,Escape,Platinum,U0J/600A,user
+2025,Ford,Escape,Platinum,U9J/600A,user
+2025,Ford,Escape,ST-Line,U0M/300A,user
+2025,Ford,Escape,ST-Line,U9M/300A,user
+2025,Ford,Escape,ST-Line Elite,U9P/500A,user
+2025,Ford,Escape,ST-Line Select,U9N/400A,user
 2025,Ford,Mustang,Dark Horse,P8R/600A,user
 2025,Ford,Mustang,EcoBoost,P8T/100A,user
 2025,Ford,Mustang,EcoBoost,P8U/101A,user
