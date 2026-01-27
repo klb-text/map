@@ -130,6 +130,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Tonale,,GC9L74/28B,2025 TONALE HYBRID EAWD,2025 tonale hybrid eawd,user,2026-01-27T16:44:32.122350Z,mapped
 2025,Alfa Romeo,Tonale,Intensa,GCGL74/23M,2025 TONALE INTENSA AWD,2025 tonale intensa awd,user,2026-01-27T16:42:59.357503Z,mapped
 2025,Alfa Romeo,Tonale,Special Edition Tributo Italiano,GC9S74/28Y,2025 TONALE TRIBUTO ITALIANO EAWD,2025 tonale tributo italiano eawd,user,2026-01-27T16:45:54.114654Z,mapped
+2026,Audi,A6,Premium,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
+2026,Audi,A6,Premium Plus,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
+2026,Audi,A6,Prestige,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
 2026,Audi,A6,Premium Plus,FN2A5Y,2026 Audi A6 Sedan quattro Premium Plus,2026 audi a6 sedan quattro premium plus,user,2026-01-27T17:06:31.201332Z,mapped
 2026,Audi,A6,Prestige,FN2A5Y,2026 Audi A6 Sedan quattro Prestige,2026 audi a6 sedan quattro prestige,user,2026-01-27T17:03:49.710672Z,mapped
 2026,AUDI,Q7,,,2026 Audi Q7 45 TFSI quattro Premium,2026 audi q7 45 tfsi quattro premium,user,2026-01-27T17:00:53.603171Z,no_data
