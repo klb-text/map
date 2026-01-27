@@ -31,6 +31,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,A6,Premium Plus,4A2C2Y,2025 Audi A6 Sedan Sport,2025 audi a6 sedan sport,user,2026-01-27T17:30:08.845192Z,mapped
 2025,Audi,A6,Prestige,4A2C2Y,2025 Audi A6 Sedan Sport,2025 audi a6 sedan sport,user,2026-01-27T17:30:08.845192Z,mapped
 2025,Audi,A8,,4NL5DA,2025 Audi A8 55 TFSI quattro,2025 audi a8 55 tfsi quattro,user,2026-01-27T17:34:14.175351Z,mapped
+2025,Audi,Q3,S line Premium,F3BCEA,2025 Audi Q3 S line 45 TFSI quattro,2025 audi q3 s line 45 tfsi quattro,user,2026-01-27T17:35:25.593459Z,mapped
+2025,Audi,Q3,S line Premium Plus,F3BCEA,2025 Audi Q3 S line 45 TFSI quattro,2025 audi q3 s line 45 tfsi quattro,user,2026-01-27T17:35:25.593459Z,mapped
 2025,Audi,Q3,S line Premium Plus,F3BCEA,2025 Audi Q3 S line 45 TFSI quattro Premium,2025 audi q3 s line 45 tfsi quattro premium,user,2026-01-27T16:59:05.272499Z,mapped
 2025,Audi,Q3,S line Premium Plus,F3BCEA,2025 Audi Q3 S line 45 TFSI quattro Premium Plus,2025 audi q3 s line 45 tfsi quattro premium plus,user,2026-01-27T17:04:27.554997Z,mapped
 2025,Audi,Q5,Premium,FYGBZY,2025 Audi Q5 quattro,2025 audi q5 quattro,user,2026-01-27T17:08:36.013877Z,mapped
