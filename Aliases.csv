@@ -71,6 +71,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,SQ7,Prestige,4MQSW1,2025 Audi SQ7 quattro,2025 audi sq7 quattro,user,2026-01-27T17:38:50.853799Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ Premium,2025 brz premium,user,2026-01-27T15:17:55.043212Z,mapped
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,2025 CHARGER 2-DOOR DAYTONA R/T AWD,2025 charger 2 door daytona r t awd,user,2026-01-27T18:07:03.659705Z,mapped
+2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,2025 CHARGER 2-DOOR DAYTONA SCAT PACK AWD,2025 charger 2 door daytona scat pack awd,user,2026-01-27T18:07:27.300364Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,S,HC462/351QG,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
