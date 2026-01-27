@@ -150,6 +150,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,SE,J1412F65/01,2025 PALISADE SE FWD,2025 palisade se fwd,user,2026-01-27T19:09:53.287447Z,mapped
 2025,Hyundai,Palisade,SEL,J1442A65/01,2025 PALISADE SEL AWD,2025 palisade sel awd,user,2026-01-27T19:10:32.370990Z,mapped
 2025,Hyundai,Palisade,SEL,J1442F65/01,2025 PALISADE SEL FWD,2025 palisade sel fwd,user,2026-01-27T19:10:16.071885Z,mapped
+2025,Hyundai,Palisade,SEL Premium,J1432A65/01,2025 PALISADE SEL PREMIUM AWD,2025 palisade sel premium awd,user,2026-01-27T19:11:21.210778Z,mapped
 2025,Hyundai,Palisade,SEL Premium,J1432F65/01,2025 PALISADE SEL PREMIUM FWD,2025 palisade sel premium fwd,user,2026-01-27T19:11:11.495151Z,mapped
 2025,Hyundai,Palisade,XRT,J1482A65/01,2025 PALISADE XRT AWD,2025 palisade xrt awd,user,2026-01-27T19:10:56.383231Z,mapped
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
