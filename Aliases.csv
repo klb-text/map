@@ -30,4 +30,5 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,MDX,w/Technology Package,YD9H4TKNW,2026 MDX,2026 mdx,user,2026-01-27T15:09:23.201631Z,mapped
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX SH-AWD 10 Speed Automatic,2026 rdx sh awd 10 speed automatic,user,2026-01-27T15:10:00.593056Z,mapped
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Plus,2026 v60 b5 awd cross country plus,user,2026-01-27T15:12:37.837191Z,no_data
+2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Ultra,2026 v60 b5 awd cross country ultra,user,2026-01-27T15:13:06.198234Z,no_data
 2027,Acura,Integra,,,2027 Integra,2027 integra,user,2026-01-24T19:10:21.375861Z,no_data
