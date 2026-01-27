@@ -164,6 +164,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost Premium,P8T/200A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost Premium,P8U/200A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
+2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang EcoBoost Coupe,2025 ford mustang ecoboost coupe,user,2026-01-27T19:50:47.939326Z,mapped
+2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang EcoBoost Coupe,2025 ford mustang ecoboost coupe,user,2026-01-27T19:50:47.939326Z,mapped
 2025,Ford,Mustang Mach-E,GT,K4S/400A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3S/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
