@@ -194,6 +194,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Dodge,Durango,GT Plus HEMI V8,WDES75/22S,2026 DURANGO GT PLUS AWD HEMI® V8,2026 durango gt plus awd hemi® v8,user,2026-01-27T18:05:12.200302Z,mapped
 2026,Dodge,Durango,GT,WDDH75/2BD,2026 DURANGO GT RWD,2026 durango gt rwd,user,2026-01-27T17:58:02.176837Z,mapped
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT AWD,2026 durango srt hellcat awd,user,2026-01-27T18:13:11.659830Z,mapped
+2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT BRASS MONKEY AWD,2026 durango srt hellcat brass monkey awd,user,2026-01-27T18:16:32.295769Z,mapped
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT HAMMERHEAD AWD,2026 durango srt hellcat hammerhead awd,user,2026-01-27T18:15:24.602193Z,mapped
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT SILVER BULLET AWD,2026 durango srt hellcat silver bullet awd,user,2026-01-27T18:16:03.612794Z,mapped
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
