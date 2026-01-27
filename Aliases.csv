@@ -46,6 +46,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,RAM,1500,Rebel,DT6X98/21W,"2025 RAM 1500 REBEL CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rebel crew cab 4x4 5'7"" box",user,2026-01-27T15:36:40.741855Z,mapped
 2025,RAM,1500,RHO,DT6S98/22Y,"2025 RAM 1500 RHO CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rho crew cab 4x4 5'7"" box",user,2026-01-27T15:37:20.595406Z,mapped
 2025,RAM,1500,Tradesman,DT1L41/23A,"2025 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-27T15:35:18.494960Z,mapped
+2025,Land Rover,Range Rover,Autobiography,AG460/460EH,2025 Range Rover I6/PHEV models,2025 range rover i6 phev models,user,2026-01-27T16:23:33.369668Z,mapped
+2025,Land Rover,Range Rover,SE,AG460/460EF,2025 Range Rover I6/PHEV models,2025 range rover i6 phev models,user,2026-01-27T16:23:33.369668Z,mapped
 2025,Land Rover,Range Rover Sport,SE,AC461/350VY,2025 Range Rover Sport P360 SE,2025 range rover sport p360 se,user,2026-01-27T16:12:33.040779Z,mapped
 2025,Acura,TLX,Type S,UB7F0SGW,2025 TLX,2025 tlx,user,2026-01-27T16:04:06.740821Z,mapped
 2025,Acura,TLX,w/Technology Package,UB5F4SGNW,2025 TLX TECH 10 Speed Automatic,2025 tlx tech 10 speed automatic,user,2026-01-27T15:06:22.353088Z,mapped
