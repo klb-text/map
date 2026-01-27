@@ -49,6 +49,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,RAM,1500,Tradesman,DT1L41/23A,"2025 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-27T15:35:18.494960Z,mapped
 2025,Land Rover,Range Rover,Autobiography,AG460/460EH,2025 Range Rover I6/PHEV models,2025 range rover i6 phev models,user,2026-01-27T16:23:33.369668Z,mapped
 2025,Land Rover,Range Rover,SE,AG460/460EF,2025 Range Rover I6/PHEV models,2025 range rover i6 phev models,user,2026-01-27T16:23:33.369668Z,mapped
+2025,Land Rover,Range Rover Sport,Autobiography,AP461/351ZW,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,Autobiography,AW461/351YG,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,Dynamic SE,AC461/350XT,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,Dynamic SE,AP461/354BM,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,Dynamic SE,AW461/350TG,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,SE,AC461/350VY,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
+2025,Land Rover,Range Rover Sport,SV Edition Two,AW461/354CH,2025 Range Rover Sport models (excluding P360 S),2025 range rover sport models (excluding p360 s),user,2026-01-27T16:26:46.123852Z,mapped
 2025,Land Rover,Range Rover Sport,SE,AC461/350VY,2025 Range Rover Sport P360 SE,2025 range rover sport p360 se,user,2026-01-27T16:12:33.040779Z,mapped
 2025,Land Rover,Range Rover,Autobiography,AB460/460BB,2025 Range Rover V8 models,2025 range rover v8 models,user,2026-01-27T16:25:30.837039Z,mapped
 2025,Land Rover,Range Rover,Autobiography,AY460/460BB,2025 Range Rover V8 models,2025 range rover v8 models,user,2026-01-27T16:25:30.837039Z,mapped
