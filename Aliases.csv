@@ -5,6 +5,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
+2025,Fiat,FIAT 500e,,,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T18:20:20.998215Z,no_data
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Advance Package,SA1H7SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
 2025,Acura,ADX,w/A-Spec Package,SA1H5SJNW,2025 ADX,2025 adx,user,2026-01-27T15:08:37.818172Z,mapped
