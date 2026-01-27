@@ -24,6 +24,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,Q5,S line Prestige,FYTCAY,2025 Audi Q5 quattro,2025 audi q5 quattro,user,2026-01-27T17:08:36.013877Z,mapped
 2025,Audi,Q5,Premium,FYGBZY,2025 Audi Q5 quattro Premium,2025 audi q5 quattro premium,user,2026-01-27T16:59:52.855266Z,mapped
 2025,Audi,Q5,Premium Plus,FYGBZY,2025 Audi Q5 quattro Premium Plus,2025 audi q5 quattro premium plus,user,2026-01-27T17:00:32.495164Z,mapped
+2025,Audi,Q5,Premium,FYGBZY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,Premium Plus,FYGBZY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,Prestige,FYGBZY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Premium,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Premium,FYTCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Premium Plus,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Premium Plus,FYTCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Prestige,FYGCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
+2025,Audi,Q5,S line Prestige,FYTCAY,2025 Audi Q5 Sportback 45 TFSI,2025 audi q5 sportback 45 tfsi,user,2026-01-27T17:09:13.107507Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ Premium,2025 brz premium,user,2026-01-27T15:17:55.043212Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
