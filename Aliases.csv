@@ -101,6 +101,14 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SEL Convenience,494H2F4S/01,2025 ELANTRA SEL CONVENIENCE,2025 elantra sel convenience,user,2026-01-27T19:05:08.299743Z,mapped
 2025,Hyundai,Elantra,SEL Sport,494G2F4S/01,2025 ELANTRA SEL SPORT,2025 elantra sel sport,user,2026-01-27T19:04:55.442008Z,mapped
+2025,Ford,Mustang,Dark Horse,P8R/600A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,EcoBoost Premium,P8T/200A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,EcoBoost Premium,P8U/200A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,GT,P8C/300A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,GT Premium,P8C/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
+2025,Ford,Mustang,GT Premium,P8F/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
