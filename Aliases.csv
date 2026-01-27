@@ -89,6 +89,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Tonale,Special Edition Tributo Italiano,GC9S74/28Y,2025 TONALE TRIBUTO ITALIANO EAWD,2025 tonale tributo italiano eawd,user,2026-01-27T16:45:54.114654Z,mapped
 2026,AUDI,Q7,,,2026 Audi Q7 45 TFSI quattro Premium,2026 audi q7 45 tfsi quattro premium,user,2026-01-27T17:00:53.603171Z,no_data
 2026,AUDI,Q7,,,2026 Audi Q7 55 TFSI quattro Premium Plus,2026 audi q7 55 tfsi quattro premium plus,user,2026-01-27T17:01:18.726282Z,no_data
+2026,AUDI,Q8,,,2026 Audi Q8 55 TFSI quattro Premium Plus,2026 audi q8 55 tfsi quattro premium plus,user,2026-01-27T17:01:49.679175Z,no_data
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
