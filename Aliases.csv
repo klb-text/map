@@ -88,6 +88,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Dodge,Durango,R/T Plus,WDES75/22S,2025 DURANGO R/T PLUS AWD,2025 durango r t plus awd,user,2026-01-27T18:03:19.000351Z,mapped
 2025,Dodge,Durango,R/T Premium,WDES75/22S,2025 DURANGO R/T PREMIUM AWD,2025 durango r t premium awd,user,2026-01-27T18:08:17.043553Z,mapped
 2025,Dodge,Durango,SRT Hellcat,WDEM75/2XA,2025 DURANGO SRT HELLCAT AWD,2025 durango srt hellcat awd,user,2026-01-27T18:03:39.273644Z,mapped
+2025,Dodge,Durango,SRT Hellcat Hammerhead,WDEM75/2XA,2025 DURANGO SRT HELLCAT HAMMERHEAD AWD,2025 durango srt hellcat hammerhead awd,user,2026-01-27T18:09:51.374719Z,mapped
 2025,Dodge,Durango,SRT Hellcat Silver Bullet,WDEM75/2XA,2025 DURANGO SRT HELLCAT SILVER BULLET AWD,2025 durango srt hellcat silver bullet awd,user,2026-01-27T18:03:56.813300Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
