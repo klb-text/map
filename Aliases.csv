@@ -199,6 +199,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
 2026,Chrysler,Pacifica,Limited,RUCT53/27P,2026 PACIFICA LIMITED,2026 pacifica limited,user,2026-01-27T17:48:53.465952Z,mapped
 2026,Chrysler,Pacifica,Limited,RUFT53/27P,2026 PACIFICA LIMITED awd,2026 pacifica limited awd,user,2026-01-27T17:49:32.657203Z,mapped
+2026,Chrysler,Pacifica,Pinnacle,RUCS53/27S,2026 PACIFICA PINNACLE,2026 pacifica pinnacle,user,2026-01-27T17:50:10.699412Z,mapped
 2026,Chrysler,Pacifica,Select,RUCH53/27L,2026 PACIFICA SELECT,2026 pacifica select,user,2026-01-27T17:48:04.202470Z,mapped
 2026,Chrysler,Pacifica,Select,RUFH53/27L,2026 PACIFICA SELECT awd,2026 pacifica select awd,user,2026-01-27T17:48:25.706831Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
