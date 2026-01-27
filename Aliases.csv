@@ -45,6 +45,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,Q7,Premium,4MQAC1,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
 2025,Audi,Q7,Premium Plus,4MQAC1,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
 2025,Audi,Q7,Prestige,4MQAX2,2025 Audi Q7 45 TFSI quattro,2025 audi q7 45 tfsi quattro,user,2026-01-27T17:37:31.954651Z,mapped
+2025,Audi,Q8,Premium,4MT5X2,2025 Audi Q8 55 TFSI quattro,2025 audi q8 55 tfsi quattro,user,2026-01-27T17:39:27.181183Z,mapped
+2025,Audi,Q8,Premium Plus,4MT5X2,2025 Audi Q8 55 TFSI quattro,2025 audi q8 55 tfsi quattro,user,2026-01-27T17:39:27.181183Z,mapped
+2025,Audi,Q8,Prestige,4MT5X2,2025 Audi Q8 55 TFSI quattro,2025 audi q8 55 tfsi quattro,user,2026-01-27T17:39:27.181183Z,mapped
 2025,Audi,SQ5,Premium,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Audi,SQ5,Premium Plus,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Audi,SQ5,Prestige,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
