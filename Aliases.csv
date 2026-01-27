@@ -322,6 +322,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD with Comfort Package,2026 ford explorer active 4wd with comfort package,user,2026-01-27T19:48:36.466930Z,mapped
+2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
+2026,Ford,Explorer,ST-Line,K8K/300A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
+2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer ST-Line and Tremor,2026 ford explorer st line and tremor,user,2026-01-27T19:50:04.608910Z,mapped
 2026,Ford,Mustang Mach-E,GT,K4S/400A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
