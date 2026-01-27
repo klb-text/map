@@ -129,6 +129,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Audi,A6,Prestige,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
 2026,Audi,A6,Premium Plus,FN2A5Y,2026 Audi A6 Sedan quattro Premium Plus,2026 audi a6 sedan quattro premium plus,user,2026-01-27T17:06:31.201332Z,mapped
 2026,Audi,A6,Prestige,FN2A5Y,2026 Audi A6 Sedan quattro Prestige,2026 audi a6 sedan quattro prestige,user,2026-01-27T17:03:49.710672Z,mapped
+2026,AUDI,Q7,,,2026 Audi Q7 45 TFSI quattro,2026 audi q7 45 tfsi quattro,user,2026-01-27T17:36:17.727451Z,no_data
 2026,AUDI,Q7,,,2026 Audi Q7 45 TFSI quattro Premium,2026 audi q7 45 tfsi quattro premium,user,2026-01-27T17:00:53.603171Z,no_data
 2026,AUDI,Q7,,,2026 Audi Q7 55 TFSI quattro,2026 audi q7 55 tfsi quattro,user,2026-01-27T17:35:56.884317Z,no_data
 2026,AUDI,Q7,,,2026 Audi Q7 55 TFSI quattro Premium Plus,2026 audi q7 55 tfsi quattro premium plus,user,2026-01-27T17:01:18.726282Z,no_data
