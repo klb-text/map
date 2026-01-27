@@ -286,6 +286,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Sonata,SEL Convenience,29452F4S/01,2025 SONATA SEL CONVENIENCE,2025 sonata sel convenience,user,2026-01-27T19:13:35.645832Z,mapped
 2025,Hyundai,Sonata,SEL,29442F4S/01,2025 SONATA SEL FWD,2025 sonata sel fwd,user,2026-01-27T19:14:01.742189Z,mapped
 2025,Kia,Sorento,LX,73222,2025 Sorento LX FWD,2025 sorento lx fwd,user,2026-01-27T19:55:44.835094Z,mapped
+2025,Kia,Sorento,S,73232,2025 Sorento S FWD,2025 sorento s fwd,user,2026-01-27T19:55:55.020636Z,mapped
 2025,Alfa Romeo,Stelvio,,GUGL74/22M,2025 STELVIO AWD,2025 stelvio awd,user,2026-01-27T16:34:36.476323Z,mapped
 2025,Alfa Romeo,Stelvio,Special Edition,GUGT74/22Y,2025 STELVIO AWD,2025 stelvio awd,user,2026-01-27T16:34:36.476323Z,mapped
 2025,Alfa Romeo,Stelvio,Intensa,GUGM74/22F,2025 STELVIO INTENSA AWD,2025 stelvio intensa awd,user,2026-01-27T16:35:05.275984Z,mapped
