@@ -101,6 +101,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Dodge,Hornet,GT,GGEH49/23N,2025 HORNET GT AWD,2025 hornet gt awd,user,2026-01-27T18:18:00.389393Z,mapped
 2025,Dodge,Hornet,GT Plus,GGEH49/23N,2025 HORNET GT PLUS AWD,2025 hornet gt plus awd,user,2026-01-27T18:18:26.523336Z,mapped
+2025,Dodge,Hornet,R/T,GG7P49/28E,2025 HORNET R/T EAWD,2025 hornet r t eawd,user,2026-01-27T18:19:27.747707Z,mapped
 2025,Acura,ADX,,SA1H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Acura,MDX,,YD9H3SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Acura,RDX,,TC2H4SJNW,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
