@@ -57,6 +57,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,S6,Premium,4A2SFA,2025 Audi S6 Sedan quattro,2025 audi s6 sedan quattro,user,2026-01-27T17:44:26.355324Z,mapped
 2025,Audi,S6,Premium Plus,4A2SFA,2025 Audi S6 Sedan quattro,2025 audi s6 sedan quattro,user,2026-01-27T17:44:26.355324Z,mapped
 2025,Audi,S6,Prestige,4A2SFA,2025 Audi S6 Sedan quattro,2025 audi s6 sedan quattro,user,2026-01-27T17:44:26.355324Z,mapped
+2025,Audi,S7,Premium,4KASFA,2025 Audi S7 quattro,2025 audi s7 quattro,user,2026-01-27T17:45:51.474693Z,mapped
+2025,Audi,S7,Premium Plus,4KASFA,2025 Audi S7 quattro,2025 audi s7 quattro,user,2026-01-27T17:45:51.474693Z,mapped
+2025,Audi,S7,Prestige,4KASFA,2025 Audi S7 quattro,2025 audi s7 quattro,user,2026-01-27T17:45:51.474693Z,mapped
 2025,Audi,SQ5,Premium,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Audi,SQ5,Premium Plus,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
 2025,Audi,SQ5,Prestige,FYGS4A,2025 Audi SQ5,2025 audi sq5,user,2026-01-27T17:09:48.073249Z,mapped
