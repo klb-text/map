@@ -267,9 +267,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,XRT,J1482A65/01,2025 PALISADE XRT AWD,2025 palisade xrt awd,user,2026-01-27T19:10:56.383231Z,mapped
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
-2025,Honda,Pilot,EX-L,YG2H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
-2025,Honda,Pilot,EX-L+,YG2H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
@@ -347,6 +345,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 CR-V 2WD Sport Hybrid Continuously Variable Transmission,2026 cr v 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:54:03.244473Z,mapped
 2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V AWD LX Continuously Variable Transmission,2026 cr v awd lx continuously variable transmission,user,2026-01-28T14:49:32.145395Z,mapped
 2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V AWD Sport Hybrid Continuously Variable Transmission,2026 cr v awd sport hybrid continuously variable transmission,user,2026-01-28T14:52:49.611243Z,mapped
+2026,Honda,CR-V e:FCEV,,,2026 CR-V Fuel Cell,2026 cr v fuel cell,user,2026-01-28T14:57:24.862646Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 models (Excluding OCTA Models),2026 defender 110 models (excluding octa models),user,2026-01-27T16:28:54.895475Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
 2026,Land Rover,DEFENDER 130,,,2026 Defender 130 models,2026 defender 130 models,user,2026-01-27T16:29:41.740780Z,no_data
