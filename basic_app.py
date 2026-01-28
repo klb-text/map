@@ -1,13 +1,12 @@
 
-# basic_app.py — Read-only Mozenda outlet with alias-exact lookup and plain-text table output
-# - Pulls Mappings.csv (canonical) and Aliases.csv (alias -> canonical) from GitHub
-# - Joins canonical mappings to local CADS.csv to add STYLE_ID (and any CADS fields you want)
-# - EXACT alias match (case-insensitive, whitespace-normalized)
-# - If alias exists with status='no_data' but no mapped rows, returns "No Vehicle Data"
-# - NEW: In Mozenda mode (?mozenda=1), prints ONLY plain-text TSV/CSV blocks and halts.
-# - Human mode shows the same plain-text blocks (no table), with an optional checkbox to render a grid.
+# basic_app.py — Read-only Mozenda outlet with alias-only exact lookup
+# NEW: Renders a plain HTML <table> with stable ids/data-attributes so Mozenda can parse each cell.
+# - Same data sources & logic as before (Mappings.csv, Aliases.csv, CADS.csv, exact alias, "No Vehicle Data")
+# - In Mozenda mode (?mozenda=1) -> outputs ONLY the HTML table + meta div, then st.stop() (no Streamlit grid)
+# - In human mode -> shows the same HTML table; optional checkbox to also display Streamlit dataframe if you want
 
 import base64
+import html
 import io
 from typing import Optional, Tuple, List
 import pandas as pd
@@ -16,7 +15,7 @@ import requests
 
 # ---------------- Page Config ----------------
 st.set_page_config(page_title="AFF Vehicle Mapping - Read Only (Alias Exact)", layout="wide")
-st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup (Plain Text)")
+st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup (HTML Table)")
 
 # ---------------- Secrets / GitHub ----------------
 gh = st.secrets.get("github", {})
@@ -227,74 +226,88 @@ refresh_qp = params.get("refresh", ["0"])[0] == "1" # ?refresh=1 to force cache 
 moz_param  = params.get("mozenda", ["0"])[0].strip().lower()
 is_mozenda = moz_param in ("1", "true", "yes", "y")
 
-# ---------------- Refresh controls (human mode only) ----------------
-if not is_mozenda:
-    if st.button("Refresh from GitHub") or refresh_qp:
-        fetch_csv_github.clear()
-        join_mappings_to_cads.clear()
-        st.success("Cache cleared. Latest GitHub files will be fetched on this run.")
-
 # ---------------- Pull GitHub CSVs (read-only) ----------------
+if not is_mozenda and st.button("Refresh from GitHub") or (not is_mozenda and refresh_qp):
+    fetch_csv_github.clear()
+    join_mappings_to_cads.clear()
+    st.success("Cache cleared. Latest GitHub files will be fetched on this run.")
+
 mappings_df = fetch_csv_github(GH_OWNER, GH_REPO, MAP_PATH, GH_BRANCH, GH_TOKEN)
 aliases_df  = fetch_csv_github(GH_OWNER, GH_REPO, ALIASES_PATH, GH_BRANCH, GH_TOKEN)
+joined_df   = join_mappings_to_cads(mappings_df, cads_df)
 
-# ---------------- Build joined dataset ----------------
-joined_df = join_mappings_to_cads(mappings_df, cads_df)
+# ---------------- HTML table builder (parsable) ----------------
+PREFERRED_COLS = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
 
-# ---------------- Helper: emit plain-text blocks ----------------
-def emit_plain_text_blocks(res_df: pd.DataFrame, is_no_data: bool):
+def to_stable_schema(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(columns=PREFERRED_COLS)
+    out = df.copy()
+    for c in PREFERRED_COLS:
+        if c not in out.columns:
+            out[c] = ""
+    remaining = [c for c in out.columns if c not in PREFERRED_COLS]
+    return out[PREFERRED_COLS + remaining]
+
+def build_html_table(df: pd.DataFrame, table_id: str = "mozenda-table") -> str:
     """
-    Always emit:
-      READY_FLAG
-      NO_VEHICLE_DATA
-      ROW_COUNT
-      HARVEST_TSV_START ... HARVEST_TSV_END  (tab-separated)
-      HARVEST_CSV_START ... HARVEST_CSV_END  (comma-separated)
+    Returns a minimal, semantic HTML table Mozenda can parse cell-by-cell.
+    Each <td> includes data-col="colname"; each <tr> includes data-row="n".
     """
-    preferred_cols = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
+    safe_cols: List[str] = list(df.columns)
+    # Header
+    thead_cells = "".join(f"<th scope='col' data-col='{html.escape(c)}'>{html.escape(c)}</th>" for c in safe_cols)
+    thead = f"<thead><tr>{thead_cells}</tr></thead>"
 
-    if res_df.empty:
-        res_df = pd.DataFrame(columns=preferred_cols)
-    else:
-        for c in preferred_cols:
-            if c not in res_df.columns:
-                res_df[c] = ""
-        remaining = [c for c in res_df.columns if c not in preferred_cols]
-        res_df = res_df[preferred_cols + remaining]
+    # Body
+    body_rows = []
+    for i, (_, row) in enumerate(df.iterrows(), start=1):
+        tds = []
+        for c in safe_cols:
+            val = "" if pd.isna(row[c]) else str(row[c])
+            tds.append(f"<td data-col='{html.escape(c)}'>{html.escape(val)}</td>")
+        body_rows.append(f"<tr data-row='{i}' data-canon-key='{html.escape(str(row.get('canon_key','')))}'>{''.join(tds)}</tr>")
+    tbody = f"<tbody>{''.join(body_rows)}</tbody>"
 
-    ready = 1
-    no_data_flag = 1 if is_no_data else 0
-    row_count = len(res_df)
+    # Simple CSS to keep it readable; avoid complex wrappers (Mozenda likes simple DOM)
+    css = """
+    <style>
+      table#mozenda-table { border-collapse: collapse; width: 100%; }
+      #mozenda-table th, #mozenda-table td { border: 1px solid #ccc; padding: 6px 8px; font-family: system-ui, sans-serif; font-size: 14px; }
+      #mozenda-table thead th { background: #f7f7f7; }
+    </style>
+    """
 
-    # Small meta header Mozenda can parse quickly
-    st.code(
-        f"READY_FLAG={ready}\nNO_VEHICLE_DATA={no_data_flag}\nROW_COUNT={row_count}",
-        language="text"
-    )
+    # Meta div for easy polling
+    meta = f"<div id='mozenda-meta' data-ready='1' data-row-count='{len(df)}' data-no-data='0'></div>"
 
-    # TSV block (plain text table; best for line-by-line parsing)
-    st.code(
-        "HARVEST_TSV_START\n"
-        + res_df.to_csv(index=False, sep="\t")
-        + "HARVEST_TSV_END",
-        language="text"
-    )
+    return f"<!-- MOZ_TABLE_START -->{css}{meta}<table id='{table_id}' role='table'>{thead}{tbody}</table><!-- MOZ_TABLE_END -->"
 
-    # Optional CSV block (kept for convenience; Mozenda can ignore if using TSV)
-    st.code(
-        "HARVEST_CSV_START\n"
-        + res_df.to_csv(index=False)
-        + "HARVEST_CSV_END",
-        language="text"
-    )
+def build_meta_no_data() -> str:
+    # Header-only table (same schema) + meta no_data=1
+    head_cells = "".join(f"<th scope='col' data-col='{html.escape(c)}'>{html.escape(c)}</th>" for c in PREFERRED_COLS)
+    thead = f"<thead><tr>{head_cells}</tr></thead>"
+    meta = "<div id='mozenda-meta' data-ready='1' data-row-count='0' data-no-data='1'></div>"
+    css = """
+    <style>
+      table#mozenda-table { border-collapse: collapse; width: 100%; }
+      #mozenda-table th, #mozenda-table td { border: 1px solid #ccc; padding: 6px 8px; font-family: system-ui, sans-serif; font-size: 14px; }
+      #mozenda-table thead th { background: #f7f7f7; }
+    </style>
+    """
+    return f"<!-- MOZ_TABLE_START -->{css}{meta}<table id='mozenda-table' role='table'>{thead}<tbody></tbody></table><!-- MOZ_TABLE_END -->"
 
-# ---------------- Mozenda Mode: CSV/TSV-only outlet (short-circuit) ----------
+# ---------------- Branch: Mozenda mode (HTML table only, then stop) ----------
 if is_mozenda:
     res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
-    emit_plain_text_blocks(res_df, is_no_data)
-    st.stop()  # ⛔ absolutely no grid/table below this point
+    if is_no_data:
+        st.markdown(build_meta_no_data(), unsafe_allow_html=True)
+        st.stop()
+    table_df = to_stable_schema(res_df)
+    st.markdown(build_html_table(table_df), unsafe_allow_html=True)
+    st.stop()  # ⛔ nothing else renders in Mozenda mode
 
-# ---------------- Human-friendly UI (plain text by default; optional grid) ---
+# ---------------- Human mode --------------------------------------------------
 st.header("Search by Alias (Exact, case-insensitive)")
 with st.form("search_form"):
     q_input = st.text_input(
@@ -311,10 +324,16 @@ if clear_clicked:
 
 if do_search or q_input:
     res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_input)
-    emit_plain_text_blocks(res_df, is_no_data)
 
-    # Optional: allow a grid only when explicitly requested
-    show_grid = st.checkbox("Show grid (optional)", value=False)
+    if is_no_data:
+        st.warning("No Vehicle Data")
+        st.markdown(build_meta_no_data(), unsafe_allow_html=True)
+    else:
+        table_df = to_stable_schema(res_df)
+        st.markdown(build_html_table(table_df), unsafe_allow_html=True)
+
+    # Optional: show Streamlit grid only when explicitly enabled
+    show_grid = st.checkbox("Show Streamlit grid (optional)", value=False)
     if show_grid and not res_df.empty:
         st.dataframe(res_df, hide_index=True, use_container_width=True)
 
