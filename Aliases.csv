@@ -17,6 +17,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,M340,M340i NA xDrive,263A,,,user,2026-01-28T23:55:41.116130Z,mapped
 2026,BMW,i4,eDrive40,26DA,,,user,2026-01-28T23:55:59.465046Z,mapped
 2026,BMW,i4,xDrive40,26DF,,,user,2026-01-28T23:56:17.726698Z,mapped
+2026,BMW,i5,xDrive40,265V,,,user,2026-01-28T23:57:26.455881Z,mapped
 2026,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-28T23:39:16.017075Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
