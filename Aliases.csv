@@ -242,6 +242,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mitsubishi,Outlander PHEV,,,2025 Outlander PHEV,2025 outlander phev,user,2026-01-28T13:54:59.838109Z,no_data
 2025,Mitsubishi,Outlander PHEV,,,2025 Outlander PHEV (SEL Black Edition/Platinum Edition),2025 outlander phev (sel black edition platinum edition),user,2026-01-28T13:56:18.284647Z,no_data
 2025,Mitsubishi,Outlander PHEV,,,2025 Outlander PHEV SE S-AWC,2025 outlander phev se s awc,user,2026-01-28T13:53:22.900478Z,no_data
+2025,Mitsubishi,Outlander,Platinum Edition,OT45-Z/R52,2025 Outlander Platinum Edition,2025 outlander platinum edition,user,2026-01-28T13:56:29.319712Z,mapped
 2025,Mitsubishi,Outlander Sport,ES,OS45-B/A51,2025 Outlander Sport,2025 outlander sport,user,2026-01-28T13:55:54.261667Z,mapped
 2025,Mitsubishi,Outlander Sport,LE,OS45-F/A52,2025 Outlander Sport,2025 outlander sport,user,2026-01-28T13:55:54.261667Z,mapped
 2025,Mitsubishi,Outlander Sport,S,OS45-Y/A55,2025 Outlander Sport,2025 outlander sport,user,2026-01-28T13:55:54.261667Z,mapped
