@@ -390,6 +390,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2025 TUCSON Plug-in Hybrid SEL,2025 tucson plug in hybrid sel,user,2026-01-27T18:58:59.464135Z,mapped
 2025,Jeep,Wagoneer,,WSTM75/25E,2025 WAGONEER 4X2,2025 wagoneer 4x2,user,2026-01-28T17:29:45.646348Z,mapped
 2025,Jeep,Wagoneer L,,WSJM76/25E,2025 WAGONEER 4X4,2025 wagoneer 4x4,user,2026-01-28T17:33:47.439365Z,mapped
+2025,Jeep,Wagoneer,Series II,WSTH75/25J,2025 WAGONEER SERIES II 4X2,2025 wagoneer series ii 4x2,user,2026-01-28T17:37:51.274265Z,mapped
 2025,Jeep,Wrangler,Rubicon,JLJS72/22R,2025 WRANGLER 2-DOOR RUBICON,2025 wrangler 2 door rubicon,user,2026-01-28T15:52:02.645213Z,mapped
 2025,Jeep,Wrangler,Rubicon X,JLJS72/22R,2025 WRANGLER 2-DOOR RUBICON X,2025 wrangler 2 door rubicon x,user,2026-01-28T16:46:24.867920Z,mapped
 2025,Jeep,Wrangler,Sport,JLJL72/22B,2025 WRANGLER 2-DOOR SPORT,2025 wrangler 2 door sport,user,2026-01-28T15:42:50.412563Z,mapped
