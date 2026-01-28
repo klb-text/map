@@ -13,6 +13,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Ford,Maverick,XLT,W8H/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT Advanced,W8C/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
+2024,Jaguar,F-TYPE,75,HL152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
+2024,Jaguar,F-TYPE,75,HM152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
+2024,Jaguar,F-TYPE,R-Dynamic,HN152/351RH,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
+2024,Jaguar,F-TYPE,R-Dynamic,HP152/351RH,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
+2024,Jaguar,F-TYPE,R75,HL152/351RJ,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
+2024,Jaguar,F-TYPE,R75,HM152/351RJ,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
 2025,Fiat,FIAT 500e,,,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T18:20:20.998215Z,no_data
