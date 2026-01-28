@@ -510,6 +510,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
+2026,Jeep,Gladiator,Sport,JTJL98/24B,2026 GLADIATOR SPORT 4X4,2026 gladiator sport 4x4,user,2026-01-28T17:22:30.404208Z,mapped
 2026,Honda,HR-V,EX-L,RZ1H7TJW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
 2026,Honda,HR-V,LX,RZ1H3TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
 2026,Honda,HR-V,Sport,RZ1H5TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
