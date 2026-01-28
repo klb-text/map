@@ -1,23 +1,22 @@
 
-# basic_app.py — Read-only Mozenda outlet with alias-only exact lookup and "No Vehicle Data" handling
+# basic_app.py — Read-only Mozenda outlet with alias-exact lookup and plain-text table output
 # - Pulls Mappings.csv (canonical) and Aliases.csv (alias -> canonical) from GitHub
 # - Joins canonical mappings to local CADS.csv to add STYLE_ID (and any CADS fields you want)
-# - Search bar + Mozenda endpoint use EXACT alias match (case-insensitive, whitespace-normalized)
-# - If alias exists with status='no_data' but no mapped rows, show "No Vehicle Data"
-# - Includes "Refresh from GitHub" button and ?refresh=1 flag to clear caches immediately
-# - NEW: When ?mozenda=1 is present, the app prints ONLY a plain-text CSV block between
-#        HARVEST_TABLE_START / HARVEST_TABLE_END and then halts (no Streamlit tables).
+# - EXACT alias match (case-insensitive, whitespace-normalized)
+# - If alias exists with status='no_data' but no mapped rows, returns "No Vehicle Data"
+# - NEW: In Mozenda mode (?mozenda=1), prints ONLY plain-text TSV/CSV blocks and halts.
+# - Human mode shows the same plain-text blocks (no table), with an optional checkbox to render a grid.
 
 import base64
 import io
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import pandas as pd
 import streamlit as st
 import requests
 
 # ---------------- Page Config ----------------
 st.set_page_config(page_title="AFF Vehicle Mapping - Read Only (Alias Exact)", layout="wide")
-st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup")
+st.title("AFF Vehicle Mapping (Read Only) — Alias Exact Lookup (Plain Text)")
 
 # ---------------- Secrets / GitHub ----------------
 gh = st.secrets.get("github", {})
@@ -221,20 +220,19 @@ except Exception as e:
     st.error(f"Failed to load {CADS_FILE}: {e}")
     st.stop()
 
-# ---------------- Refresh controls ----------------
+# ---------------- Query Params ----------------
 params     = st.experimental_get_query_params()
 q_param    = params.get("q", [""])[0]               # alias string to look up
 refresh_qp = params.get("refresh", ["0"])[0] == "1" # ?refresh=1 to force cache clear
 moz_param  = params.get("mozenda", ["0"])[0].strip().lower()
 is_mozenda = moz_param in ("1", "true", "yes", "y")
-# 'format' is ignored in Mozenda mode; we always return plain-text CSV block
-out_format = params.get("format", ["csv"])[0].lower()  # csv|json|html (still used for human mode)
 
-refresh_clicked = st.button("Refresh from GitHub")
-if refresh_clicked or refresh_qp:
-    fetch_csv_github.clear()
-    join_mappings_to_cads.clear()
-    st.success("Cache cleared. Latest GitHub files will be fetched on this run.")
+# ---------------- Refresh controls (human mode only) ----------------
+if not is_mozenda:
+    if st.button("Refresh from GitHub") or refresh_qp:
+        fetch_csv_github.clear()
+        join_mappings_to_cads.clear()
+        st.success("Cache cleared. Latest GitHub files will be fetched on this run.")
 
 # ---------------- Pull GitHub CSVs (read-only) ----------------
 mappings_df = fetch_csv_github(GH_OWNER, GH_REPO, MAP_PATH, GH_BRANCH, GH_TOKEN)
@@ -243,42 +241,60 @@ aliases_df  = fetch_csv_github(GH_OWNER, GH_REPO, ALIASES_PATH, GH_BRANCH, GH_TO
 # ---------------- Build joined dataset ----------------
 joined_df = join_mappings_to_cads(mappings_df, cads_df)
 
-# ---------------- Mozenda Mode: CSV-only outlet (short-circuit) -------------
-# IMPORTANT: This block must execute BEFORE any human-facing UI renders.
-if is_mozenda:
-    # Perform lookup using the query parameter alias
-    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
-
-    # Enforce a stable column order for Mozenda scraping
+# ---------------- Helper: emit plain-text blocks ----------------
+def emit_plain_text_blocks(res_df: pd.DataFrame, is_no_data: bool):
+    """
+    Always emit:
+      READY_FLAG
+      NO_VEHICLE_DATA
+      ROW_COUNT
+      HARVEST_TSV_START ... HARVEST_TSV_END  (tab-separated)
+      HARVEST_CSV_START ... HARVEST_CSV_END  (comma-separated)
+    """
     preferred_cols = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
 
     if res_df.empty:
-        # Always emit header, even when empty (stable schema)
         res_df = pd.DataFrame(columns=preferred_cols)
     else:
-        # Ensure every preferred col exists; keep extras too
         for c in preferred_cols:
             if c not in res_df.columns:
                 res_df[c] = ""
-        # Reorder to preferred first, then any remaining columns
         remaining = [c for c in res_df.columns if c not in preferred_cols]
         res_df = res_df[preferred_cols + remaining]
 
-    # If alias exists but is explicitly marked as no_data, still emit an empty CSV (header only)
-    # so the scrape pipeline remains consistent.
-    if is_no_data:
-        res_df = pd.DataFrame(columns=preferred_cols)
+    ready = 1
+    no_data_flag = 1 if is_no_data else 0
+    row_count = len(res_df)
 
-    # Emit plain-text CSV block ONLY (no Streamlit table), then STOP rendering.
+    # Small meta header Mozenda can parse quickly
     st.code(
-        "HARVEST_TABLE_START\n"
-        + res_df.to_csv(index=False)
-        + "HARVEST_TABLE_END",
+        f"READY_FLAG={ready}\nNO_VEHICLE_DATA={no_data_flag}\nROW_COUNT={row_count}",
         language="text"
     )
-    st.stop()  # ⛔ Prevents any further UI (tables, etc.) from rendering.
 
-# ---------------- Human-friendly UI (only when not in Mozenda mode) ----------
+    # TSV block (plain text table; best for line-by-line parsing)
+    st.code(
+        "HARVEST_TSV_START\n"
+        + res_df.to_csv(index=False, sep="\t")
+        + "HARVEST_TSV_END",
+        language="text"
+    )
+
+    # Optional CSV block (kept for convenience; Mozenda can ignore if using TSV)
+    st.code(
+        "HARVEST_CSV_START\n"
+        + res_df.to_csv(index=False)
+        + "HARVEST_CSV_END",
+        language="text"
+    )
+
+# ---------------- Mozenda Mode: CSV/TSV-only outlet (short-circuit) ----------
+if is_mozenda:
+    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
+    emit_plain_text_blocks(res_df, is_no_data)
+    st.stop()  # ⛔ absolutely no grid/table below this point
+
+# ---------------- Human-friendly UI (plain text by default; optional grid) ---
 st.header("Search by Alias (Exact, case-insensitive)")
 with st.form("search_form"):
     q_input = st.text_input(
@@ -289,47 +305,17 @@ with st.form("search_form"):
     do_search = st.form_submit_button("Search")
 
 clear_clicked = st.button("Clear")
-
-if "search_alias" not in st.session_state: st.session_state["search_alias"] = q_param
-if "search_results" not in st.session_state: st.session_state["search_results"] = pd.DataFrame()
-if "search_no_data" not in st.session_state: st.session_state["search_no_data"] = False
-
 if clear_clicked:
-    st.session_state["search_alias"] = ""
-    st.session_state["search_results"] = pd.DataFrame()
-    st.session_state["search_no_data"] = False
     st.experimental_set_query_params()
-elif do_search:
-    st.session_state["search_alias"] = q_input
+    q_input = ""
+
+if do_search or q_input:
     res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_input)
-    st.session_state["search_results"] = res_df
-    st.session_state["search_no_data"] = is_no_data
-    st.experimental_set_query_params(q=q_input)
+    emit_plain_text_blocks(res_df, is_no_data)
 
-# ---------------- Human-friendly Preview ----------------
-if mappings_df.empty:
-    st.warning(f"Mappings.csv not found or unauthorized: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
-else:
-    st.success(f"Loaded {len(mappings_df)} canonical mappings from GitHub.")
-
-if aliases_df.empty:
-    st.warning(f"Aliases.csv not found or unauthorized: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{ALIASES_PATH}")
-else:
-    st.caption(f"Aliases available: {len(aliases_df)}")
-
-st.subheader("Results")
-if st.session_state["search_no_data"]:
-    st.warning("No Vehicle Data")
-else:
-    results_df = st.session_state["search_results"]
-    if results_df.empty and st.session_state["search_alias"]:
-        st.info("No results for that alias.")
-    elif not results_df.empty:
-        st.dataframe(results_df, hide_index=True, use_container_width=True)
-
-# Helpful endpoints (human mode only)
-st.markdown("---")
-st.subheader("Mozenda Hint")
-st.caption("Call this page with '?mozenda=1&q=<alias>' to get a CSV block between HARVEST_TABLE_START and HARVEST_TABLE_END.")
+    # Optional: allow a grid only when explicitly requested
+    show_grid = st.checkbox("Show grid (optional)", value=False)
+    if show_grid and not res_df.empty:
+        st.dataframe(res_df, hide_index=True, use_container_width=True)
 
 # --- EOF ---
