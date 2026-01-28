@@ -434,6 +434,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,230,230i,262B,2026 BMW 230i i,2026 bmw 230i i,user,2026-01-28T21:19:12.182958Z,mapped
 2026,BMW,230,230i xDrive,262J,2026 BMW 230i i xDrive,2026 bmw 230i i xdrive,user,2026-01-28T21:19:24.448799Z,mapped
 2026,BMW,330,330i,263O,2026 BMW 330i i,2026 bmw 330i i,user,2026-01-28T21:20:34.409676Z,mapped
+2026,BMW,330,330i NA xDrive,263X,2026 BMW 330i i xDrive,2026 bmw 330i i xdrive,user,2026-01-28T21:20:48.236811Z,mapped
 2026,BMW,M240,M240i,262C,2026 BMW M240i i,2026 bmw m240i i,user,2026-01-28T21:20:04.828142Z,mapped
 2026,BMW,M240,M240i xDrive,262K,2026 BMW M240i i xDrive,2026 bmw m240i i xdrive,user,2026-01-28T21:20:17.309092Z,mapped
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
