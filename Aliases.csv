@@ -370,6 +370,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan 2WD Sport Hybrid Continuously Variable Transmission,2026 civic sedan 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:34:32.144436Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid,2026 civic sedan hybrid,user,2026-01-28T15:02:42.358803Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid Sport,2026 civic sedan hybrid sport,user,2026-01-28T14:35:31.918313Z,no_data
+2026,Honda,CR-V,EX,RS3H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
+2026,Honda,CR-V,EX,RS4H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
+2026,Honda,CR-V,EX-L,RS3H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
+2026,Honda,CR-V,EX-L,RS4H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
+2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
+2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V 2WD LX Continuously Variable Transmission,2026 cr v 2wd lx continuously variable transmission,user,2026-01-28T14:50:30.747206Z,mapped
 2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 CR-V 2WD Sport Hybrid Continuously Variable Transmission,2026 cr v 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:54:03.244473Z,mapped
 2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V AWD LX Continuously Variable Transmission,2026 cr v awd lx continuously variable transmission,user,2026-01-28T14:49:32.145395Z,mapped
