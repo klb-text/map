@@ -436,6 +436,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,330,330i,263O,2026 BMW 330i i,2026 bmw 330i i,user,2026-01-28T21:20:34.409676Z,mapped
 2026,BMW,330,330i NA xDrive,263X,2026 BMW 330i i xDrive,2026 bmw 330i i xdrive,user,2026-01-28T21:20:48.236811Z,mapped
 2026,BMW,430,430i,264B,2026 BMW 430i i,2026 bmw 430i i,user,2026-01-28T21:22:18.517068Z,mapped
+2026,BMW,430,430i xDrive,264D,2026 BMW 430i i xDrive,2026 bmw 430i i xdrive,user,2026-01-28T21:22:38.626956Z,mapped
 2026,BMW,i4,eDrive40,26DA,2026 BMW i4,2026 bmw i4,user,2026-01-28T21:21:37.258549Z,mapped
 2026,BMW,i4,xDrive40,26DF,2026 BMW i4 xDrive,2026 bmw i4 xdrive,user,2026-01-28T21:21:49.980747Z,mapped
 2026,BMW,M240,M240i,262C,2026 BMW M240i i,2026 bmw m240i i,user,2026-01-28T21:20:04.828142Z,mapped
