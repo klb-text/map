@@ -2,9 +2,11 @@
 # basic_app.py — Read-only Mozenda outlet with alias-only exact lookup and "No Vehicle Data" handling
 # - Pulls Mappings.csv (canonical) and Aliases.csv (alias -> canonical) from GitHub
 # - Joins canonical mappings to local CADS.csv to add STYLE_ID (and any CADS fields you want)
-# - Search bar + Mozenda endpoints use EXACT alias match (case-insensitive, whitespace-normalized)
+# - Search bar + Mozenda endpoint use EXACT alias match (case-insensitive, whitespace-normalized)
 # - If alias exists with status='no_data' but no mapped rows, show "No Vehicle Data"
 # - Includes "Refresh from GitHub" button and ?refresh=1 flag to clear caches immediately
+# - NEW: When ?mozenda=1 is present, the app prints ONLY a plain-text CSV block between
+#        HARVEST_TABLE_START / HARVEST_TABLE_END and then halts (no Streamlit tables).
 
 import base64
 import io
@@ -223,8 +225,10 @@ except Exception as e:
 params     = st.experimental_get_query_params()
 q_param    = params.get("q", [""])[0]               # alias string to look up
 refresh_qp = params.get("refresh", ["0"])[0] == "1" # ?refresh=1 to force cache clear
-is_mozenda = params.get("mozenda", ["0"])[0] == "1"
-out_format = params.get("format", ["csv"])[0].lower()  # csv|json|html (csv default)
+moz_param  = params.get("mozenda", ["0"])[0].strip().lower()
+is_mozenda = moz_param in ("1", "true", "yes", "y")
+# 'format' is ignored in Mozenda mode; we always return plain-text CSV block
+out_format = params.get("format", ["csv"])[0].lower()  # csv|json|html (still used for human mode)
 
 refresh_clicked = st.button("Refresh from GitHub")
 if refresh_clicked or refresh_qp:
@@ -239,7 +243,42 @@ aliases_df  = fetch_csv_github(GH_OWNER, GH_REPO, ALIASES_PATH, GH_BRANCH, GH_TO
 # ---------------- Build joined dataset ----------------
 joined_df = join_mappings_to_cads(mappings_df, cads_df)
 
-# ---------------- Search UI (Exact alias) ----------------
+# ---------------- Mozenda Mode: CSV-only outlet (short-circuit) -------------
+# IMPORTANT: This block must execute BEFORE any human-facing UI renders.
+if is_mozenda:
+    # Perform lookup using the query parameter alias
+    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
+
+    # Enforce a stable column order for Mozenda scraping
+    preferred_cols = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
+
+    if res_df.empty:
+        # Always emit header, even when empty (stable schema)
+        res_df = pd.DataFrame(columns=preferred_cols)
+    else:
+        # Ensure every preferred col exists; keep extras too
+        for c in preferred_cols:
+            if c not in res_df.columns:
+                res_df[c] = ""
+        # Reorder to preferred first, then any remaining columns
+        remaining = [c for c in res_df.columns if c not in preferred_cols]
+        res_df = res_df[preferred_cols + remaining]
+
+    # If alias exists but is explicitly marked as no_data, still emit an empty CSV (header only)
+    # so the scrape pipeline remains consistent.
+    if is_no_data:
+        res_df = pd.DataFrame(columns=preferred_cols)
+
+    # Emit plain-text CSV block ONLY (no Streamlit table), then STOP rendering.
+    st.code(
+        "HARVEST_TABLE_START\n"
+        + res_df.to_csv(index=False)
+        + "HARVEST_TABLE_END",
+        language="text"
+    )
+    st.stop()  # ⛔ Prevents any further UI (tables, etc.) from rendering.
+
+# ---------------- Human-friendly UI (only when not in Mozenda mode) ----------
 st.header("Search by Alias (Exact, case-insensitive)")
 with st.form("search_form"):
     q_input = st.text_input(
@@ -267,50 +306,6 @@ elif do_search:
     st.session_state["search_no_data"] = is_no_data
     st.experimental_set_query_params(q=q_input)
 
-# ---------------- Mozenda Mode: API-like outlet (Plain-text CSV block) ----------------
-if is_mozenda:
-    res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
-
-    # Always determine a stable column order (adjust to your schema as needed)
-    preferred_cols = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
-    if not res_df.empty:
-        # Ensure every preferred col exists; keep extras too
-        for c in preferred_cols:
-            if c not in res_df.columns:
-                res_df[c] = ""
-        # Reorder to preferred first, then any remaining columns
-        remaining = [c for c in res_df.columns if c not in preferred_cols]
-        res_df = res_df[preferred_cols + remaining]
-
-    if is_no_data:
-        # HTML shows message; CSV/JSON emit an empty CSV (header only) inside markers for schema stability
-        if out_format == "html":
-            st.warning("No Vehicle Data")
-
-        # Build an empty CSV with the correct header
-        empty_cols = preferred_cols
-        empty_df = pd.DataFrame(columns=empty_cols)
-
-        st.code(
-            "HARVEST_TABLE_START\n"
-            + empty_df.to_csv(index=False)
-            + "HARVEST_TABLE_END",
-            language="text"
-        )
-        st.stop()
-
-    # Return mapped rows (joined to CADS) as a plain-text CSV block between markers
-    # If res_df is empty, this still returns just the header line (schema-stable).
-    st.code(
-        "HARVEST_TABLE_START\n"
-        + res_df.to_csv(index=False)
-        + "HARVEST_TABLE_END",
-        language="text"
-    )
-    st.stop()
-# --- end Mozenda Mode block ---
-
-
 # ---------------- Human-friendly Preview ----------------
 if mappings_df.empty:
     st.warning(f"Mappings.csv not found or unauthorized: {GH_OWNER}/{GH_REPO}@{GH_BRANCH}:{MAP_PATH}")
@@ -332,12 +327,9 @@ else:
     elif not results_df.empty:
         st.dataframe(results_df, hide_index=True, use_container_width=True)
 
-# Helpful endpoints
+# Helpful endpoints (human mode only)
 st.markdown("---")
-st.subheader("Mozenda Endpoints")
-base_url = st.request.url.split("?")[0] if hasattr(st, "request") else ""
-st.code(f"{base_url}?mozenda=1&format=csv&q=2026%20Integra", language="text")
-st.code(f"{base_url}?mozenda=1&format=json&q=2026%20Integra", language="text")
-st.code(f"{base_url}?mozenda=1&format=html&q=2026%20Integra", language="text")
+st.subheader("Mozenda Hint")
+st.caption("Call this page with '?mozenda=1&q=<alias>' to get a CSV block between HARVEST_TABLE_START and HARVEST_TABLE_END.")
 
 # --- EOF ---
