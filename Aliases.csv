@@ -105,6 +105,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Dodge,Durango,SRT Hellcat Brass Monkey,WDEM75/2XA,2025 DURANGO SRT HELLCAT BRASS MONKEY AWD,2025 durango srt hellcat brass monkey awd,user,2026-01-27T18:10:21.124973Z,mapped
 2025,Dodge,Durango,SRT Hellcat Hammerhead,WDEM75/2XA,2025 DURANGO SRT HELLCAT HAMMERHEAD AWD,2025 durango srt hellcat hammerhead awd,user,2026-01-27T18:09:51.374719Z,mapped
 2025,Dodge,Durango,SRT Hellcat Silver Bullet,WDEM75/2XA,2025 DURANGO SRT HELLCAT SILVER BULLET AWD,2025 durango srt hellcat silver bullet awd,user,2026-01-27T18:03:56.813300Z,mapped
+2025,Mitsubishi,Eclipse Cross,Black Edition,EC45-H/R52,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
+2025,Mitsubishi,Eclipse Cross,ES,EC45-B/A51,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
+2025,Mitsubishi,Eclipse Cross,LE,EC45-F/E51,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
+2025,Mitsubishi,Eclipse Cross,Ralliart,EC45-R/R51,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
+2025,Mitsubishi,Eclipse Cross,SE,EC45-J/E52,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
+2025,Mitsubishi,Eclipse Cross,SEL,EC45-N/E54,2025 Eclipse Cross,2025 eclipse cross,user,2026-01-28T13:55:30.705332Z,mapped
 2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 ELANTRA LIMITED,2025 elantra limited,user,2026-01-27T19:05:20.862277Z,mapped
 2025,Hyundai,Elantra,N Line,49452FT5/01,2025 ELANTRA N LINE,2025 elantra n line,user,2026-01-27T19:05:34.365712Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
