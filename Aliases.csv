@@ -462,6 +462,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM FWD,2026 palisade sel premium fwd,user,2026-01-27T19:08:30.988058Z,mapped
 2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO,2026 palisade xrt pro,user,2026-01-27T19:09:16.185767Z,mapped
 2026,RAM,1500,Big Horn,DT1H41/23Z,"2026 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2026 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-28T14:09:35.313792Z,mapped
+2026,RAM,1500,Big Horn,DT1H41/23Z,"2026 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2026 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-28T14:09:59.448010Z,mapped
+2026,RAM,1500,Laramie,DT1P98/21H,"2026 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2026 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-28T14:09:59.448010Z,mapped
+2026,RAM,1500,Tradesman,DT1L41/23A,"2026 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2026 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-28T14:09:59.448010Z,mapped
 2026,RAM,1500,Big Horn,DT1H41/23Z,"2026 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2026 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-28T14:09:46.797594Z,mapped
 2026,RAM,1500,Tradesman,DT1L41/23A,"2026 RAM 1500 TRADESMAN CREW CAB 4X4 5'7"" BOX","2026 ram 1500 tradesman crew cab 4x4 5'7"" box",user,2026-01-28T14:09:46.797594Z,mapped
 2026,Land Rover,Range Rover Evoque,Core S,HM551/551BL,2026 Range Rover Evoque models,2026 range rover evoque models,user,2026-01-27T16:28:24.849415Z,mapped
