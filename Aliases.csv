@@ -387,6 +387,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid,2026 civic sedan hybrid,user,2026-01-28T15:02:42.358803Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid Sport,2026 civic sedan hybrid sport,user,2026-01-28T14:35:31.918313Z,no_data
 2026,Honda,Civic Sedan,,,2026 Civic Si Sedan,2026 civic si sedan,user,2026-01-28T15:06:21.901621Z,no_data
+2026,Jeep,Compass,Latitude,MPJM74/29J,2026 COMPASS LATITUDE 4X4,2026 compass latitude 4x4,user,2026-01-28T15:31:42.654788Z,mapped
 2026,Honda,CR-V,EX,RS3H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,EX-L,RS3H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
