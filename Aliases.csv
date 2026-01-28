@@ -390,6 +390,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jeep,Compass,Latitude,MPJM74/29J,2026 COMPASS LATITUDE 4X4,2026 compass latitude 4x4,user,2026-01-28T15:31:42.654788Z,mapped
 2026,Jeep,Compass,Latitude Altitude,MPJM74/29J,2026 COMPASS LATITUDE ALTITUDE 4X4,2026 compass latitude altitude 4x4,user,2026-01-28T15:32:50.050912Z,mapped
 2026,Jeep,Compass,Limited,MPJP74/29G,2026 COMPASS LIMITED 4X4,2026 compass limited 4x4,user,2026-01-28T15:32:17.760727Z,mapped
+2026,Jeep,Compass,Limited Altitude,MPJP74/29G,2026 COMPASS LIMITED ALTITUDE 4X4,2026 compass limited altitude 4x4,user,2026-01-28T15:33:42.680569Z,mapped
 2026,Jeep,Compass,Trailhawk,MPJH74/29E,2026 COMPASS TRAILHAWK® 4X4,2026 compass trailhawk® 4x4,user,2026-01-28T15:33:15.600860Z,mapped
 2026,Honda,CR-V,EX,RS3H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,EX-L,RS3H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
