@@ -142,6 +142,28 @@ def get_example_make_model(vehicle_name: str):
         pass
     return None, None
 
+# ---- NEW: Attach visible vehicle attribute columns for the table ----
+ATTR_CANDIDATES = {
+    "Cab":    ["CAB", "AD_CAB", "CAB_STYLE", "CABTYPE", "CAB_TYPE"],
+    "Drive":  ["DRIVE", "DRIVETRAIN", "DRIVE_TRAIN", "AD_DRIVE", "DRIVE_TYPE"],
+    "Body":   ["BODY", "BODY_STYLE", "AD_BODY"],
+    "Engine": ["ENGINE", "AD_ENGINE", "ENGINE_DESC", "ENGINE_DESCRIPTION"],
+    "Box":    ["BOX", "BED", "BED_LENGTH", "BOX_SIZE", "AD_BOX"],
+}
+
+def _first_series_or_blank(df: pd.DataFrame, candidates: list[str]) -> pd.Series:
+    for c in candidates:
+        if c in df.columns:
+            return df[c].astype(str).fillna('')
+    return pd.Series([''] * len(df), index=df.index)
+
+def attach_vehicle_attrs(df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure 'Cab','Drive','Body','Engine','Box' exist (derived from best-available CADS columns)."""
+    out = df.copy()
+    for out_col, cand in ATTR_CANDIDATES.items():
+        out[out_col] = _first_series_or_blank(out, cand)
+    return out
+
 def smart_vehicle_match(
     df: pd.DataFrame,
     vehicle_q: str,
@@ -207,7 +229,16 @@ def smart_vehicle_match(
         work['STYLE_ID']
     )
 
-    cols = ['map_key', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+    # ---- NEW: attach vehicle attrs for display ----
+    work = attach_vehicle_attrs(work)
+
+    cols = [
+        'map_key', 'score',
+        'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
+        'AD_MFGCODE', 'STYLE_ID',
+        'Cab', 'Drive', 'Body', 'Engine', 'Box',  # NEW in table
+        'vehicle_search'
+    ]
     for c in cols:
         if c not in work.columns:
             work[c] = ""
@@ -229,6 +260,58 @@ def strict_filter(df: pd.DataFrame, year: str = "", make: str = "", model: str =
     if trim:
         work = work[work['TRIM'].str.lower() == trim.lower()]
     return work
+
+# ---- NEW: strict Year + Model Code lookup (no fuzzy) ----
+def lookup_by_year_modelcode(df: pd.DataFrame, year: str, model_code: str) -> pd.DataFrame:
+    """
+    Return *all* matching rows for exact Year + Model Code.
+    Sets score=100 to surface at top; attaches attrs.
+    """
+    if df.empty or not year or not model_code:
+        return pd.DataFrame()
+
+    work = df.copy()
+    work = work[
+        (work['MODEL_YEAR'].astype(str) == str(year)) &
+        (work['AD_MFGCODE'].astype(str).str.casefold() == str(model_code).casefold())
+    ].copy()
+
+    if work.empty:
+        return pd.DataFrame()
+
+    # Build vehicle_search, fixed score, stable key
+    work['vehicle_search'] = (
+        work['MODEL_YEAR'].str.strip() + ' ' +
+        work['AD_MAKE'].str.strip() + ' ' +
+        work['AD_MODEL'].str.strip() + ' ' +
+        work['TRIM'].str.strip()
+    ).str.replace(r'\s+', ' ', regex=True).str.strip()
+    work['score'] = 100
+
+    work['map_key'] = (
+        work['MODEL_YEAR'] + '|' +
+        work['AD_MAKE'] + '|' +
+        work['AD_MODEL'] + '|' +
+        work['TRIM'] + '|' +
+        work['AD_MFGCODE'] + '|' +
+        work['STYLE_ID']
+    )
+
+    # Attach attributes for display
+    work = attach_vehicle_attrs(work)
+
+    cols = [
+        'map_key', 'score',
+        'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
+        'AD_MFGCODE', 'STYLE_ID',
+        'Cab', 'Drive', 'Body', 'Engine', 'Box',
+        'vehicle_search'
+    ]
+    for c in cols:
+        if c not in work.columns:
+            work[c] = ""
+    # Keep consistent ordering
+    return work[cols].sort_values(['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']).reset_index(drop=True)
 
 # =========================
 # --- GitHub helpers ---
@@ -417,6 +500,9 @@ if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
 if 'inferred' not in st.session_state:
     st.session_state['inferred'] = {"year":"", "make":"", "model":"", "trim":""}
+# ---- NEW: track which search populated the table ----
+if 'result_mode' not in st.session_state:
+    st.session_state['result_mode'] = "alias"  # alias | year_model_code
 
 # =========================
 # --- Main Page: Search Form ---
@@ -439,6 +525,27 @@ with st.form("search_form_main"):
     score_cutoff = st.slider("Minimum match score", min_value=0, max_value=100, value=60, step=5)
 
     submitted = st.form_submit_button("Search Vehicles")
+
+# ---- NEW: Alternate search — Year + Model Code (kept separate to preserve existing flow) ----
+with st.expander("Alternate search: Year + Model Code", expanded=False):
+    with st.form("search_form_mc"):
+        cmc1, cmc2 = st.columns(2)
+        mc_year = cmc1.text_input("Year (exact)", value="")
+        mc_code = cmc2.text_input("Model Code (exact)", value="")
+        submitted_mc = st.form_submit_button("Search by Year + Model Code")
+    if submitted_mc:
+        # Build results strictly from Year + Model Code
+        mc_df = lookup_by_year_modelcode(cads_df, year=mc_year, model_code=mc_code)
+
+        st.session_state['matches_df'] = mc_df
+        st.session_state['show_results'] = True
+        # Keep whatever alias was typed above; don't overwrite it
+        st.session_state['current_query'] = vehicle_input
+        st.session_state['result_mode'] = "year_model_code"
+
+        # Reset/preserve selection only for the current results
+        prev = st.session_state['selection']
+        st.session_state['selection'] = {k: prev.get(k, False) for k in mc_df['map_key']} if not mc_df.empty else {}
 
 # Optional hint from reference file
 example_make, example_model = (None, None)
@@ -479,6 +586,7 @@ if submitted:
     st.session_state['matches_df'] = matches_df
     st.session_state['show_results'] = True
     st.session_state['current_query'] = vehicle_input
+    st.session_state['result_mode'] = "alias"
 
     # Reset/preserve selection only for the current results
     prev = st.session_state['selection']
@@ -494,35 +602,37 @@ if st.session_state['show_results']:
     eff_year, eff_make, eff_model, eff_trim = eff["year"], eff["make"], eff["model"], eff["trim"]
 
     # Compute strict subset using provided or inferred fields (only those that are non-empty)
-    strict_subset = strict_filter(cads_df, year=eff_year, make=eff_make, model=eff_model, trim=eff_trim)
-    specified_any_filter = any([eff_year, eff_make, eff_model, eff_trim])
-    no_data_candidate = specified_any_filter and strict_subset.empty
-    has_any_fuzzy = not matches_df.empty
+    # Show the "No Vehicle Data" pathway only for the alias-based search to avoid confusion.
+    if st.session_state.get('result_mode', 'alias') == "alias":
+        strict_subset = strict_filter(cads_df, year=eff_year, make=eff_make, model=eff_model, trim=eff_trim)
+        specified_any_filter = any([eff_year, eff_make, eff_model, eff_trim])
+        no_data_candidate = specified_any_filter and strict_subset.empty
+        has_any_fuzzy = not matches_df.empty
 
-    # Surface the no-data button if specific (provided or inferred) Y/M/M/T doesn't exist in CADS
-    if no_data_candidate:
-        st.warning(
-            "No exact CADS rows found for the specific Y/M/M/T you entered or I inferred "
-            f"(Year={eff_year or '—'}, Make={eff_make or '—'}, Model={eff_model or '—'}"
-            f"{', Trim='+eff_trim if eff_trim else ''})."
-        )
-        st.info("If you expect this vehicle to arrive in CADS later, log it as **'No Vehicle Data'** so the Basic app shows a clear message for this alias.")
-        if st.button("Vehicle Data Not Received"):
-            ok, msg = commit_alias_no_data(
-                alias_input=alias_text,
-                year=eff_year,
-                make=eff_make,
-                model=eff_model,
-                trim=eff_trim,
-                source="user"
+        # Surface the no-data button if specific (provided or inferred) Y/M/M/T doesn't exist in CADS
+        if no_data_candidate:
+            st.warning(
+                "No exact CADS rows found for the specific Y/M/M/T you entered or I inferred "
+                f"(Year={eff_year or '—'}, Make={eff_make or '—'}, Model={eff_model or '—'}"
+                f"{', Trim='+eff_trim if eff_trim else ''})."
             )
-            if ok:
-                st.success("Logged as 'No Vehicle Data'. When you search this alias in the Basic app, it will show a 'No Vehicle Data' message.")
-            else:
-                st.error(msg)
+            st.info("If you expect this vehicle to arrive in CADS later, log it as **'No Vehicle Data'** so the Basic app shows a clear message for this alias.")
+            if st.button("Vehicle Data Not Received"):
+                ok, msg = commit_alias_no_data(
+                    alias_input=alias_text,
+                    year=eff_year,
+                    make=eff_make,
+                    model=eff_model,
+                    trim=eff_trim,
+                    source="user"
+                )
+                if ok:
+                    st.success("Logged as 'No Vehicle Data'. When you search this alias in the Basic app, it will show a 'No Vehicle Data' message.")
+                else:
+                    st.error(msg)
 
-    # Show fuzzy results table (so you can map to what's available today)
-    if has_any_fuzzy:
+    # Show results table (fuzzy or MC-based)
+    if not matches_df.empty:
         st.subheader("Matching Vehicles")
         view = matches_df.copy()
         view['Select'] = view['map_key'].map(st.session_state['selection']).fillna(False).astype(bool)
@@ -540,7 +650,20 @@ if st.session_state['show_results']:
         if select_all_clicked:
             view['Select'] = True
 
-        display_cols = ['Select', 'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+        # ---- NEW: include Cab/Drive/Body/Engine/Box in the display table ----
+        display_cols = [
+            'Select', 'score',
+            'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
+            'AD_MFGCODE', 'STYLE_ID',
+            'Cab', 'Drive', 'Body', 'Engine', 'Box',
+            'vehicle_search'
+        ]
+
+        # If attributes are missing for some reason, ensure columns exist
+        for c in display_cols:
+            if c not in view.columns:
+                view[c] = ""
+
         edited = st.data_editor(
             view[display_cols],
             hide_index=True,
@@ -549,8 +672,17 @@ if st.session_state['show_results']:
                 "Select": st.column_config.CheckboxColumn(help="Include this row in the mapping"),
                 "score": st.column_config.NumberColumn(format="%d", help="Fuzzy match score (0–100)"),
                 "AD_MFGCODE": st.column_config.TextColumn(label="Model Code"),
+                "STYLE_ID": st.column_config.TextColumn(label="STYLE_ID"),
+                "Cab": st.column_config.TextColumn(help="Cab / cab style"),
+                "Drive": st.column_config.TextColumn(help="Drivetrain (e.g., 2WD, 4WD, AWD)"),
+                "Body": st.column_config.TextColumn(help="Body style"),
+                "Engine": st.column_config.TextColumn(help="Engine description"),
+                "Box": st.column_config.TextColumn(help="Bed/box length or size"),
             },
-            disabled=['score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM', 'AD_MFGCODE', 'STYLE_ID', 'vehicle_search']
+            disabled=[
+                'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
+                'AD_MFGCODE', 'STYLE_ID', 'Cab', 'Drive', 'Body', 'Engine', 'Box', 'vehicle_search'
+            ]
         )
         for i, row in edited.iterrows():
             mk = matches_df.loc[i, 'map_key']
@@ -611,8 +743,8 @@ if st.session_state['show_results']:
                     mime="text/csv"
                 )
 
-    # If there were no fuzzy matches either, still provide a no-data pathway
-    if (not has_any_fuzzy) and (not no_data_candidate):
+    # If there were no matches either way, still provide a no-data pathway (only meaningful for alias flow)
+    if st.session_state.get('result_mode', 'alias') == "alias" and st.session_state['matches_df'].empty:
         st.warning("No CADS matches found for this alias.")
         st.info("Optionally log it as **'No Vehicle Data'** if you expect CADS to arrive later.")
         if st.button("Vehicle Data Not Received"):
