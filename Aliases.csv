@@ -345,6 +345,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid Sport,2026 civic sedan hybrid sport,user,2026-01-28T14:35:31.918313Z,no_data
 2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V 2WD LX Continuously Variable Transmission,2026 cr v 2wd lx continuously variable transmission,user,2026-01-28T14:50:30.747206Z,mapped
 2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V AWD LX Continuously Variable Transmission,2026 cr v awd lx continuously variable transmission,user,2026-01-28T14:49:32.145395Z,mapped
+2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V AWD Sport Hybrid Continuously Variable Transmission,2026 cr v awd sport hybrid continuously variable transmission,user,2026-01-28T14:52:49.611243Z,mapped
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 models (Excluding OCTA Models),2026 defender 110 models (excluding octa models),user,2026-01-27T16:28:54.895475Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
 2026,Land Rover,DEFENDER 130,,,2026 Defender 130 models,2026 defender 130 models,user,2026-01-27T16:29:41.740780Z,no_data
