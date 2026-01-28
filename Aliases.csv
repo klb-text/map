@@ -581,6 +581,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,MDX,,YD9H3TJNW,2026 MDX SH-AWD 10 Speed Automatic,2026 mdx sh awd 10 speed automatic,user,2026-01-27T15:43:19.291293Z,mapped
 2026,Kia,Niro,EX,G4242,2026 Niro EX FWD,2026 niro ex fwd,user,2026-01-27T19:55:36.222221Z,mapped
 2026,Kia,Niro,LX,G4222,2026 Niro LX FWD,2026 niro lx fwd,user,2026-01-27T19:55:25.786501Z,mapped
+2026,Lexus,NX,,,2026 NX 350 AWD,2026 nx 350 awd,user,2026-01-28T18:00:53.524981Z,no_data
 2026,Honda,Odyssey,EX-L,RL6H6TJNW,2026 Odyssey,2026 odyssey,user,2026-01-28T14:57:58.688713Z,mapped
 2026,Honda,Odyssey,Elite,RL6H9TKNW,2026 Odyssey,2026 odyssey,user,2026-01-28T14:57:58.688713Z,mapped
 2026,Honda,Odyssey,Sport-L,RL6H7TJNW,2026 Odyssey,2026 odyssey,user,2026-01-28T14:57:58.688713Z,mapped
