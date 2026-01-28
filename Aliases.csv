@@ -410,6 +410,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
+2026,Honda,HR-V,LX,RZ1H3TEW,2026 HR-V 2WD LX Continuously Variable Transmission,2026 hr v 2wd lx continuously variable transmission,user,2026-01-28T14:56:02.219253Z,mapped
 2026,Honda,HR-V,LX,RZ2H3TEW,2026 HR-V AWD LX Continuously Variable Transmission,2026 hr v awd lx continuously variable transmission,user,2026-01-28T14:55:29.919349Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
