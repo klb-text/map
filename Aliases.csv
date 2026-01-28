@@ -438,6 +438,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,M240,M240i,262C,2026 BMW M240i i,2026 bmw m240i i,user,2026-01-28T21:20:04.828142Z,mapped
 2026,BMW,M240,M240i xDrive,262K,2026 BMW M240i i xDrive,2026 bmw m240i i xdrive,user,2026-01-28T21:20:17.309092Z,mapped
 2026,BMW,M340,M340i,263Q,2026 BMW M340i i,2026 bmw m340i i,user,2026-01-28T21:21:06.603414Z,mapped
+2026,BMW,M340,M340i NA xDrive,263A,2026 BMW M340i i xDrive,2026 bmw m340i i xdrive,user,2026-01-28T21:21:17.195792Z,mapped
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
