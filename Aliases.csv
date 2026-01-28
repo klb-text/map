@@ -282,10 +282,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
 2025,Honda,Prologue,EX,3B3H2SEXW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
-2025,Honda,Prologue,EX,3B4H2SEW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
 2025,Honda,Prologue,Elite,3B4H8SJW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
 2025,Honda,Prologue,Touring,3B3H6SJXW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
-2025,Honda,Prologue,Touring,3B4H6SJW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
@@ -370,12 +368,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan 2WD Sport Hybrid Continuously Variable Transmission,2026 civic sedan 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:34:32.144436Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid,2026 civic sedan hybrid,user,2026-01-28T15:02:42.358803Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid Sport,2026 civic sedan hybrid sport,user,2026-01-28T14:35:31.918313Z,no_data
+2026,Honda,Civic Sedan,,,2026 Civic Si Sedan,2026 civic si sedan,user,2026-01-28T15:06:21.901621Z,no_data
 2026,Honda,CR-V,EX,RS3H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
-2026,Honda,CR-V,EX,RS4H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,EX-L,RS3H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
-2026,Honda,CR-V,EX-L,RS4H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
-2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,LX,RS3H2TEW,2026 CR-V 2WD LX Continuously Variable Transmission,2026 cr v 2wd lx continuously variable transmission,user,2026-01-28T14:50:30.747206Z,mapped
 2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 CR-V 2WD Sport Hybrid Continuously Variable Transmission,2026 cr v 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:54:03.244473Z,mapped
 2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V AWD LX Continuously Variable Transmission,2026 cr v awd lx continuously variable transmission,user,2026-01-28T14:49:32.145395Z,mapped
@@ -449,11 +445,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
 2026,Honda,HR-V,EX-L,RZ1H7TJW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
-2026,Honda,HR-V,EX-L,RZ2H7TJW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
 2026,Honda,HR-V,LX,RZ1H3TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
-2026,Honda,HR-V,LX,RZ2H3TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
 2026,Honda,HR-V,Sport,RZ1H5TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
-2026,Honda,HR-V,Sport,RZ2H5TEW,2026 HR-V,2026 hr v,user,2026-01-28T15:05:02.255260Z,mapped
 2026,Honda,HR-V,LX,RZ1H3TEW,2026 HR-V 2WD LX Continuously Variable Transmission,2026 hr v 2wd lx continuously variable transmission,user,2026-01-28T14:56:02.219253Z,mapped
 2026,Honda,HR-V,LX,RZ2H3TEW,2026 HR-V AWD LX Continuously Variable Transmission,2026 hr v awd lx continuously variable transmission,user,2026-01-28T14:55:29.919349Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
