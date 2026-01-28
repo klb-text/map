@@ -429,6 +429,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,AUDI,Q8,,,2026 Audi Q8 55 TFSI quattro Premium Plus,2026 audi q8 55 tfsi quattro premium plus,user,2026-01-27T17:01:49.679175Z,no_data
 2026,AUDI,SQ7,,,2026 Audi SQ7 quattro,2026 audi sq7 quattro,user,2026-01-27T17:38:17.037149Z,no_data
 2026,BMW,228,Coupe,,2026 BMW 228,2026 bmw 228,user,2026-01-28T21:18:05.617883Z,no_data
+2026,BMW,228,Coupe,,2026 BMW 228 xDrive,2026 bmw 228 xdrive,user,2026-01-28T21:18:15.786134Z,no_data
 2026,BMW,228i,,,2026 BMW 228 xDrive,2026 bmw 228 xdrive,user,2026-01-28T16:04:50.261256Z,no_data
 2026,Subaru,BRZ,Limited,,2026 BRZ Limited,2026 brz limited,user,2026-01-27T15:17:18.226409Z,no_data
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
