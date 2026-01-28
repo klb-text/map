@@ -333,6 +333,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Cadillac,VISTIQ,Premium Luxury,6MB56/1SE,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Sport,6MC56/1SF,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ AWD Luxury,2026 cadillac vistiq awd luxury,user,2026-01-26T16:45:26.157028Z,mapped
+2026,Honda,Civic Sedan,,,2026 Civic Sedan 2WD LX Continuously Variable Transmission,2026 civic sedan 2wd lx continuously variable transmission,user,2026-01-28T14:33:31.575193Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 models (Excluding OCTA Models),2026 defender 110 models (excluding octa models),user,2026-01-27T16:28:54.895475Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
 2026,Land Rover,DEFENDER 130,,,2026 Defender 130 models,2026 defender 130 models,user,2026-01-27T16:29:41.740780Z,no_data
