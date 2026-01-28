@@ -3,6 +3,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,MAZDA,Electrified Gv70,,,,,user,2026-01-27T15:19:02.365605Z,no_data
 2025,jeep,wagoneer s,,,,,user,2026-01-28T17:45:22.154762Z,no_data
 2026,BMW,228 Gran Coupe,228,262V,,,user,2026-01-28T23:27:22.952426Z,mapped
+2026,BMW,228 Gran Coupe,228 xDrive,262T,,,user,2026-01-28T23:30:02.683015Z,mapped
 2026,BMW,540,540i xDrive,265D,,,user,2026-01-28T23:17:01.660164Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
