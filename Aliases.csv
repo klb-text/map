@@ -635,4 +635,5 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Ultra,2026 v60 b5 awd cross country ultra,user,2026-01-27T15:13:06.198234Z,no_data
 2026,Volvo,B6 Cross Country,,,2026 V90 B6 AWD Cross Country Ultra,2026 v90 b6 awd cross country ultra,user,2026-01-27T15:13:18.289446Z,no_data
 2026,Chrysler,Voyager,LX,RUCL53/27E,2026 VOYAGER LX,2026 voyager lx,user,2026-01-27T17:51:35.264338Z,mapped
+2026,Jeep,Wrangler,Sahara,JLJP74/22G,2026 WRANGLER 4-DOOR SAHARA,2026 wrangler 4 door sahara,user,2026-01-28T15:57:18.877297Z,mapped
 2027,Acura,Integra,,,2027 Integra,2027 integra,user,2026-01-24T19:10:21.375861Z,no_data
