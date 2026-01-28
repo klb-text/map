@@ -364,6 +364,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,CR-V,LX,RS4H2TEW,2026 CR-V AWD LX Continuously Variable Transmission,2026 cr v awd lx continuously variable transmission,user,2026-01-28T14:49:32.145395Z,mapped
 2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V AWD Sport Hybrid Continuously Variable Transmission,2026 cr v awd sport hybrid continuously variable transmission,user,2026-01-28T14:52:49.611243Z,mapped
 2026,Honda,CR-V e:FCEV,,,2026 CR-V Fuel Cell,2026 cr v fuel cell,user,2026-01-28T14:57:24.862646Z,no_data
+2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
+2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
+2026,Honda,CR-V Hybrid,Sport Touring,RS6H9TKXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
+2026,Honda,CR-V Hybrid,Sport-L,RS5H8TJFW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
+2026,Honda,CR-V Hybrid,Sport-L,RS6H8TJFW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
+2026,Honda,CR-V Hybrid,TrailSport,RS6H6TJZW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 models (Excluding OCTA Models),2026 defender 110 models (excluding octa models),user,2026-01-27T16:28:54.895475Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
 2026,Land Rover,DEFENDER 130,,,2026 Defender 130 models,2026 defender 130 models,user,2026-01-27T16:29:41.740780Z,no_data
