@@ -273,16 +273,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
 2025,Honda,Pilot,Black Edition,YG1H9SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
-2025,Honda,Pilot,EX-L,YG2H4SENW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
-2025,Honda,Pilot,EX-L+,YG2H4SEXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,Elite,YG1H8SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,Sport,YG1H3SEW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
-2025,Honda,Pilot,Sport,YG2H3SEW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,Touring,YG1H7SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
-2025,Honda,Pilot,Touring,YG2H7SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,Touring+,YG1H7SKXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
-2025,Honda,Pilot,Touring+,YG2H7SKXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,TrailSport,YG1H6SJW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
@@ -356,6 +351,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback FWD Sport Continuously Variable Transmission,2026 civic hatchback fwd sport continuously variable transmission,user,2026-01-28T14:34:45.256230Z,no_data
 2026,Honda,Civic Hatchback Hybrid,,,2026 Civic Hatchback FWD Touring Hybrid Continuously Variable Transmission,2026 civic hatchback fwd touring hybrid continuously variable transmission,user,2026-01-28T14:35:06.216426Z,no_data
 2026,Honda,Civic Hatchback Hybrid,,,2026 Civic Hatchback Hybrid Sport,2026 civic hatchback hybrid sport,user,2026-01-28T14:35:48.518210Z,no_data
+2026,Honda,Civic Sedan,,,2026 Civic Sedan,2026 civic sedan,user,2026-01-28T15:02:06.336815Z,no_data
 2026,Honda,Civic Sedan,,,2026 Civic Sedan 2WD LX Continuously Variable Transmission,2026 civic sedan 2wd lx continuously variable transmission,user,2026-01-28T14:33:31.575193Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan 2WD Sport Hybrid Continuously Variable Transmission,2026 civic sedan 2wd sport hybrid continuously variable transmission,user,2026-01-28T14:34:32.144436Z,no_data
 2026,Honda,Civic Sedan Hybrid,,,2026 Civic Sedan Hybrid Sport,2026 civic sedan hybrid sport,user,2026-01-28T14:35:31.918313Z,no_data
@@ -365,10 +361,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V AWD Sport Hybrid Continuously Variable Transmission,2026 cr v awd sport hybrid continuously variable transmission,user,2026-01-28T14:52:49.611243Z,mapped
 2026,Honda,CR-V e:FCEV,,,2026 CR-V Fuel Cell,2026 cr v fuel cell,user,2026-01-28T14:57:24.862646Z,no_data
 2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
-2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Honda,CR-V Hybrid,Sport Touring,RS6H9TKXW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Honda,CR-V Hybrid,Sport-L,RS5H8TJFW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
-2026,Honda,CR-V Hybrid,Sport-L,RS6H8TJFW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Honda,CR-V Hybrid,TrailSport,RS6H6TJZW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 models (Excluding OCTA Models),2026 defender 110 models (excluding octa models),user,2026-01-27T16:28:54.895475Z,no_data
 2026,Land Rover,DEFENDER 110,,,2026 Defender 110 P300 S,2026 defender 110 p300 s,user,2026-01-27T16:14:50.558180Z,no_data
