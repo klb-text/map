@@ -229,14 +229,14 @@ def smart_vehicle_match(
         work['STYLE_ID']
     )
 
-    # ---- NEW: attach vehicle attrs for display ----
+    # Attach attrs for display
     work = attach_vehicle_attrs(work)
 
     cols = [
         'map_key', 'score',
         'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
         'AD_MFGCODE', 'STYLE_ID',
-        'Cab', 'Drive', 'Body', 'Engine', 'Box',  # NEW in table
+        'Cab', 'Drive', 'Body', 'Engine', 'Box',
         'vehicle_search'
     ]
     for c in cols:
@@ -265,7 +265,7 @@ def strict_filter(df: pd.DataFrame, year: str = "", make: str = "", model: str =
 def lookup_by_year_modelcode(df: pd.DataFrame, year: str, model_code: str) -> pd.DataFrame:
     """
     Return *all* matching rows for exact Year + Model Code.
-    Sets score=100 to surface at top; attaches attrs.
+    Sets score=100; attaches attrs.
     """
     if df.empty or not year or not model_code:
         return pd.DataFrame()
@@ -279,7 +279,6 @@ def lookup_by_year_modelcode(df: pd.DataFrame, year: str, model_code: str) -> pd
     if work.empty:
         return pd.DataFrame()
 
-    # Build vehicle_search, fixed score, stable key
     work['vehicle_search'] = (
         work['MODEL_YEAR'].str.strip() + ' ' +
         work['AD_MAKE'].str.strip() + ' ' +
@@ -297,7 +296,6 @@ def lookup_by_year_modelcode(df: pd.DataFrame, year: str, model_code: str) -> pd
         work['STYLE_ID']
     )
 
-    # Attach attributes for display
     work = attach_vehicle_attrs(work)
 
     cols = [
@@ -310,7 +308,6 @@ def lookup_by_year_modelcode(df: pd.DataFrame, year: str, model_code: str) -> pd
     for c in cols:
         if c not in work.columns:
             work[c] = ""
-    # Keep consistent ordering
     return work[cols].sort_values(['MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM']).reset_index(drop=True)
 
 # =========================
@@ -487,6 +484,61 @@ def commit_alias_no_data(
     )
     return ok, msg
 
+# ---- NEW: Load existing Aliases for "Mapped?" detection ----
+@st.cache_data
+def load_aliases_df() -> pd.DataFrame:
+    """
+    Try to load Aliases.csv from GitHub (if secrets present). If that fails,
+    try local path. Returns empty DF if not found.
+    """
+    # Try GitHub
+    if GH_OWNER and GH_REPO and ALIASES_PATH:
+        try:
+            url = _gh_contents_url(ALIASES_PATH, GH_BRANCH)
+            r = requests.get(url, headers=_gh_headers(), timeout=30)
+            if r.status_code == 200:
+                js = r.json()
+                decoded = base64.b64decode(js.get("content", "")).decode("utf-8", errors="replace")
+                df = pd.read_csv(io.StringIO(decoded), dtype=str).fillna("")
+                return df
+        except Exception:
+            pass
+    # Fallback local
+    try:
+        return load_csv(ALIASES_PATH)
+    except Exception:
+        return pd.DataFrame()
+
+aliases_df = load_aliases_df()
+
+def is_row_already_mapped_for_alias(row: pd.Series, alias_text: str) -> bool:
+    """
+    Returns True if Aliases.csv already has a row with status='mapped' for this alias_norm
+    and same (year, make, model, trim, model_code).
+    """
+    if aliases_df.empty or not alias_text:
+        return False
+    alias_norm = normalize(alias_text)
+    y = str(row.get("MODEL_YEAR", ""))
+    mk = str(row.get("AD_MAKE", ""))
+    md = str(row.get("AD_MODEL", ""))
+    tr = str(row.get("TRIM", ""))
+    mc = str(row.get("AD_MFGCODE", ""))
+    df = aliases_df
+    needed_cols = {"alias_norm","status","year","make","model","trim","model_code"}
+    if not needed_cols.issubset(set(df.columns)):
+        return False
+    hit = df[
+        (df["alias_norm"].astype(str).map(normalize) == alias_norm) &
+        (df["status"] == "mapped") &
+        (df["year"].astype(str) == y) &
+        (df["make"].astype(str) == mk) &
+        (df["model"].astype(str) == md) &
+        (df["trim"].astype(str) == tr) &
+        (df["model_code"].astype(str) == mc)
+    ]
+    return not hit.empty
+
 # =========================
 # --- Session State ---
 # =========================
@@ -500,7 +552,7 @@ if 'current_query' not in st.session_state:
     st.session_state['current_query'] = ""
 if 'inferred' not in st.session_state:
     st.session_state['inferred'] = {"year":"", "make":"", "model":"", "trim":""}
-# ---- NEW: track which search populated the table ----
+# Track which search mode populated the table
 if 'result_mode' not in st.session_state:
     st.session_state['result_mode'] = "alias"  # alias | year_model_code
 
@@ -526,7 +578,7 @@ with st.form("search_form_main"):
 
     submitted = st.form_submit_button("Search Vehicles")
 
-# ---- NEW: Alternate search — Year + Model Code (kept separate to preserve existing flow) ----
+# Alternate search — Year + Model Code
 with st.expander("Alternate search: Year + Model Code", expanded=False):
     with st.form("search_form_mc"):
         cmc1, cmc2 = st.columns(2)
@@ -534,16 +586,11 @@ with st.expander("Alternate search: Year + Model Code", expanded=False):
         mc_code = cmc2.text_input("Model Code (exact)", value="")
         submitted_mc = st.form_submit_button("Search by Year + Model Code")
     if submitted_mc:
-        # Build results strictly from Year + Model Code
         mc_df = lookup_by_year_modelcode(cads_df, year=mc_year, model_code=mc_code)
-
         st.session_state['matches_df'] = mc_df
         st.session_state['show_results'] = True
-        # Keep whatever alias was typed above; don't overwrite it
-        st.session_state['current_query'] = vehicle_input
+        st.session_state['current_query'] = vehicle_input  # keep alias typed above
         st.session_state['result_mode'] = "year_model_code"
-
-        # Reset/preserve selection only for the current results
         prev = st.session_state['selection']
         st.session_state['selection'] = {k: prev.get(k, False) for k in mc_df['map_key']} if not mc_df.empty else {}
 
@@ -554,31 +601,27 @@ if vehicle_input:
     if example_make or example_model:
         st.caption(f"Ref hint → Make: {example_make or '—'}, Model: {example_model or '—'}")
 
-# =========================
-# --- Handle Search Submit ---
-# =========================
+# Handle Search Submit
 if submitted:
-    # Infer Y/M/M/T from alias + hints if not supplied
     inf_year, inf_make, inf_model, inf_trim_guess = infer_from_alias(
         vehicle_input, vehicle_ref_df,
         fallback_make=make_input or (example_make or ""),
         fallback_model=model_input or (example_model or "")
     )
-    # Use explicit inputs if provided; otherwise fallback to inferred/hints
     eff_year  = year_input or inf_year
     eff_make  = make_input or (example_make or inf_make)
     eff_model = model_input or (example_model or inf_model)
-    eff_trim  = trim_input  # do not auto-apply trim_guess strictly; keep user-driven
+    eff_trim  = trim_input  # deliberate: do not force trim guess
 
     st.session_state['inferred'] = {"year":eff_year, "make":eff_make, "model":eff_model, "trim":eff_trim}
 
     matches_df = smart_vehicle_match(
         cads_df,
         vehicle_input,
-        year=eff_year,      # note: used as a pre-filter for speed
+        year=eff_year,
         make=eff_make,
         model=eff_model,
-        trim="",            # keep fuzzy trim out; strict trim handled separately
+        trim="",            # keep fuzzy trim out
         top_n=top_n,
         score_cutoff=score_cutoff
     )
@@ -588,7 +631,6 @@ if submitted:
     st.session_state['current_query'] = vehicle_input
     st.session_state['result_mode'] = "alias"
 
-    # Reset/preserve selection only for the current results
     prev = st.session_state['selection']
     st.session_state['selection'] = {k: prev.get(k, False) for k in matches_df['map_key']} if not matches_df.empty else {}
 
@@ -601,15 +643,20 @@ if st.session_state['show_results']:
     eff = st.session_state.get('inferred', {"year":"", "make":"", "model":"", "trim":""})
     eff_year, eff_make, eff_model, eff_trim = eff["year"], eff["make"], eff["model"], eff["trim"]
 
-    # Compute strict subset using provided or inferred fields (only those that are non-empty)
-    # Show the "No Vehicle Data" pathway only for the alias-based search to avoid confusion.
+    # ---- NEW: add "Mapped?" column per row for current alias ----
+    if not matches_df.empty:
+        mapped_flags = []
+        for _, r in matches_df.iterrows():
+            mapped_flags.append(is_row_already_mapped_for_alias(r, alias_text))
+        matches_df = matches_df.copy()
+        matches_df["Mapped?"] = mapped_flags
+
+    # No-data flow only for alias-based search
     if st.session_state.get('result_mode', 'alias') == "alias":
         strict_subset = strict_filter(cads_df, year=eff_year, make=eff_make, model=eff_model, trim=eff_trim)
         specified_any_filter = any([eff_year, eff_make, eff_model, eff_trim])
         no_data_candidate = specified_any_filter and strict_subset.empty
-        has_any_fuzzy = not matches_df.empty
 
-        # Surface the no-data button if specific (provided or inferred) Y/M/M/T doesn't exist in CADS
         if no_data_candidate:
             st.warning(
                 "No exact CADS rows found for the specific Y/M/M/T you entered or I inferred "
@@ -631,7 +678,6 @@ if st.session_state['show_results']:
                 else:
                     st.error(msg)
 
-    # Show results table (fuzzy or MC-based)
     if not matches_df.empty:
         st.subheader("Matching Vehicles")
         view = matches_df.copy()
@@ -650,19 +696,33 @@ if st.session_state['show_results']:
         if select_all_clicked:
             view['Select'] = True
 
-        # ---- NEW: include Cab/Drive/Body/Engine/Box in the display table ----
+        # ---- IMPORTANT: Disable selection if alias is empty ----
+        alias_required_msg = ""
+        if not (alias_text and alias_text.strip()):
+            alias_required_msg = "Enter Vehicle (alias) above to enable mapping."
+            # Force all Select checkboxes false in the editor to prevent mapping without alias
+            view['Select'] = False
+
         display_cols = [
             'Select', 'score',
             'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
             'AD_MFGCODE', 'STYLE_ID',
             'Cab', 'Drive', 'Body', 'Engine', 'Box',
+            'Mapped?',           # NEW
             'vehicle_search'
         ]
-
-        # If attributes are missing for some reason, ensure columns exist
         for c in display_cols:
             if c not in view.columns:
                 view[c] = ""
+
+        # Column config (lock read-only fields)
+        disabled_cols = [
+            'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
+            'AD_MFGCODE', 'STYLE_ID', 'Cab', 'Drive', 'Body', 'Engine', 'Box', 'Mapped?', 'vehicle_search'
+        ]
+        # If alias not provided, also disable "Select"
+        if not (alias_text and alias_text.strip()):
+            disabled_cols = ['Select'] + disabled_cols
 
         edited = st.data_editor(
             view[display_cols],
@@ -678,15 +738,19 @@ if st.session_state['show_results']:
                 "Body": st.column_config.TextColumn(help="Body style"),
                 "Engine": st.column_config.TextColumn(help="Engine description"),
                 "Box": st.column_config.TextColumn(help="Bed/box length or size"),
+                "Mapped?": st.column_config.TextColumn(help="Already mapped for this alias"),
             },
-            disabled=[
-                'score', 'MODEL_YEAR', 'AD_MAKE', 'AD_MODEL', 'TRIM',
-                'AD_MFGCODE', 'STYLE_ID', 'Cab', 'Drive', 'Body', 'Engine', 'Box', 'vehicle_search'
-            ]
+            disabled=disabled_cols
         )
-        for i, row in edited.iterrows():
-            mk = matches_df.loc[i, 'map_key']
-            st.session_state['selection'][mk] = bool(row['Select'])
+
+        # Persist selection only if alias exists
+        if alias_text and alias_text.strip():
+            for i, row in edited.iterrows():
+                mk = matches_df.loc[i, 'map_key']
+                st.session_state['selection'][mk] = bool(row['Select'])
+
+        if alias_required_msg:
+            st.warning(alias_required_msg)
 
         selected_keys = [k for k, v in st.session_state['selection'].items() if v]
         final_df = matches_df[matches_df['map_key'].isin(selected_keys)].copy()
@@ -710,6 +774,22 @@ if st.session_state['show_results']:
             alias_preview["status"] = "mapped"
             alias_preview["created_at"] = datetime.utcnow().isoformat() + "Z"
 
+            # Show a small "already mapped" badge inline for any duplicates
+            if "Mapped?" in matches_df.columns:
+                # decor: add an indicator column to previews for UX
+                alias_preview["already_mapped_for_alias"] = alias_preview.apply(
+                    lambda r: "Yes" if not aliases_df.empty and not aliases_df[
+                        (aliases_df["alias_norm"].astype(str).map(normalize) == normalize(alias_text)) &
+                        (aliases_df["status"] == "mapped") &
+                        (aliases_df["year"].astype(str) == str(r["year"])) &
+                        (aliases_df["make"].astype(str) == str(r["make"])) &
+                        (aliases_df["model"].astype(str) == str(r["model"])) &
+                        (aliases_df["trim"].astype(str) == str(r["trim"])) &
+                        (aliases_df["model_code"].astype(str) == str(r["model_code"]))
+                    ].empty else "No",
+                    axis=1
+                )
+
             st.caption("Alias rows to append (status='mapped') → Aliases.csv")
             st.dataframe(alias_preview, use_container_width=True)
             st.caption("Canonical rows ensured → Mappings.csv")
@@ -717,21 +797,27 @@ if st.session_state['show_results']:
 
         cA, cB = st.columns([1, 1])
         with cA:
-            if st.button("Commit to GitHub (Aliases + Mappings)"):
-                if final_df.empty:
-                    st.warning("No rows selected to commit.")
-                elif not GH_TOKEN or not GH_OWNER or not GH_REPO:
-                    st.error("GitHub secrets not configured. Cannot commit.")
-                else:
-                    ok, msg = commit_alias_and_canonical(
-                        alias_input=alias_text,
-                        selected_canonical_df=final_df[["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE"]],
-                        source="user"
-                    )
-                    if ok:
-                        st.success(msg)
+            # Disable commit if alias missing
+            commit_disabled = not (alias_text and alias_text.strip())
+            if commit_disabled:
+                st.button("Commit to GitHub (Aliases + Mappings)", disabled=True)
+                st.info("Enter Vehicle (alias) to enable committing selected mapping(s).")
+            else:
+                if st.button("Commit to GitHub (Aliases + Mappings)"):
+                    if final_df.empty:
+                        st.warning("No rows selected to commit.")
+                    elif not GH_TOKEN or not GH_OWNER or not GH_REPO:
+                        st.error("GitHub secrets not configured. Cannot commit.")
                     else:
-                        st.error(msg)
+                        ok, msg = commit_alias_and_canonical(
+                            alias_input=alias_text,
+                            selected_canonical_df=final_df[["MODEL_YEAR","AD_MAKE","AD_MODEL","TRIM","AD_MFGCODE"]],
+                            source="user"
+                        )
+                        if ok:
+                            st.success(msg)
+                        else:
+                            st.error(msg)
 
         with cB:
             if not final_df.empty:
