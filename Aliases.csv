@@ -472,6 +472,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-01-27T19:08:39.431294Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM FWD,2026 palisade sel premium fwd,user,2026-01-27T19:08:30.988058Z,mapped
 2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO,2026 palisade xrt pro,user,2026-01-27T19:09:16.185767Z,mapped
+2026,Honda,Passport,RTL,YF9H3TGXW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
+2026,Honda,Passport,RTL Blackout,YF9H3TGZW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
+2026,Honda,Passport,RTL Towing,YF9H3TGYW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
 2026,RAM,1500,Big Horn,DT1H41/23Z,"2026 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2026 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-28T14:09:35.313792Z,mapped
 2026,RAM,1500,Big Horn,DT1H41/23Z,"2026 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2026 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-28T14:09:59.448010Z,mapped
 2026,RAM,1500,Laramie,DT1P98/21H,"2026 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2026 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-28T14:09:59.448010Z,mapped
