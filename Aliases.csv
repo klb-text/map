@@ -341,6 +341,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT HAMMERHEAD AWD,2026 durango srt hellcat hammerhead awd,user,2026-01-27T18:15:24.602193Z,mapped
 2026,Dodge,Durango,SRT Jailbreak,WDEM75/2XP,2026 DURANGO SRT HELLCAT JAILBREAK AWD,2026 durango srt hellcat jailbreak awd,user,2026-01-27T18:17:06.165713Z,mapped
 2026,Dodge,Durango,SRT Hellcat,WDEM75/2XP,2026 DURANGO SRT HELLCAT SILVER BULLET AWD,2026 durango srt hellcat silver bullet awd,user,2026-01-27T18:16:03.612794Z,mapped
+2026,Mitsubishi,Eclipse Cross,Black Edition,EC45-H/R62,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
+2026,Mitsubishi,Eclipse Cross,ES,EC45-B/A61,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
+2026,Mitsubishi,Eclipse Cross,LE,EC45-F/E61,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
+2026,Mitsubishi,Eclipse Cross,Ralliart,EC45-R/R61,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
+2026,Mitsubishi,Eclipse Cross,SE,EC45-J/E62,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
+2026,Mitsubishi,Eclipse Cross,SEL,EC45-N/E64,2026 Eclipse Cross,2026 eclipse cross,user,2026-01-28T13:55:41.566148Z,mapped
 2026,Mitsubishi,Eclipse Cross,ES,EC45-B/A61,2026 Eclipse Cross ES 1.5T S-AWC,2026 eclipse cross es 1.5t s awc,user,2026-01-28T13:54:49.251567Z,mapped
 2026,Hyundai,Elantra,Limited,494M2F4S/01,2026 ELANTRA LIMITED,2026 elantra limited,user,2026-01-27T19:04:18.657583Z,mapped
 2026,Hyundai,Elantra,N Line,494L2FT5/01,2026 ELANTRA N LINE,2026 elantra n line,user,2026-01-27T19:04:31.480738Z,mapped
