@@ -266,6 +266,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,SEL Premium,J1432F65/01,2025 PALISADE SEL PREMIUM FWD,2025 palisade sel premium fwd,user,2026-01-27T19:11:11.495151Z,mapped
 2025,Hyundai,Palisade,XRT,J1482A65/01,2025 PALISADE XRT AWD,2025 palisade xrt awd,user,2026-01-27T19:10:56.383231Z,mapped
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
+2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
+2025,Honda,Pilot,EX-L,YG2H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
 2025,Honda,Pilot,EX-L+,YG2H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
