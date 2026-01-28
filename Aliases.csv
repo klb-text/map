@@ -429,6 +429,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mitsubishi,Outlander,SEL,OT45-N/E65,2026 Outlander,2026 outlander,user,2026-01-28T13:55:21.246184Z,mapped
 2026,Mitsubishi,Outlander,Trail Edition,OT45-T/R61,2026 Outlander,2026 outlander,user,2026-01-28T13:55:21.246184Z,mapped
 2026,Mitsubishi,Outlander,ES,OT45-A/E6A,2026 Outlander ES 1.5T 2WD,2026 outlander es 1.5t 2wd,user,2026-01-28T13:54:39.347802Z,mapped
+2026,Mitsubishi,Outlander Sport,ES,OS45-B/A61,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,LE,OS45-F/A62,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,Railliart,OS45-R/R66,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,S,OS45-Y/A65,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,SE,OS45-J/A63,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,SEL,OS45-N/A64,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
+2026,Mitsubishi,Outlander Sport,Trail Edition,OS45-H/R67,2026 Outlander Sport,2026 outlander sport,user,2026-01-28T13:56:06.081520Z,mapped
 2026,Chrysler,Pacifica,Limited,RUCT53/27P,2026 PACIFICA LIMITED,2026 pacifica limited,user,2026-01-27T17:48:53.465952Z,mapped
 2026,Chrysler,Pacifica,Limited,RUFT53/27P,2026 PACIFICA LIMITED awd,2026 pacifica limited awd,user,2026-01-27T17:49:32.657203Z,mapped
 2026,Chrysler,Pacifica,Pinnacle,RUCS53/27S,2026 PACIFICA PINNACLE,2026 pacifica pinnacle,user,2026-01-27T17:50:10.699412Z,mapped
