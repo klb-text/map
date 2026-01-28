@@ -213,6 +213,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Grand Cherokee,Altitude,WLTH74/23A,2025 GRAND CHEROKEE ALTITUDE 4X2,2025 grand cherokee altitude 4x2,user,2026-01-28T17:01:34.245074Z,mapped
 2025,Jeep,Grand Cherokee,Altitude,WLJH74/23A,2025 GRAND CHEROKEE ALTITUDE 4X4,2025 grand cherokee altitude 4x4,user,2026-01-28T17:03:11.284981Z,mapped
 2025,Jeep,Grand Cherokee L,Altitude,WLTH75/23A,2025 GRAND CHEROKEE L ALTITUDE 4X2,2025 grand cherokee l altitude 4x2,user,2026-01-28T17:02:39.954158Z,mapped
+2025,Jeep,Grand Cherokee L,Altitude,WLJH75/23A,2025 GRAND CHEROKEE L ALTITUDE 4X4,2025 grand cherokee l altitude 4x4,user,2026-01-28T17:05:39.095131Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLJH75/23A,2025 GRAND CHEROKEE L LAREDO 4X4,2025 grand cherokee l laredo 4x4,user,2026-01-28T16:22:00.245754Z,mapped
 2025,Jeep,Grand Cherokee L,Limited,WLTP75/22E,2025 GRAND CHEROKEE L LIMITED 4X2,2025 grand cherokee l limited 4x2,user,2026-01-28T16:40:37.501401Z,mapped
