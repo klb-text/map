@@ -99,6 +99,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,2025 CLA 250,2025 cla 250,user,2026-01-27T21:07:35.848539Z,mapped
 2025,Jeep,Compass,Latitude,MPJM74/29J,2025 COMPASS LATITUDE 4X4,2025 compass latitude 4x4,user,2026-01-28T15:30:11.480201Z,mapped
 2025,Jeep,Compass,Limited,MPJP74/29G,2025 COMPASS LIMITED 4X4,2025 compass limited 4x4,user,2026-01-28T15:30:46.027913Z,mapped
+2025,Jeep,Compass,Sport,MPJL74/29A,2025 COMPASS SPORT 4X4,2025 compass sport 4x4,user,2026-01-28T16:44:18.626584Z,mapped
 2025,Jeep,Compass,Trailhawk,MPJH74/29E,2025 COMPASS TRAILHAWK 4X4,2025 compass trailhawk 4x4,user,2026-01-28T15:31:08.461487Z,mapped
 2025,Land Rover,Discovery,Dynamic SE,HB462/462AL,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
 2025,Land Rover,Discovery,Metropolitan Edition,HB462/462AB,2025 Discovery models,2025 discovery models,user,2026-01-27T16:31:12.216158Z,mapped
