@@ -397,6 +397,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Wagoneer,Series II,WSTH75/25J,2025 WAGONEER SERIES II 4X2,2025 wagoneer series ii 4x2,user,2026-01-28T17:37:51.274265Z,mapped
 2025,Jeep,Wagoneer,Series II,WSJH75/25J,2025 WAGONEER SERIES II 4X4,2025 wagoneer series ii 4x4,user,2026-01-28T17:38:38.882324Z,mapped
 2025,Jeep,Wagoneer,Series III,WSJP75/25N,2025 WAGONEER SERIES III 4X4,2025 wagoneer series iii 4x4,user,2026-01-28T17:40:51.093049Z,mapped
+2025,Jeep,Wagoneer,Series III Super,WSJP75/25N,2025 WAGONEER SUPER 4X4,2025 wagoneer super 4x4,user,2026-01-28T17:42:06.372038Z,mapped
 2025,Jeep,Wrangler,Rubicon,JLJS72/22R,2025 WRANGLER 2-DOOR RUBICON,2025 wrangler 2 door rubicon,user,2026-01-28T15:52:02.645213Z,mapped
 2025,Jeep,Wrangler,Rubicon X,JLJS72/22R,2025 WRANGLER 2-DOOR RUBICON X,2025 wrangler 2 door rubicon x,user,2026-01-28T16:46:24.867920Z,mapped
 2025,Jeep,Wrangler,Sport,JLJL72/22B,2025 WRANGLER 2-DOOR SPORT,2025 wrangler 2 door sport,user,2026-01-28T15:42:50.412563Z,mapped
