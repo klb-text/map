@@ -14,6 +14,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,530,530i xDrive,265B,,,user,2026-01-28T23:57:44.816893Z,mapped
 2026,BMW,540,540i xDrive,265D,,,user,2026-01-28T23:17:01.660164Z,mapped
 2026,BMW,550e,550e xDrive,265E,,,user,2026-01-28T23:58:19.152589Z,mapped
+2026,BMW,740,740i,267F,,,user,2026-01-28T23:58:55.824434Z,mapped
 2026,BMW,M235 Gran Coupe,M235 xDrive,262U,,,user,2026-01-28T23:30:25.951809Z,mapped
 2026,BMW,M340,M340i NA,263T,,,user,2026-01-28T23:55:22.759896Z,mapped
 2026,BMW,M340,M340i NA xDrive,263A,,,user,2026-01-28T23:55:41.116130Z,mapped
