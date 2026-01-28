@@ -211,6 +211,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Giulia,Intensa,GAFM41/22F,2025 GIULIA RWD,2025 giulia rwd,user,2026-01-27T16:38:18.449897Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLTH75/23A,2025 GRAND CHEROKEE L LAREDO 4X2,2025 grand cherokee l laredo 4x2,user,2026-01-27T15:32:16.671833Z,mapped
 2025,Jeep,Grand Cherokee L,Laredo,WLJH75/23A,2025 GRAND CHEROKEE L LAREDO 4X4,2025 grand cherokee l laredo 4x4,user,2026-01-28T16:22:00.245754Z,mapped
+2025,Jeep,Grand Cherokee L,Limited,WLJP75/22E,2025 GRAND CHEROKEE L LIMITED 4X4,2025 grand cherokee l limited 4x4,user,2026-01-28T16:39:27.613423Z,mapped
 2025,Jeep,Grand Cherokee,Laredo,WLTH74/23A,2025 GRAND CHEROKEE LAREDO 4X2,2025 grand cherokee laredo 4x2,user,2026-01-28T16:03:43.880396Z,mapped
 2025,Jeep,Grand Cherokee,Laredo,WLJH74/23A,2025 GRAND CHEROKEE LAREDO 4X4,2025 grand cherokee laredo 4x4,user,2026-01-28T16:04:26.979558Z,mapped
 2025,Jeep,Grand Cherokee,Limited,WLTP74/22E,2025 GRAND CHEROKEE LIMITED 4X2,2025 grand cherokee limited 4x2,user,2026-01-28T16:37:36.646272Z,mapped
