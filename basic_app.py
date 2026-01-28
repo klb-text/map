@@ -267,27 +267,49 @@ elif do_search:
     st.session_state["search_no_data"] = is_no_data
     st.experimental_set_query_params(q=q_input)
 
-# ---------------- Mozenda Mode: API-like outlet ----------------
+# ---------------- Mozenda Mode: API-like outlet (Plain-text CSV block) ----------------
 if is_mozenda:
     res_df, is_no_data = exact_alias_filter_with_no_data(aliases_df, joined_df, cads_df, q_param)
+
+    # Always determine a stable column order (adjust to your schema as needed)
+    preferred_cols = ["year", "make", "model", "trim", "model_code", "source", "STYLE_ID", "canon_key"]
+    if not res_df.empty:
+        # Ensure every preferred col exists; keep extras too
+        for c in preferred_cols:
+            if c not in res_df.columns:
+                res_df[c] = ""
+        # Reorder to preferred first, then any remaining columns
+        remaining = [c for c in res_df.columns if c not in preferred_cols]
+        res_df = res_df[preferred_cols + remaining]
+
     if is_no_data:
-        # HTML shows message; CSV/JSON return empty for schema stability
+        # HTML shows message; CSV/JSON emit an empty CSV (header only) inside markers for schema stability
         if out_format == "html":
             st.warning("No Vehicle Data")
-        elif out_format == "json":
-            st.write("[]")
-        else:
-            st.write("")
+
+        # Build an empty CSV with the correct header
+        empty_cols = preferred_cols
+        empty_df = pd.DataFrame(columns=empty_cols)
+
+        st.code(
+            "HARVEST_TABLE_START\n"
+            + empty_df.to_csv(index=False)
+            + "HARVEST_TABLE_END",
+            language="text"
+        )
         st.stop()
 
-    # Return mapped rows (joined to CADS)
-    if out_format == "json":
-        st.write(res_df.to_json(orient="records"))
-    elif out_format == "html":
-        st.dataframe(res_df, hide_index=True, use_container_width=True)
-    else:
-        st.write(res_df.to_csv(index=False))
+    # Return mapped rows (joined to CADS) as a plain-text CSV block between markers
+    # If res_df is empty, this still returns just the header line (schema-stable).
+    st.code(
+        "HARVEST_TABLE_START\n"
+        + res_df.to_csv(index=False)
+        + "HARVEST_TABLE_END",
+        language="text"
+    )
     st.stop()
+# --- end Mozenda Mode block ---
+
 
 # ---------------- Human-friendly Preview ----------------
 if mappings_df.empty:
