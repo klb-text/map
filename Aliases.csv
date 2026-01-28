@@ -233,6 +233,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Grand Cherokee,Overland,WLJS74/23N,2025 GRAND CHEROKEE OVERLAND 4X4,2025 grand cherokee overland 4x4,user,2026-01-28T16:41:18.923541Z,mapped
 2025,Jeep,Grand Cherokee,Summit,WLJT74/23S,2025 GRAND CHEROKEE SUMMIT 4X4,2025 grand cherokee summit 4x4,user,2026-01-28T16:42:41.403972Z,mapped
 2025,Jeep,Grand Cherokee,Summit Reserve,WLJT74/23S,2025 GRAND CHEROKEE SUMMIT 4X4,2025 grand cherokee summit 4x4,user,2026-01-28T16:42:41.403972Z,mapped
+2025,Jeep,Grand Cherokee,Summit Reserve,WLJT74/23S,2025 GRAND CHEROKEE SUMMIT RESERVE 4X4,2025 grand cherokee summit reserve 4x4,user,2026-01-28T17:17:55.031703Z,mapped
 2025,Dodge,Hornet,GT,GGEH49/23N,2025 HORNET GT AWD,2025 hornet gt awd,user,2026-01-27T18:18:00.389393Z,mapped
 2025,Dodge,Hornet,GT Plus,GGEH49/23N,2025 HORNET GT PLUS AWD,2025 hornet gt plus awd,user,2026-01-27T18:18:26.523336Z,mapped
 2025,Dodge,Hornet,R/T,GG7P49/28E,2025 HORNET R/T EAWD,2025 hornet r t eawd,user,2026-01-27T18:19:27.747707Z,mapped
