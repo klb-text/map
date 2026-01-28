@@ -281,6 +281,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Pilot,TrailSport,YG1H6SJW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot 2WD EX-L 10 Speed Automatic,2025 pilot 2wd ex l 10 speed automatic,user,2026-01-28T14:44:37.215979Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot AWD EX-L 10 Speed Automatic,2025 pilot awd ex l 10 speed automatic,user,2026-01-28T14:43:26.991708Z,mapped
+2025,Honda,Prologue,EX,3B3H2SEXW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
+2025,Honda,Prologue,EX,3B4H2SEW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
+2025,Honda,Prologue,Elite,3B4H8SJW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
+2025,Honda,Prologue,Touring,3B3H6SJXW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
+2025,Honda,Prologue,Touring,3B4H6SJW,2025 Prologue,2025 prologue,user,2026-01-28T15:03:23.244801Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 BIG HORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 big horn crew cab 4x4 5'7"" box",user,2026-01-27T15:35:29.909560Z,mapped
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
