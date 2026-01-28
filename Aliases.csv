@@ -510,6 +510,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Land Rover,Range Rover Velar,S,HB560/560CE,2026 Range Rover Velar P250 S,2026 range rover velar p250 s,user,2026-01-27T16:13:23.384489Z,mapped
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX,2026 rdx,user,2026-01-27T15:56:06.526789Z,mapped
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX SH-AWD 10 Speed Automatic,2026 rdx sh awd 10 speed automatic,user,2026-01-27T15:10:00.593056Z,mapped
+2026,Honda,Ridgeline,Black Edition,YK3F8TKNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
+2026,Honda,Ridgeline,Black Edition Two-Tone,YK3F9TKNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
+2026,Honda,Ridgeline,RTL,YK3F5TJNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
+2026,Honda,Ridgeline,Sport,YK3F1TEW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
+2026,Honda,Ridgeline,TrailSport,YK3F6TKNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
+2026,Honda,Ridgeline,TrailSport+,YK3F7TKNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
 2026,Honda,Ridgeline,RTL,YK3F5TJNW,2026 Ridgeline AWD RTL,2026 ridgeline awd rtl,user,2026-01-28T14:32:21.711476Z,mapped
 2026,Land Rover,Range Rover Velar,Autobiography,HE560/352UG,2026 Rover Velar models,2026 rover velar models,user,2026-01-27T16:28:00.254099Z,mapped
 2026,Land Rover,Range Rover Velar,Dynamic SE,HB560/352YP,2026 Rover Velar models,2026 rover velar models,user,2026-01-27T16:28:00.254099Z,mapped
