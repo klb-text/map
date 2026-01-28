@@ -702,6 +702,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Sorento,S,73232,2026 Sorento S FWD,2026 sorento s fwd,user,2026-01-27T19:56:33.179164Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
+2026,Lexus,TX,,,2026 TX 350,2026 tx 350,user,2026-01-28T18:00:27.113291Z,no_data
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Plus,2026 v60 b5 awd cross country plus,user,2026-01-27T15:12:37.837191Z,no_data
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Ultra,2026 v60 b5 awd cross country ultra,user,2026-01-27T15:13:06.198234Z,no_data
 2026,Volvo,B6 Cross Country,,,2026 V90 B6 AWD Cross Country Ultra,2026 v90 b6 awd cross country ultra,user,2026-01-27T15:13:18.289446Z,no_data
