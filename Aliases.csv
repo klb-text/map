@@ -530,6 +530,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Passport,RTL,YF9H3TGXW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
 2026,Honda,Passport,RTL Blackout,YF9H3TGZW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
 2026,Honda,Passport,RTL Towing,YF9H3TGYW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
+2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
+2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
+2026,Honda,CR-V Hybrid,Sport Touring,RS6H9TKXW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
+2026,Honda,CR-V Hybrid,Sport-L,RS5H8TJFW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
+2026,Honda,CR-V Hybrid,Sport-L,RS6H8TJFW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
+2026,Honda,CR-V Hybrid,TrailSport,RS6H6TJZW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
 2026,Honda,Prologue,EX,3B3H2TEXW,2026 Prologue,2026 prologue,user,2026-01-28T14:58:40.239800Z,mapped
 2026,Honda,Prologue,Elite,3B4H8TJW,2026 Prologue,2026 prologue,user,2026-01-28T14:58:40.239800Z,mapped
 2026,Honda,Prologue,Touring,3B3H6TJXW,2026 Prologue,2026 prologue,user,2026-01-28T14:58:40.239800Z,mapped
