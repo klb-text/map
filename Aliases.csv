@@ -72,6 +72,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,GLE 450,GLE 450,GLE450W4,,,user,2026-01-29T04:22:04.292493Z,mapped
 2025,Mercedes-Benz,GLE 450e,GLE 450e,GLE450E4,,,user,2026-01-29T04:22:20.444836Z,mapped
 2025,Mercedes-Benz,GLE 580,GLE 580,GLE580W4,,,user,2026-01-29T04:22:36.570308Z,mapped
+2025,Mercedes-Benz,GLS 450,GLS 450,GLS450W4,,,user,2026-01-29T04:27:57.881473Z,mapped
 2025,Mercedes-Benz,S-Class,S 500,S500V4,,,user,2026-01-29T04:07:32.714025Z,mapped
 2025,Mercedes-Benz,S-Class,S 580,S580V4,,,user,2026-01-29T04:07:48.770891Z,mapped
 2025,Mercedes-Benz,S-Class,S 580e,S580eV4,,,user,2026-01-29T04:08:04.828515Z,mapped
