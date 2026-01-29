@@ -1225,6 +1225,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,LEAF,SV+,17216,2026 LEAF,2026 leaf,user,2026-01-29T15:26:20.897011Z,mapped
 2026,Nissan,LEAF,SV+,17216,2026 LEAF SV+ 75 kWh lithium-ion battery with Floor Mat Package (SV+) and Splash Guards (4-piece set),2026 leaf sv+ 75 kwh lithium ion battery with floor mat package (sv+) and splash guards (4 piece set),user,2026-01-29T15:13:52.005358Z,mapped
 2026,Lexus,LS,,,2026 LS,2026 ls,user,2026-01-27T21:06:55.567000Z,no_data
+2026,Lexus,LX,,,2026 LX 600 F SPORT HANDLING,2026 lx 600 f sport handling,user,2026-01-29T22:14:31.384063Z,no_data
 2026,Porsche,Macan,,95BAU1,2026 Macan,2026 macan,user,2026-01-29T15:30:23.128004Z,mapped
 2026,Porsche,Macan,GTS,95BBW1,2026 Macan,2026 macan,user,2026-01-29T15:30:23.128004Z,mapped
 2026,Porsche,Macan,S,95BBV1,2026 Macan,2026 macan,user,2026-01-29T15:30:23.128004Z,mapped
