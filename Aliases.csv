@@ -987,6 +987,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RX,,,2026 RX 350,2026 rx 350,user,2026-01-28T18:01:41.107255Z,no_data
 2026,Lexus,RXh,,,2026 RX 350h PREMIUM AWD,2026 rx 350h premium awd,user,2026-01-28T18:01:52.817723Z,no_data
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
+2026,Toyota,Sequoia,SR5,7947/OF,2026 Sequoia SR5,2026 sequoia sr5,user,2026-01-29T12:43:11.094335Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA LIMITED HYBRID,2026 sonata limited hybrid,user,2026-01-27T19:15:40.430391Z,mapped
 2026,Hyundai,Sonata,N Line,29472FT5/01,2026 SONATA N LINE,2026 sonata n line,user,2026-01-27T19:17:38.640687Z,mapped
