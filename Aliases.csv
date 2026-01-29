@@ -515,6 +515,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD,2025 ford mustang mach e select rwd,user,2026-01-29T15:35:18.519529Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD Standard Battery,2025 ford mustang mach e select rwd standard battery,user,2026-01-29T16:10:18.074442Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD Std Bat,2025 ford mustang mach e select rwd std bat,user,2026-01-29T16:16:27.165637Z,mapped
+2025,Ford,Ranger,LARIAT,R4J/500A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,LARIAT,R4K/500A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,Raptor,R4L/800A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,XL,R4B/100A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,XL,R4P/100A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,XLT,R4G/300A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Ford,Ranger,XLT,R4H/300A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Subaru,Forester,,SFB/01,2025 Forester Base,2025 forester base,user,2026-01-29T15:33:07.591617Z,mapped
 2025,Subaru,Forester,Limited,SFJ/41,2025 Forester Limited,2025 forester limited,user,2026-01-29T18:49:47.177962Z,mapped
 2025,Subaru,Forester Hybrid,Limited Hybrid,SFK/46,2025 Forester Limited Hybrid,2025 forester limited hybrid,user,2026-01-29T18:50:09.495970Z,mapped
