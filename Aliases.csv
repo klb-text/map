@@ -44,6 +44,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,E-Class,E 350,E350W4,,,user,2026-01-28T23:39:57.127073Z,mapped
 2025,Mercedes-Benz,E-Class,E 450,E450S4,,,user,2026-01-29T04:04:45.072539Z,mapped
 2025,Mercedes-Benz,E-Class,E 450,E450W4,,,user,2026-01-29T04:03:03.661736Z,mapped
+2025,Mercedes-Benz,EQB 250+,EQB 250+,EQB250W,,,user,2026-01-29T04:15:59.760339Z,mapped
 2025,Mercedes-Benz,EQE 350 Sedan,EQE 350,EQE350V4,,,user,2026-01-29T04:05:53.888984Z,mapped
 2025,Mercedes-Benz,EQE 350+ Sedan,EQE 350+,EQE350V,,,user,2026-01-29T04:05:35.543403Z,mapped
 2025,Mercedes-Benz,EQE 500 Sedan,EQE 500,EQE500V4,,,user,2026-01-29T04:06:09.988857Z,mapped
