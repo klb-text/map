@@ -1025,6 +1025,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Genesis,Electrified GV70,Standard,U04F2AEZ/01,2026 Electrified GV70,2026 electrified gv70,user,2026-01-29T20:20:52.975206Z,mapped
 2026,Genesis,Electrified GV70,Advanced,U04H2AEZ/01,2026 Electrified GV70 ADVANCED,2026 electrified gv70 advanced,user,2026-01-29T20:21:03.602469Z,mapped
 2026,Genesis,Electrified GV70,Prestige,U04J2AEZ/01,2026 Electrified GV70 PRESTIGE,2026 electrified gv70 prestige,user,2026-01-29T20:21:13.744698Z,mapped
+2026,Kia,EV9,GT-Line,P5472,2026 EV9 9,2026 ev9 9,user,2026-01-29T22:06:09.118164Z,mapped
+2026,Kia,EV9,Land,P5462,2026 EV9 9,2026 ev9 9,user,2026-01-29T22:06:09.118164Z,mapped
+2026,Kia,EV9,Light Long Range,P4342,2026 EV9 9,2026 ev9 9,user,2026-01-29T22:06:09.118164Z,mapped
+2026,Kia,EV9,Light Short Range,P2342,2026 EV9 9,2026 ev9 9,user,2026-01-29T22:06:09.118164Z,mapped
+2026,Kia,EV9,Wind,P5452,2026 EV9 9,2026 ev9 9,user,2026-01-29T22:06:09.118164Z,mapped
 2026,Kia,EV9,Light Long Range,P4342,2026 EV9 Light Long Range RWD,2026 ev9 light long range rwd,user,2026-01-29T22:01:26.547546Z,mapped
 2026,Kia,EV9,Wind,P5452,2026 EV9 Wind AWD,2026 ev9 wind awd,user,2026-01-29T22:01:42.475881Z,mapped
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
