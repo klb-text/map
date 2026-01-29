@@ -91,6 +91,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,iX,xDrive60,26IJ,,,user,2026-01-29T00:06:16.773866Z,mapped
 2026,Honda,CR-V,LX,RS3H2TEW,,,user,2026-01-29T00:41:18.923159Z,mapped
 2026,Honda,CR-V,LX,RS4H2TEW,,,user,2026-01-29T00:41:02.903687Z,mapped
+2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,,,user,2026-01-29T00:41:55.559375Z,mapped
 2026,Honda,CR-V Hybrid,Sport,RS6H5TJXW,,,user,2026-01-29T00:41:37.266254Z,mapped
 2026,Honda,Civic,LX,FE2F2TEW,,,user,2026-01-29T00:38:04.174046Z,mapped
 2026,Honda,Civic,Sport,FL2H8TEW,,,user,2026-01-29T00:38:20.245378Z,mapped
