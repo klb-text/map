@@ -299,24 +299,17 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,ADX,,SA1H3SJNW,2025 ADX FWD Continuously Variable Transmission,2025 adx fwd continuously variable transmission,user,2026-01-27T15:07:34.960617Z,mapped
 2025,Nissan,Altima,S,13115,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
 2025,Nissan,Altima,SL,13615,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
-2025,Nissan,Altima,SL,13715,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
 2025,Nissan,Altima,SR,13415,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
-2025,Nissan,Altima,SR,13515,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
 2025,Nissan,Altima,SV,13215,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
-2025,Nissan,Altima,SV,13315,2025 Altima,2025 altima,user,2026-01-29T15:24:30.060036Z,mapped
 2025,Nissan,Altima,SV,13315,2025 Altima SV FWD,2025 altima sv fwd,user,2026-01-29T15:10:49.063769Z,mapped
 2025,Nissan,Altima,SV,13315,"2025 Altima SV FWD with Splash Guards (4-piece set) and Carpeted Floor Mats (4-piece set), Carpeted Trunk Area Protector, Hideaway Trunk Cargo Net, and Shopping Bag Hook","2025 altima sv fwd with splash guards (4 piece set) and carpeted floor mats (4 piece set), carpeted trunk area protector, hideaway trunk cargo net, and shopping bag hook",user,2026-01-29T15:19:01.145700Z,mapped
 2025,Mercedes-Benz,AMG GLC 63 Coupe,,,2025 AMG GLC 63 Coupe,2025 amg glc 63 coupe,user,2026-01-29T12:27:20.311868Z,no_data
 2025,Mercedes-Benz,AMG GLC 63 S E,,,2025 AMG GLC 63 S E,2025 amg glc 63 s e,user,2026-01-29T12:26:50.200837Z,no_data
 2025,Nissan,Armada,PRO-4X,26615,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,Platinum,26415,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
-2025,Nissan,Armada,Platinum,26515,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,Platinum Reserve,26715,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
-2025,Nissan,Armada,Platinum Reserve,26815,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,SL,26215,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
-2025,Nissan,Armada,SL,26315,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,SV,26015,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
-2025,Nissan,Armada,SV,26115,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Audi,A5,Premium,F5FBZY,2025 Audi A5 quattro,2025 audi a5 quattro,user,2026-01-27T17:11:46.975330Z,mapped
 2025,Audi,A5,Premium Plus,F5FBZY,2025 Audi A5 quattro,2025 audi a5 quattro,user,2026-01-27T17:11:46.975330Z,mapped
 2025,Audi,A5,Prestige,F5FBZY,2025 Audi A5 quattro,2025 audi a5 quattro,user,2026-01-27T17:11:46.975330Z,mapped
@@ -562,11 +555,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:02:52.423384Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT Design,9504/FM,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:03:02.841378Z,mapped
 2025,Nissan,Kicks,S,21015,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
-2025,Nissan,Kicks,S,21115,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Nissan,Kicks,SR,21415,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
-2025,Nissan,Kicks,SR,21515,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Nissan,Kicks,SV,21215,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
-2025,Nissan,Kicks,SV,21315,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
@@ -625,7 +615,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Murano,Platinum,23415,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
 2025,Nissan,Murano,SL,23215,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
 2025,Nissan,Murano,SV,23015,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
-2025,Nissan,Murano,SV,23115,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MX-5 Grand Touring (RWD / Manual Transmission),2025 mx 5 grand touring (rwd manual transmission),user,2026-01-29T14:22:14.563758Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
 2025,Kia,Niro,EX,G4242,2025 Niro EX FWD,2025 niro ex fwd,user,2026-01-27T19:55:16.302400Z,mapped
@@ -769,25 +758,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,AMG GLC 63 Coupe,,,2026 AMG GLC 63 Coupe,2026 amg glc 63 coupe,user,2026-01-29T12:27:36.620443Z,no_data
 2026,Mercedes-Benz,AMG GLC 63 S E,,,2026 AMG GLC 63 S E,2026 amg glc 63 s e,user,2026-01-29T12:27:07.228568Z,no_data
 2026,Nissan,Armada,NISMO,29016,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,NISMO,59016,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,Nissan,Armada,PRO-4X,26616,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,PRO-4X,56616,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,Nissan,Armada,Platinum,26416,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum,26516,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum,56416,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum,56516,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,Nissan,Armada,Platinum Reserve,26716,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum Reserve,26816,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum Reserve,56716,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,Platinum Reserve,56816,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,Nissan,Armada,SL,26216,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SL,26316,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SL,56216,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SL,56316,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,Nissan,Armada,SV,26016,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SV,26116,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SV,56016,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
-2026,Nissan,Armada,SV,56116,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
 2026,AUDI,A3,,,2026 Audi A3 Sedan 40 TFSI quattro,2026 audi a3 sedan 40 tfsi quattro,user,2026-01-27T17:40:28.519111Z,no_data
 2026,Audi,A6,Premium,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
 2026,Audi,A6,Premium Plus,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
@@ -969,11 +944,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jaguar,F-PACE,R-Dynamic S,HB761/352KU,2026 Jaguar F-PACE P250 R-Dynamic S AWD,2026 jaguar f pace p250 r dynamic s awd,user,2026-01-28T15:25:51.645955Z,mapped
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,S,21116,2026 Kicks,2026 kicks,user,2026-01-29T15:23:15.907061Z,mapped
 2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,SR,21516,2026 Kicks,2026 kicks,user,2026-01-29T15:23:15.907061Z,mapped
 2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,SV,21316,2026 Kicks,2026 kicks,user,2026-01-29T15:23:15.907061Z,mapped
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
 2026,Nissan,LEAF,SV+,17216,2026 LEAF SV+ 75 kWh lithium-ion battery with Floor Mat Package (SV+) and Splash Guards (4-piece set),2026 leaf sv+ 75 kwh lithium ion battery with floor mat package (sv+) and splash guards (4 piece set),user,2026-01-29T15:13:52.005358Z,mapped
@@ -1156,6 +1128,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
+2026,Nissan,Sentra,,,2026 Sentra,2026 sentra,user,2026-01-29T15:25:55.035500Z,no_data
 2026,Nissan,Sentra,,,2026 Sentra SV with Floor Mat Package and Splash Guards (4-piece set),2026 sentra sv with floor mat package and splash guards (4 piece set),user,2026-01-29T15:12:52.937011Z,no_data
 2026,Toyota,Sequoia,SR5,7947/OF,2026 Sequoia SR5,2026 sequoia sr5,user,2026-01-29T12:43:11.094335Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
