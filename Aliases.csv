@@ -263,6 +263,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2024,Tesla,Cybertruck,,CYBERB,2024 Cybertruck All-Wheel Drive,2024 cybertruck all wheel drive,user,2026-01-29T22:22:27.571222Z,mapped
+2024,Tesla,Cybertruck,Cyberbeast,CYBERBST,2024 Cybertruck Cyberbeast,2024 cybertruck cyberbeast,user,2026-01-29T22:22:38.817514Z,mapped
 2024,Genesis,Electrified G80,Advanced,S14E2AEZ/01,2024 ELECTRIFIED G80 AWD AUTOMATIC TRANSMISSION,2024 electrified g80 awd automatic transmission,user,2026-01-29T20:12:56.046196Z,mapped
 2024,Ford,F-150 Lightning,Flash,W3L/312A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
 2024,Ford,F-150 Lightning,LARIAT,W5L/511A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
