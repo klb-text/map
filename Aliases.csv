@@ -23,6 +23,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,i4,eDrive40,26DA,,,user,2026-01-28T23:55:59.465046Z,mapped
 2026,BMW,i4,xDrive40,26DF,,,user,2026-01-28T23:56:17.726698Z,mapped
 2026,BMW,i5,xDrive40,265V,,,user,2026-01-28T23:57:26.455881Z,mapped
+2026,BMW,i7,M70,267S,,,user,2026-01-29T00:00:07.609231Z,mapped
 2026,BMW,i7,eDrive50,267R,,,user,2026-01-28T23:58:37.488361Z,mapped
 2026,BMW,i7,xDrive60,267Q,,,user,2026-01-28T23:59:51.588530Z,mapped
 2026,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-28T23:39:16.017075Z,mapped
