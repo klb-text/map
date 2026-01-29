@@ -264,6 +264,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Grand Highlander,XLE,6708,,,user,2026-01-29T04:47:55.531728Z,mapped
 2026,Toyota,Grand Highlander Hybrid,Hybrid XLE,6722,,,user,2026-01-29T04:46:00.753270Z,mapped
 2026,Toyota,Highlander,XLE,6953,,,user,2026-01-29T04:45:28.624265Z,mapped
+2026,Toyota,Highlander Hybrid,Hybrid XLE,6965,,,user,2026-01-29T04:51:29.045691Z,mapped
 2026,Toyota,Tacoma,SR5,7540,,,user,2026-01-29T04:42:04.456920Z,mapped
 2026,Toyota,Tacoma Hybrid,TRD Sport Hybrid,7530,,,user,2026-01-29T04:41:04.177866Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
