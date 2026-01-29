@@ -1423,6 +1423,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RX 450h+,RX 450h+ Premium,9441,2026 RX 350h PREMIUM AWD,2026 rx 350h premium awd,user,2026-01-29T22:13:24.822093Z,mapped
 2026,Lexus,RXh,,,2026 RX 350h PREMIUM AWD,2026 rx 350h premium awd,user,2026-01-28T18:01:52.817723Z,no_data
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
+2025,Lexus,UX 300h,UX 300h,9721,2026 RZ 350e,2026 rz 350e,user,2026-01-29T22:14:03.067855Z,mapped
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
 2026,Lexus,RZ 450e,RZ 450e Premium,9902,2026 RZ 350e,2026 rz 350e,user,2026-01-29T22:13:47.954552Z,mapped
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
