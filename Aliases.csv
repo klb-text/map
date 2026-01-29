@@ -971,6 +971,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Land Rover,Range Rover Sport,SV Black,AW461/461AD,2026 Range Rover Sport models,2026 range rover sport models,user,2026-01-27T16:27:34.697205Z,mapped
 2026,Land Rover,Range Rover Sport,SV Carbon,AW461/461AE,2026 Range Rover Sport models,2026 range rover sport models,user,2026-01-27T16:27:34.697205Z,mapped
 2026,Land Rover,Range Rover Velar,S,HB560/560CE,2026 Range Rover Velar P250 S,2026 range rover velar p250 s,user,2026-01-27T16:13:23.384489Z,mapped
+2026,Toyota,RAV4,,,2026 RAV4 LE,2026 rav4 le,user,2026-01-29T12:42:34.585990Z,no_data
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX,2026 rdx,user,2026-01-27T15:56:06.526789Z,mapped
 2026,Acura,RDX,,TC2H4TJNW,2026 RDX SH-AWD 10 Speed Automatic,2026 rdx sh awd 10 speed automatic,user,2026-01-27T15:10:00.593056Z,mapped
 2026,Honda,Ridgeline,Black Edition,YK3F8TKNW,2026 Ridgeline,2026 ridgeline,user,2026-01-28T14:59:25.819722Z,mapped
