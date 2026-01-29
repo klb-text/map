@@ -8,6 +8,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Pilot,EX-L,YG1H4SENW,,,user,2026-01-29T00:39:47.287572Z,mapped
 2025,Honda,Pilot,EX-L,YG2H4SENW,,,user,2026-01-29T00:40:05.639757Z,mapped
 2025,Jeep,Wagoneer L,,,,,user,2026-01-28T17:31:50.918954Z,no_data
+2025,Lexus,ES 350,ES 350,9000,,,user,2026-01-29T00:55:40.606118Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT,9510,,,user,2026-01-29T00:55:08.363324Z,mapped
 2025,MAZDA,Electrified Gv70,,,,,user,2026-01-27T15:19:02.365605Z,no_data
 2025,Mercedes-Benz,E-Class,E 350,E350W,,,user,2026-01-28T23:39:36.511433Z,mapped
