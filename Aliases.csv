@@ -528,6 +528,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,G80,2.5T,S1422A45/01,2025 G80 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2025 g80 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:12:36.323525Z,mapped
 2025,Genesis,G90,,T1422A65/01,2025 G90 3.5T AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 g90 3.5t awd 3.5l v6 automatic transmission,user,2026-01-29T20:13:06.156277Z,mapped
 2025,Genesis,G90,e-SC,T1462A65/01,2025 G90 3.5T E-SC MHEV AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 g90 3.5t e sc mhev awd 3.5l v6 automatic transmission,user,2026-01-29T20:13:22.490451Z,mapped
+2025,Genesis,G70,2.5T,R0422A45/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
+2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
+2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
+2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
