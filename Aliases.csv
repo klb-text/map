@@ -37,6 +37,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,E-Class,E 350,E350W4,,,user,2026-01-28T23:39:57.127073Z,mapped
 2025,Mercedes-Benz,E-Class,E 450,E450S4,,,user,2026-01-29T04:04:45.072539Z,mapped
 2025,Mercedes-Benz,E-Class,E 450,E450W4,,,user,2026-01-29T04:03:03.661736Z,mapped
+2025,Mercedes-Benz,EQE 350+ Sedan,EQE 350+,EQE350V,,,user,2026-01-29T04:05:35.543403Z,mapped
 2025,jeep,wagoneer s,,,,,user,2026-01-28T17:45:22.154762Z,no_data
 2026,Acura,Integra,,DE4H2TJW,,,user,2026-01-29T00:28:44.711239Z,mapped
 2026,Acura,MDX,,YE1H3TJNW,,,user,2026-01-29T00:29:16.730251Z,mapped
