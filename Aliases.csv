@@ -18,6 +18,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,RC 300,RC 300,9202,,,user,2026-01-29T03:52:06.661905Z,mapped
 2025,Lexus,UX 300h,UX 300h,9721,,,user,2026-01-29T00:58:58.607125Z,mapped
 2025,MAZDA,Electrified Gv70,,,,,user,2026-01-27T15:19:02.365605Z,no_data
+2025,Mercedes-Benz,AMG C 43,AMG C 43,C43W4,,,user,2026-01-29T03:57:10.175776Z,mapped
 2025,Mercedes-Benz,AMG CLA 35,AMG CLA 35,CLA35C4,,,user,2026-01-29T03:54:50.079221Z,mapped
 2025,Mercedes-Benz,AMG CLA 45,AMG CLA 45,CLA45C4S,,,user,2026-01-29T03:55:06.090697Z,mapped
 2025,Mercedes-Benz,C-Class,C 300,C300W,,,user,2026-01-29T03:56:35.740835Z,mapped
