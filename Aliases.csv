@@ -574,6 +574,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Kicks,S,21015,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Nissan,Kicks,SR,21415,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Nissan,Kicks,SV,21215,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks Play,S,27015,2025 Kicks Play,2025 kicks play,user,2026-01-29T15:28:57.894332Z,mapped
 2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
