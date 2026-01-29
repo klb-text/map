@@ -168,6 +168,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,AMG E 53 E,AMG E 53 E,E53ES4,,,user,2026-01-29T04:05:17.179461Z,mapped
 2026,Mercedes-Benz,AMG E 53 E,AMG E 53 E,E53EW4,,,user,2026-01-29T04:04:26.691267Z,mapped
 2026,Mercedes-Benz,AMG EQE,AMG EQE,AMGEQEV4,,,user,2026-01-29T04:07:16.612380Z,mapped
+2026,Mercedes-Benz,AMG GLA 35,AMG GLA 35,GLA35W4,,,user,2026-01-29T04:14:00.515105Z,mapped
 2026,Mercedes-Benz,AMG SL 43,AMG SL 43,SL43R,,,user,2026-01-29T04:11:45.119325Z,mapped
 2026,Mercedes-Benz,AMG SL 55,AMG SL 55,SL55R4,,,user,2026-01-29T04:12:03.486692Z,mapped
 2026,Mercedes-Benz,C-Class,C 300,C300W,,,user,2026-01-29T03:57:53.701168Z,mapped
