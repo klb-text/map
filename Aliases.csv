@@ -274,6 +274,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Corolla Hybrid,Hybrid LE,1883,,,user,2026-01-29T05:15:34.491904Z,mapped
 2026,Toyota,Crown,XLE,4015,,,user,2026-01-29T04:55:50.819523Z,mapped
 2026,Toyota,Grand Highlander,LE,6700,,,user,2026-01-29T05:15:18.133012Z,mapped
+2026,Toyota,Grand Highlander,LE,6706,,,user,2026-01-29T05:16:08.649563Z,mapped
 2026,Toyota,Grand Highlander,XLE,6702,,,user,2026-01-29T04:45:44.694182Z,mapped
 2026,Toyota,Grand Highlander,XLE,6708,,,user,2026-01-29T04:47:55.531728Z,mapped
 2026,Toyota,Grand Highlander Hybrid,Hybrid LE,6720,,,user,2026-01-29T04:53:53.708918Z,mapped
