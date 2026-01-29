@@ -27,6 +27,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C,,,user,2026-01-29T03:54:15.408728Z,mapped
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,,,user,2026-01-29T03:54:31.507134Z,mapped
 2025,Mercedes-Benz,CLE 300,CLE 300,CLE300C4,,,user,2026-01-29T03:59:04.859676Z,mapped
+2025,Mercedes-Benz,CLE 450,CLE 450,CLE450C4,,,user,2026-01-29T03:59:20.976440Z,mapped
 2025,Mercedes-Benz,E-Class,E 350,E350W,,,user,2026-01-28T23:39:36.511433Z,mapped
 2025,Mercedes-Benz,E-Class,E 350,E350W4,,,user,2026-01-28T23:39:57.127073Z,mapped
 2025,jeep,wagoneer s,,,,,user,2026-01-28T17:45:22.154762Z,no_data
