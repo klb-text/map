@@ -642,7 +642,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Alfa Romeo,Stelvio,Intensa,GUGM74/22F,2025 STELVIO INTENSA AWD,2025 stelvio intensa awd,user,2026-01-27T16:35:05.275984Z,mapped
 2025,Alfa Romeo,Stelvio,Special Edition,GUGT74/22Y,2025 STELVIO TRIBUTO ITALIANO AWD,2025 stelvio tributo italiano awd,user,2026-01-27T16:42:16.486400Z,mapped
 2025,Toyota,Tacoma,TRD Off Road,7544/OC,2025 Tacoma TRD Off-Road,2025 tacoma trd off road,user,2026-01-29T12:28:59.473743Z,mapped
-2025,Toyota,Tacoma,TRD Off Road,7568/OF,2025 Tacoma TRD Off-Road,2025 tacoma trd off road,user,2026-01-29T12:37:21.478512Z,mapped
+2025,Toyota,Tacoma i-FORCE MAX,,,2025 Tacoma TRD Off-Road i-FORCE MAX,2025 tacoma trd off road i force max,user,2026-01-29T12:39:09.869013Z,no_data
 2025,Kia,Telluride,S,J4432,2025 Telluride S AWD,2025 telluride s awd,user,2026-01-27T19:57:06.493556Z,mapped
 2025,Kia,Telluride,S,J4232,2025 Telluride S FWD,2025 telluride s fwd,user,2026-01-27T19:56:53.370277Z,mapped
 2025,Acura,TLX,Type S,UB7F0SGW,2025 TLX,2025 tlx,user,2026-01-27T16:04:06.740821Z,mapped
