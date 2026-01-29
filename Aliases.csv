@@ -561,6 +561,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-50,2.5 S Premium Package,C50 PR XA,2025 MAZDA CX-50 2.5 S Premium (AWD / Automatic Transmission),2025 mazda cx 50 2.5 s premium (awd automatic transmission),user,2026-01-29T14:13:35.419392Z,mapped
 2025,Mazda,CX-50,2.5 S Select Package,C50 SE XA,2025 MAZDA CX-50 2.5 S Select (AWD / Automatic Transmission),2025 mazda cx 50 2.5 s select (awd automatic transmission),user,2026-01-29T14:09:31.683842Z,mapped
 2025,Mazda,CX-50 Hybrid,Preferred Package,50H PF XA,2025 MAZDA CX-50 Hybrid Preferred (AWD / Automatic Transmission),2025 mazda cx 50 hybrid preferred (awd automatic transmission),user,2026-01-29T14:08:25.926393Z,mapped
+2025,Mazda,CX-70 PHEV,Premium Package,C7P PR XA,2025 MAZDA CX-70 PHEV Premium (AWD / Automatic Transmission),2025 mazda cx 70 phev premium (awd automatic transmission),user,2026-01-29T14:14:37.074278Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT A,2025 MAZDA MX-5 Miata RF Grand Touring (RWD / Automatic Transmission),2025 mazda mx 5 miata rf grand touring (rwd automatic transmission),user,2026-01-29T14:11:43.627925Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MAZDA MX-5 RF Grand Touring (RWD / Manual Transmission),2025 mazda mx 5 rf grand touring (rwd manual transmission),user,2026-01-29T14:07:03.037253Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MAZDA MX-5 Sport (RWD / Manual Transmission),2025 mazda mx 5 sport (rwd manual transmission),user,2026-01-29T14:06:05.881297Z,no_data
