@@ -137,6 +137,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,AMG CLA 45,AMG CLA 45,CLA45C4S,,,user,2026-01-29T03:56:19.601081Z,mapped
 2026,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-28T23:39:16.017075Z,mapped
 2026,Mercedes-Benz,C-Class,C 300,C300W,,,user,2026-01-29T03:57:53.701168Z,mapped
+2026,Mercedes-Benz,C-Class,C 300,C300W4,,,user,2026-01-29T03:58:12.022284Z,mapped
 2026,Mercedes-Benz,CLA 250,CLA 250,CLA250C,,,user,2026-01-29T03:55:24.495946Z,mapped
 2026,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,,,user,2026-01-29T03:55:45.166809Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
