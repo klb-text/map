@@ -932,6 +932,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Explorer,ST,K7G/400A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
+2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer Active 4WD,2026 ford explorer active 4wd,user,2026-01-29T19:22:11.866116Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD,2026 ford explorer active 4wd,user,2026-01-27T19:53:15.638065Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD with Comfort Package,2026 ford explorer active 4wd with comfort package,user,2026-01-27T19:48:36.466930Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active AWD with Comfort Package,2026 ford explorer active awd with comfort package,user,2026-01-29T14:56:07.487204Z,mapped
