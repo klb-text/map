@@ -977,6 +977,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Genesis,Electrified GV70,Advanced,U04H2AEZ/01,2026 Electrified GV70 ADVANCED,2026 electrified gv70 advanced,user,2026-01-29T20:21:03.602469Z,mapped
 2026,Genesis,Electrified GV70,Prestige,U04J2AEZ/01,2026 Electrified GV70 PRESTIGE,2026 electrified gv70 prestige,user,2026-01-29T20:21:13.744698Z,mapped
 2026,Kia,EV9,Light Long Range,P4342,2026 EV9 Light Long Range RWD,2026 ev9 light long range rwd,user,2026-01-29T22:01:26.547546Z,mapped
+2026,Kia,EV9,Wind,P5452,2026 EV9 Wind AWD,2026 ev9 wind awd,user,2026-01-29T22:01:42.475881Z,mapped
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape,2026 ford escape,user,2026-01-29T14:54:26.198782Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD,2026 ford escape active awd,user,2026-01-27T19:47:15.544606Z,mapped
