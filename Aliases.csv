@@ -1024,4 +1024,5 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jeep,Wrangler,Willys,JLJL74/23B,2026 WRANGLER 4-DOOR WILLYS '41,2026 wrangler 4 door willys '41,user,2026-01-28T16:52:51.166959Z,mapped
 2026,Volvo,XC40,Plus,XC40B4PFWD,2026 XC40 B4 FWD Plus Dark,2026 xc40 b4 fwd plus dark,user,2026-01-29T12:47:03.153292Z,mapped
 2026,Volvo,XC40,Plus,XC40B5PAWD,2026 XC40 B5 AWD Plus Dark,2026 xc40 b5 awd plus dark,user,2026-01-29T12:47:27.106447Z,mapped
+2026,Volvo,XC40,Ultra,XC40B5UAWD,2026 XC40 B5 AWD Ultra Dark,2026 xc40 b5 awd ultra dark,user,2026-01-29T12:47:49.687344Z,mapped
 2027,Acura,Integra,,,2027 Integra,2027 integra,user,2026-01-24T19:10:21.375861Z,no_data
