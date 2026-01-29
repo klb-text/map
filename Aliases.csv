@@ -984,6 +984,14 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD,2026 ford escape active awd,user,2026-01-27T19:47:15.544606Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD 1.5L Gas,2026 ford escape active awd 1.5l gas,user,2026-01-27T19:21:11.444920Z,mapped
 2026,Ford,Escape,Active,U0G/200A,2026 Ford Escape Active FWD,2026 ford escape active fwd,user,2026-01-29T14:52:32.133592Z,mapped
+2026,Ford,Escape,Active,U0G/200A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,Platinum,U9J/600A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,ST-Line,U0M/300A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,ST-Line,U9M/300A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,ST-Line Elite,U9P/500A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
+2026,Ford,Escape,ST-Line Select,U9N/400A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape PHEV,2026 ford escape phev,user,2026-01-27T19:21:46.748771Z,mapped
 2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Platinum,K7H/600A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
