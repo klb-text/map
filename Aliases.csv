@@ -22,6 +22,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,AMG C 63,AMG C 63 S E Performance,C63W4SE,,,user,2026-01-29T03:57:28.526567Z,mapped
 2025,Mercedes-Benz,AMG CLA 35,AMG CLA 35,CLA35C4,,,user,2026-01-29T03:54:50.079221Z,mapped
 2025,Mercedes-Benz,AMG CLA 45,AMG CLA 45,CLA45C4S,,,user,2026-01-29T03:55:06.090697Z,mapped
+2025,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-29T04:01:20.378556Z,mapped
 2025,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53C4,,,user,2026-01-29T03:59:36.999436Z,mapped
 2025,Mercedes-Benz,C-Class,C 300,C300W,,,user,2026-01-29T03:56:35.740835Z,mapped
 2025,Mercedes-Benz,C-Class,C 300,C300W4,,,user,2026-01-29T03:56:51.804006Z,mapped
