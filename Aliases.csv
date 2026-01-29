@@ -869,6 +869,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
 2026,Lexus,LS,,,2026 LS,2026 ls,user,2026-01-27T21:06:55.567000Z,no_data
+2026,Mazda,CX-70,3.3 Turbo Preferred,C70 PF XA,2026 MAZDA CX-70 3.3 Turbo Preferred (AWD / Automatic Transmission),2026 mazda cx 70 3.3 turbo preferred (awd automatic transmission),user,2026-01-29T14:00:01.771924Z,mapped
 2026,Mazda,CX-90,Select,C90 SE XA,2026 MAZDA CX-90 3.3 Turbo Select (FWD / Automatic Transmission),2026 mazda cx 90 3.3 turbo select (fwd automatic transmission),user,2026-01-29T13:52:03.343265Z,mapped
 2026,MAZDA,MAZDA3 Hatchback,,,2026 MAZDA3 Hatchback 2.5 S (FWD / Automatic Transmission),2026 mazda3 hatchback 2.5 s (fwd automatic transmission),user,2026-01-29T13:57:18.546945Z,no_data
 2026,MAZDA,MAZDA3 SEDAN,,,2026 MAZDA3 SEDAN,2026 mazda3 sedan,user,2026-01-27T15:20:07.218694Z,no_data
