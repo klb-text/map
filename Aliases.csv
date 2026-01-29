@@ -895,6 +895,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mazda,CX-30,2.5 S Select Sport,C30 SES XA,2026 MAZDA CX-30 2.5 S SELECT SPORT (AWD / Automatic Transmission),2026 mazda cx 30 2.5 s select sport (awd automatic transmission),user,2026-01-29T14:24:25.967271Z,mapped
 2026,MAZDA,CX-50,,,2026 MAZDA CX-50 2.5 S Select (AWD / Automatic Transmission),2026 mazda cx 50 2.5 s select (awd automatic transmission),user,2026-01-29T14:08:55.600533Z,no_data
 2026,MAZDA,CX-50 Hybrid,,,2026 MAZDA CX-50 Hybrid Preferred (AWD / Automatic Transmission),2026 mazda cx 50 hybrid preferred (awd automatic transmission),user,2026-01-29T14:07:35.870683Z,no_data
+2026,Mazda,CX-70,3.3 Turbo Preferred,C70 PF XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
+2026,Mazda,CX-70,3.3 Turbo Premium,C70 PR XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
+2026,Mazda,CX-70,3.3 Turbo Premium Plus,C70 PP XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
+2026,Mazda,CX-70,3.3 Turbo S Premium,C70 SPR XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
+2026,Mazda,CX-70,3.3 Turbo S Premium Plus,C70 SPP XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
 2026,Mazda,CX-70,3.3 Turbo Preferred,C70 PF XA,2026 MAZDA CX-70 3.3 Turbo Preferred (AWD / Automatic Transmission),2026 mazda cx 70 3.3 turbo preferred (awd automatic transmission),user,2026-01-29T14:00:01.771924Z,mapped
 2026,Mazda,CX-70 PHEV,SC,C7P SC XA,2026 MAZDA CX-70 CX-70 PHEV SC (AWD / Automatic Transmission),2026 mazda cx 70 cx 70 phev sc (awd automatic transmission),user,2026-01-29T14:23:34.362524Z,mapped
 2026,Mazda,CX-70 PHEV,SC,C7P SC XA,2026 MAZDA CX-70 PHEV SC (AWD / Automatic Transmission),2026 mazda cx 70 phev sc (awd automatic transmission),user,2026-01-29T14:03:27.378335Z,mapped
