@@ -802,7 +802,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,RAM,1500,Big Horn,DT1H41/23Z,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-27T15:35:59.102320Z,mapped
 2025,RAM,1500,Laramie,DT1P98/21H,"2025 RAM 1500 LARAMIE CREW CAB 4X4 5'7"" BOX","2025 ram 1500 laramie crew cab 4x4 5'7"" box",user,2026-01-29T22:19:03.785195Z,mapped
 2025,RAM,1500,Limited,DT6M91/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-27T15:38:36.246510Z,mapped
-2025,RAM,1500,Limited,DT6M98/22M,"2025 RAM 1500 LIMITED CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited crew cab 4x4 5'7"" box",user,2026-01-29T22:19:37.600743Z,mapped
 2025,RAM,1500,Longhorn,DT6M98/22M,"2025 RAM 1500 LIMITED LONGHORN CREW CAB 4X4 5'7"" BOX","2025 ram 1500 limited longhorn crew cab 4x4 5'7"" box",user,2026-01-28T14:09:18.801180Z,mapped
 2025,RAM,1500,Rebel,DT6X98/21W,"2025 RAM 1500 REBEL CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rebel crew cab 4x4 5'7"" box",user,2026-01-27T15:36:40.741855Z,mapped
 2025,RAM,1500,RHO,DT6S98/22Y,"2025 RAM 1500 RHO CREW CAB 4X4 5'7"" BOX","2025 ram 1500 rho crew cab 4x4 5'7"" box",user,2026-01-27T15:37:20.595406Z,mapped
@@ -1514,6 +1513,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Tacoma i-FORCE MAX,,,2026 Tacoma TRD Off-Road i-FORCE MAX,2026 tacoma trd off road i force max,user,2026-01-29T12:40:03.499197Z,no_data
 2026,Toyota,Tacoma,TRD Off Road,7544/OC,2026 Tacoma TRD Sport,2026 tacoma trd sport,user,2026-01-29T12:44:35.747335Z,mapped
 2026,Toyota,Tacoma,TRD Sport,7148/PQ,2026 Tacoma TRD Sport,2026 tacoma trd sport,user,2026-01-29T12:44:35.747335Z,mapped
+2026,Volkswagen,Tiguan,,,2026 Tiguan,2026 tiguan,user,2026-01-29T22:22:55.584423Z,no_data
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
 2026,Toyota,Tundra i-FORCE MAX,,,2026 Tundra Limited i-FORCE MAX,2026 tundra limited i force max,user,2026-01-29T12:28:21.978044Z,no_data
