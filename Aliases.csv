@@ -206,6 +206,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,GLA 250,GLA 250,GLA250W4,,,user,2026-01-29T04:13:44.502910Z,mapped
 2026,Mercedes-Benz,GLB 250,GLB 250,GLB250W,,,user,2026-01-29T04:15:11.624819Z,mapped
 2026,Mercedes-Benz,GLB 250,GLB 250,GLB250W4,,,user,2026-01-29T04:15:27.662975Z,mapped
+2026,Mercedes-Benz,GLC 300,GLC 300,GLC300C4,,,user,2026-01-29T04:20:41.476651Z,mapped
 2026,Mercedes-Benz,GLC 300,GLC 300,GLC300W,,,user,2026-01-29T04:18:12.888177Z,mapped
 2026,Mercedes-Benz,GLC 300,GLC 300,GLC300W4,,,user,2026-01-29T04:18:28.950700Z,mapped
 2026,Mercedes-Benz,GLC 350e,GLC 350e,GLC350E4,,,user,2026-01-29T04:18:44.977742Z,mapped
