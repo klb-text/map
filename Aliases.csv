@@ -1054,6 +1054,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jeep,WAGONEER,,,2026 GRAND WAGONEER SUMMIT OBSIDIAN 4X4,2026 grand wagoneer summit obsidian 4x4,user,2026-01-28T17:56:56.791635Z,no_data
 2026,Jeep,WAGONEER,,,2026 GRAND WAGONEER SUMMIT RESERVE 4X4,2026 grand wagoneer summit reserve 4x4,user,2026-01-28T17:57:22.632082Z,no_data
 2026,Jeep,WAGONEER,,,2026 GRAND WAGONEER UPLAND 4X4,2026 grand wagoneer upland 4x4,user,2026-01-28T17:55:37.789075Z,no_data
+2026,Genesis,GV70,2.5T,U0422A45/01,2026 GV70 2.5T,2026 gv70 2.5t,user,2026-01-29T20:19:19.717589Z,mapped
 2026,Genesis,GV70,2.5T,U0422A45/01,2026 GV70 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2026 gv70 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:15:49.557427Z,mapped
 2026,Genesis,GV70,2.5T Select,U0432A45/01,2026 GV70 2.5T SELECT AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2026 gv70 2.5t select awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:16:07.170568Z,mapped
 2026,Lexus,GX,,,2026 GX 550 PREMIUM,2026 gx 550 premium,user,2026-01-29T13:27:48.726974Z,no_data
