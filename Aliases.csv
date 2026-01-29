@@ -194,6 +194,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,GLA 250,GLA 250,GLA250W,,,user,2026-01-29T04:13:28.441564Z,mapped
 2026,Mercedes-Benz,GLA 250,GLA 250,GLA250W4,,,user,2026-01-29T04:13:44.502910Z,mapped
 2026,Mercedes-Benz,GLB 250,GLB 250,GLB250W,,,user,2026-01-29T04:15:11.624819Z,mapped
+2026,Mercedes-Benz,GLB 250,GLB 250,GLB250W4,,,user,2026-01-29T04:15:27.662975Z,mapped
 2026,Mercedes-Benz,S-Class,S 500,S500V4,,,user,2026-01-29T04:08:23.148452Z,mapped
 2026,Mercedes-Benz,S-Class,S 580,S580V4,,,user,2026-01-29T04:08:41.471631Z,mapped
 2026,Mercedes-Benz,S-Class,S 580e,S580eV4,,,user,2026-01-29T04:08:57.561176Z,mapped
