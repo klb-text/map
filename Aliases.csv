@@ -950,6 +950,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Carnival,LXS,M4232,2026 Carnival,2026 carnival,user,2026-01-29T22:05:17.767004Z,mapped
 2026,Kia,Carnival,SX,M4282,2026 Carnival,2026 carnival,user,2026-01-29T22:05:17.767004Z,mapped
 2026,Kia,Carnival,SX Prestige,M4292,2026 Carnival,2026 carnival,user,2026-01-29T22:05:17.767004Z,mapped
+2026,Kia,Carnival MPV Hybrid,,,2026 Carnival MPV Hybrid,2026 carnival mpv hybrid,user,2026-01-29T22:05:50.350787Z,no_data
 2026,Kia,Carnival MPV Hybrid,,,2026 Carnival MPV Hybrid LXS FWD,2026 carnival mpv hybrid lxs fwd,user,2026-01-29T22:00:30.561988Z,no_data
 2026,Kia,Carnival MPV,,,2026 Carnival MPV LX FWD,2026 carnival mpv lx fwd,user,2026-01-29T22:00:06.312560Z,no_data
 2026,Kia,Carnival MPV,,,2026 Carnival MPV LXS FWD,2026 carnival mpv lxs fwd,user,2026-01-29T22:00:12.176491Z,no_data
@@ -1194,7 +1195,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,K5,EX,L4262,2026 K5,2026 k5,user,2026-01-29T22:05:44.377507Z,mapped
 2026,Kia,K5,GT,L6282,2026 K5,2026 k5,user,2026-01-29T22:05:44.377507Z,mapped
 2026,Kia,K5,GT-Line,L4252,2026 K5,2026 k5,user,2026-01-29T22:05:44.377507Z,mapped
-2026,Kia,K5,GT-Line,L4452,2026 K5,2026 k5,user,2026-01-29T22:05:44.377507Z,mapped
 2026,Kia,K5,LXS,L4232,2026 K5,2026 k5,user,2026-01-29T22:05:44.377507Z,mapped
 2026,Kia,K5,LXS,L4232,2026 K5 LXS FWD,2026 k5 lxs fwd,user,2026-01-29T22:00:19.928237Z,mapped
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
