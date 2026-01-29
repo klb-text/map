@@ -491,6 +491,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E Premium AWD Extended Battery,2025 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:10.969672Z,mapped
+2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD,2025 ford mustang mach e select rwd,user,2026-01-29T15:35:18.519529Z,mapped
 2025,Subaru,Forester,,SFB/01,2025 Forester Base,2025 forester base,user,2026-01-29T15:33:07.591617Z,mapped
 2025,Subaru,Forester,Premium,SFD/11,2025 Forester Premium Hybrid,2025 forester premium hybrid,user,2026-01-29T15:33:36.001826Z,mapped
 2025,Nissan,Frontier,PRO-4X,32415,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
