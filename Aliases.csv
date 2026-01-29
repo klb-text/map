@@ -960,6 +960,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Subaru,Forester,Limited,TFJ/41,2026 Forester Limited,2026 forester limited,user,2026-01-29T18:53:22.957921Z,mapped
 2026,Subaru,Forester,Premium,TFD/11,2026 Forester Premium,2026 forester premium,user,2026-01-29T18:52:10.481369Z,mapped
 2026,Subaru,Forester,Sport,TFF/21,2026 Forester Sport,2026 forester sport,user,2026-01-29T18:52:36.013517Z,mapped
+2026,Subaru,Forester,Touring,TFL/51,2026 Forester Touring,2026 forester touring,user,2026-01-29T18:53:55.703532Z,mapped
 2026,Subaru,Forester,Wilderness,TFH/31,2026 Forester Wilderness,2026 forester wilderness,user,2026-01-29T18:52:59.380884Z,mapped
 2026,Nissan,Frontier,PRO-4X,32416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,PRO-4X w/R Package,32816,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
