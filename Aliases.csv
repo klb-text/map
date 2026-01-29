@@ -489,22 +489,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E Premium AWD Extended Battery,2025 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:10.969672Z,mapped
 2025,Nissan,Frontier,PRO-4X,32415,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,PRO-4X,33415,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
 2025,Nissan,Frontier,PRO-X,32515,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
 2025,Nissan,Frontier,S,31015,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,S,31115,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,S,32015,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,S,32115,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
 2025,Nissan,Frontier,SL,32615,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SL,32715,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SL,33615,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SL,33715,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
 2025,Nissan,Frontier,SV,31215,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SV,31315,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SV,32215,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SV,32315,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SV,33215,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
-2025,Nissan,Frontier,SV,33315,2025 Frontier,2025 frontier,user,2026-01-29T15:28:01.081278Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
@@ -639,9 +627,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Kia,Niro,LX,G4222,2025 Niro LX FWD,2025 niro lx fwd,user,2026-01-27T19:55:06.134279Z,mapped
 2025,Nissan,Z,NISMO,41215,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Nissan,Z,Performance,41115,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
-2025,Nissan,Z,Performance,41165,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Nissan,Z,Sport,41015,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
-2025,Nissan,Z,Sport,41065,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Mitsubishi,Outlander,ES,OT45-A/E5A,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,Platinum Edition,OT45-Z/R52,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,SE,OT45-I/E5B,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
@@ -757,6 +743,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2025 TUCSON Plug-in Hybrid SEL,2025 tucson plug in hybrid sel,user,2026-01-27T18:58:59.464135Z,mapped
 2025,Toyota,Tundra i-FORCE MAX,,,2025 Tundra Limited i-FORCE MAX,2025 tundra limited i force max,user,2026-01-29T12:29:17.854039Z,no_data
 2025,Lexus,UXh,,,2025 UX 300h,2025 ux 300h,user,2026-01-29T13:24:33.153588Z,no_data
+2025,Nissan,Versa Sedan,,,2025 Versa Sedan,2025 versa sedan,user,2026-01-29T15:29:29.559654Z,no_data
 2025,Jeep,Wagoneer,,WSTM75/25E,2025 WAGONEER 4X2,2025 wagoneer 4x2,user,2026-01-28T17:29:45.646348Z,mapped
 2025,Jeep,Wagoneer L,,WSJM76/25E,2025 WAGONEER 4X4,2025 wagoneer 4x4,user,2026-01-28T17:33:47.439365Z,mapped
 2025,Jeep,Wagoneer,Series II Carbide,WSTH75/25J,2025 WAGONEER CARBIDE 4X2,2025 wagoneer carbide 4x2,user,2026-01-28T17:39:16.728643Z,mapped
@@ -919,17 +906,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
 2026,Nissan,Frontier,PRO-4X,32416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,PRO-4X,33416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,PRO-4X w/R Package,32816,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,PRO-X,32516,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,S,31016,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,S,31116,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,S,32016,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,S,32116,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,SV,32216,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,SV,32316,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,SV,33216,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
-2026,Nissan,Frontier,SV,33316,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,SV,33316,"2026 Frontier SV (CC) 4x2 with Splash Guards (4-piece set) and Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio","2026 frontier sv (cc) 4x2 with splash guards (4 piece set) and carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio",user,2026-01-29T15:17:08.848544Z,mapped
 2026,Nissan,Frontier,SV,32216,"2026 Frontier SV (CC) 4x4 with Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio and Splash Guards (4-piece set)","2026 frontier sv (cc) 4x4 with carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio and splash guards (4 piece set)",user,2026-01-29T15:16:07.811407Z,mapped
 2026,Jeep,Gladiator,Mojave,JTJH98/24D,2026 GLADIATOR MOJAVE 4X4,2026 gladiator mojave 4x4,user,2026-01-28T17:24:40.781180Z,mapped
@@ -1049,9 +1029,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Niro,LX,G4222,2026 Niro LX FWD,2026 niro lx fwd,user,2026-01-27T19:55:25.786501Z,mapped
 2026,Nissan,Z,NISMO,41216,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
 2026,Nissan,Z,Performance,41116,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
-2026,Nissan,Z,Performance,41166,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
 2026,Nissan,Z,Sport,41016,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
-2026,Nissan,Z,Sport,41066,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
 2026,Lexus,NX,,,2026 NX 350 AWD,2026 nx 350 awd,user,2026-01-28T18:00:53.524981Z,no_data
 2026,Lexus,NXh,,,2026 NX 350h AWD,2026 nx 350h awd,user,2026-01-28T18:01:13.308999Z,no_data
 2026,Lexus,NXphev,,,2026 NX 450h+ PREMIUM AWD,2026 nx 450h+ premium awd,user,2026-01-28T18:01:23.491631Z,no_data
