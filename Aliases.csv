@@ -553,6 +553,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-30,2.5 Turbo Premium Package,C30 PR TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
 2025,Mazda,CX-30,2.5 Turbo Premium Plus Package,C30 PP TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
 2025,Mazda,CX-30,2.5 S,C30 25S XA,2025 MAZDA CX-30 2.5 S (AWD / Automatic Transmission),2025 mazda cx 30 2.5 s (awd automatic transmission),user,2026-01-29T14:05:27.155329Z,mapped
+2025,Mazda,CX-30,2.5 S Preferred Package,C30 PF XA,2025 MAZDA CX-30 2.5 S PREFERRED (AWD / Automatic Transmission),2025 mazda cx 30 2.5 s preferred (awd automatic transmission),user,2026-01-29T14:17:16.538331Z,mapped
 2025,Mazda,CX-5,2.5 S,CX5 25S XA,2025 MAZDA CX-5 2.5 S,2025 mazda cx 5 2.5 s,user,2026-01-27T15:20:23.739543Z,mapped
 2025,Mazda,CX-5,2.5 S,CX5 25S XA,2025 MAZDA CX-5 2.5 S (AWD / Automatic Transmission),2025 mazda cx 5 2.5 s (awd automatic transmission),user,2026-01-29T14:02:18.572415Z,mapped
 2025,Mazda,CX-5,2.5 S Carbon Edition,CX5 CE XA,2025 MAZDA CX-5 2.5 S CARBON EDITION,2025 mazda cx 5 2.5 s carbon edition,user,2026-01-27T15:21:41.679682Z,mapped
