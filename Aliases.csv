@@ -912,11 +912,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jaguar,F-PACE,R-Dynamic S,HB761/352KU,2026 Jaguar F-PACE P250 R-Dynamic S AWD,2026 jaguar f pace p250 r dynamic s awd,user,2026-01-28T15:25:51.645955Z,mapped
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,S,21116,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,SR,21516,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
-2026,Nissan,Kicks,SV,21316,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
 2026,Lexus,LS,,,2026 LS,2026 ls,user,2026-01-27T21:06:55.567000Z,no_data
@@ -1094,6 +1091,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
+2026,Nissan,Sentra,,,2026 Sentra SV with Floor Mat Package and Splash Guards (4-piece set),2026 sentra sv with floor mat package and splash guards (4 piece set),user,2026-01-29T15:12:52.937011Z,no_data
 2026,Toyota,Sequoia,SR5,7947/OF,2026 Sequoia SR5,2026 sequoia sr5,user,2026-01-29T12:43:11.094335Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA LIMITED HYBRID,2026 sonata limited hybrid,user,2026-01-27T19:15:40.430391Z,mapped
