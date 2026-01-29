@@ -587,6 +587,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,MAZDA,MX-5 miata st,,,2025 MAZDA MX-5 Sport (RWD / Manual Transmission),2025 mazda mx 5 sport (rwd manual transmission),user,2026-01-29T14:06:05.881297Z,no_data
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
+2025,Mini,COOPER HARDTOP 2 DOOR,,,2025 MINI Cooper Hardtop 2 Door,2025 mini cooper hardtop 2 door,user,2026-01-29T14:51:11.746823Z,no_data
 2025,Mini,COUNTRYMAN S ALL4,,,2025 MINI Countryman S ALL4,2025 mini countryman s all4,user,2026-01-29T14:50:40.612708Z,no_data
 2025,Mini,COUNTRYMAN SE ALL4,,,2025 MINI Countryman SE ALL4,2025 mini countryman se all4,user,2026-01-29T14:50:59.154925Z,no_data
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MX-5 Grand Touring (RWD / Manual Transmission),2025 mx 5 grand touring (rwd manual transmission),user,2026-01-29T14:22:14.563758Z,mapped
