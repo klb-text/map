@@ -1186,6 +1186,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Subaru,Solterra,Limited,TEG/31,2026 Solterra Limited,2026 solterra limited,user,2026-01-29T15:43:53.833010Z,mapped
 2026,Subaru,Solterra,Limited XT,TEH/31,2026 Solterra Limited XT,2026 solterra limited xt,user,2026-01-29T15:44:27.088341Z,mapped
 2026,Subaru,Solterra,Premium,TED/11,2026 Solterra Premium,2026 solterra premium,user,2026-01-29T15:32:09.280088Z,mapped
+2026,Subaru,Solterra,Touring XT,TEJ/41,2026 Solterra Touring XT,2026 solterra touring xt,user,2026-01-29T15:44:54.449641Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA LIMITED HYBRID,2026 sonata limited hybrid,user,2026-01-27T19:15:40.430391Z,mapped
 2026,Hyundai,Sonata,N Line,29472FT5/01,2026 SONATA N LINE,2026 sonata n line,user,2026-01-27T19:17:38.640687Z,mapped
