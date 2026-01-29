@@ -26,6 +26,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53C4,,,user,2026-01-29T03:59:36.999436Z,mapped
 2025,Mercedes-Benz,AMG E 53 E,AMG E 53 E,E53EW4,,,user,2026-01-29T04:03:18.001651Z,mapped
 2025,Mercedes-Benz,AMG EQE,AMG EQE,AMGEQEV4,,,user,2026-01-29T04:06:26.063079Z,mapped
+2025,Mercedes-Benz,AMG EQE SUV,AMG EQE,AMGEQEX4,,,user,2026-01-29T04:26:49.155370Z,mapped
 2025,Mercedes-Benz,AMG EQS,AMG EQS,AMGEQSV4,,,user,2026-01-29T04:10:08.695018Z,mapped
 2025,Mercedes-Benz,AMG GLA 35,AMG GLA 35,GLA35W4,,,user,2026-01-29T04:13:12.361452Z,mapped
 2025,Mercedes-Benz,AMG GLB 35,AMG GLB 35,GLB35W4,,,user,2026-01-29T04:14:53.274315Z,mapped
