@@ -926,6 +926,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mazda,CX-90 PHEV,Premium Plus,C9P PP XA,2026 MAZDA CX-90 PHEV,2026 mazda cx 90 phev,user,2026-01-29T14:38:58.964057Z,mapped
 2026,Mazda,CX-90 PHEV,Premium Sport,C9P PR XA,2026 MAZDA CX-90 PHEV,2026 mazda cx 90 phev,user,2026-01-29T14:38:58.964057Z,mapped
 2026,Mazda,CX-90 PHEV,Preferred,C9P PF XA,2026 MAZDA CX-90 PHEV Preferred (AWD / Automatic Transmission),2026 mazda cx 90 phev preferred (awd automatic transmission),user,2026-01-29T14:00:47.967548Z,mapped
+2026,MAZDA,MAZDA3 HATCHBACK,,,2026 MAZDA3 HATCHBACK,2026 mazda3 hatchback,user,2026-01-29T14:44:43.542679Z,no_data
 2026,MAZDA,MAZDA3 Hatchback,,,2026 MAZDA3 Hatchback 2.5 S (FWD / Automatic Transmission),2026 mazda3 hatchback 2.5 s (fwd automatic transmission),user,2026-01-29T13:57:18.546945Z,no_data
 2026,MAZDA,MAZDA3 Hatchback,,,2026 MAZDA3 Hatchback 2.5 S Select Sport (FWD / Automatic Transmission),2026 mazda3 hatchback 2.5 s select sport (fwd automatic transmission),user,2026-01-29T14:12:06.785469Z,no_data
 2026,MAZDA,MAZDA3 SEDAN,,,2026 MAZDA3 SEDAN,2026 mazda3 sedan,user,2026-01-27T15:20:07.218694Z,no_data
