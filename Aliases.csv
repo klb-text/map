@@ -912,6 +912,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mazda,CX-70 PHEV,SC,C7P SC XA,2026 MAZDA CX-70 PHEV,2026 mazda cx 70 phev,user,2026-01-29T14:35:28.071889Z,mapped
 2026,Mazda,CX-70 PHEV,SC Plus,C7P SCP XA,2026 MAZDA CX-70 PHEV,2026 mazda cx 70 phev,user,2026-01-29T14:37:29.395220Z,mapped
 2026,Mazda,CX-70 PHEV,SC,C7P SC XA,2026 MAZDA CX-70 PHEV SC (AWD / Automatic Transmission),2026 mazda cx 70 phev sc (awd automatic transmission),user,2026-01-29T14:03:27.378335Z,mapped
+2026,Mazda,CX-90,Preferred,C90 PF XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
+2026,Mazda,CX-90,Premium Plus,C90 PP XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
+2026,Mazda,CX-90,Premium Sport,C90 PR XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
+2026,Mazda,CX-90,S Premium Plus,C90 SPP XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
+2026,Mazda,CX-90,S Premium Sport,C90 SPR XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
+2026,Mazda,CX-90,Select,C90 SE XA,2026 MAZDA CX-90,2026 mazda cx 90,user,2026-01-29T14:43:43.420395Z,mapped
 2026,Mazda,CX-90,Preferred,C90 PF XA,2026 MAZDA CX-90 3.3 Turbo Preferred (AWD / Automatic Transmission),2026 mazda cx 90 3.3 turbo preferred (awd automatic transmission),user,2026-01-29T14:16:16.950382Z,mapped
 2026,Mazda,CX-90,Select,C90 SE XA,2026 MAZDA CX-90 3.3 Turbo Select (AWD / Automatic Transmission),2026 mazda cx 90 3.3 turbo select (awd automatic transmission),user,2026-01-29T14:20:46.387432Z,mapped
 2026,Mazda,CX-90,Select,C90 SE XA,2026 MAZDA CX-90 3.3 Turbo Select (FWD / Automatic Transmission),2026 mazda cx 90 3.3 turbo select (fwd automatic transmission),user,2026-01-29T13:52:03.343265Z,mapped
