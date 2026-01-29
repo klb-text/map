@@ -253,6 +253,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,4Runner,SR5,8664,,,user,2026-01-29T04:47:07.354506Z,mapped
 2026,Toyota,Corolla,LE,1852,,,user,2026-01-29T04:43:04.184352Z,mapped
 2026,Toyota,Corolla Cross,L,6301,,,user,2026-01-29T04:43:22.578724Z,mapped
+2026,Toyota,Corolla Cross,L,6302,,,user,2026-01-29T04:49:20.418618Z,mapped
 2026,Toyota,Corolla Cross,LE,6303,,,user,2026-01-29T04:39:59.101472Z,mapped
 2026,Toyota,Corolla Cross,LE,6304,,,user,2026-01-29T04:46:35.117416Z,mapped
 2026,Toyota,Corolla Cross Hybrid,Hybrid S,6312,,,user,2026-01-29T04:47:23.387255Z,mapped
