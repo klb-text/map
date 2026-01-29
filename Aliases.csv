@@ -222,6 +222,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,EQS 400 SUV,EQS 400,EQS400X4,,,user,2026-01-29T04:29:55.102657Z,mapped
 2026,Mercedes-Benz,EQS 450 Sedan,EQS 450,EQS450V4,,,user,2026-01-29T04:10:40.856889Z,mapped
 2026,Mercedes-Benz,EQS 450+ Sedan,EQS 450+,EQS450V,,,user,2026-01-29T04:10:24.772742Z,mapped
+2026,Mercedes-Benz,EQS 550 SUV,EQS 550,EQS550X4,,,user,2026-01-29T04:30:09.488787Z,mapped
 2026,Mercedes-Benz,EQS 580 Sedan,EQS 580,EQS580V4,,,user,2026-01-29T04:10:56.881742Z,mapped
 2026,Mercedes-Benz,GLA 250,GLA 250,GLA250W,,,user,2026-01-29T04:13:28.441564Z,mapped
 2026,Mercedes-Benz,GLA 250,GLA 250,GLA250W4,,,user,2026-01-29T04:13:44.502910Z,mapped
