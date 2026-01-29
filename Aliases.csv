@@ -677,6 +677,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Wrangler,Sahara,JLJP74/22G,2025 WRANGLER 4-DOOR SAHARA,2025 wrangler 4 door sahara,user,2026-01-28T15:43:55.859844Z,mapped
 2025,Jeep,Wrangler,Sport,JLJL74/23B,2025 WRANGLER 4-DOOR SPORT,2025 wrangler 4 door sport,user,2026-01-28T15:40:22.219255Z,mapped
 2025,Jeep,Wrangler,Willys,JLJL74/23B,2025 WRANGLER 4-DOOR WILLYS,2025 wrangler 4 door willys,user,2026-01-28T16:45:46.894016Z,mapped
+2026,Mercedes-Benz,AMG GLC 63 Coupe,,,2026 AMG GLC 63 Coupe,2026 amg glc 63 coupe,user,2026-01-29T12:27:36.620443Z,no_data
 2026,Mercedes-Benz,AMG GLC 63 S E,,,2026 AMG GLC 63 S E,2026 amg glc 63 s e,user,2026-01-29T12:27:07.228568Z,no_data
 2026,AUDI,A3,,,2026 Audi A3 Sedan 40 TFSI quattro,2026 audi a3 sedan 40 tfsi quattro,user,2026-01-27T17:40:28.519111Z,no_data
 2026,Audi,A6,Premium,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
