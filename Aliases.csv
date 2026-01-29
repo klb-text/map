@@ -619,6 +619,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
 2025,Kia,Niro,EX,G4242,2025 Niro EX FWD,2025 niro ex fwd,user,2026-01-27T19:55:16.302400Z,mapped
 2025,Kia,Niro,LX,G4222,2025 Niro LX FWD,2025 niro lx fwd,user,2026-01-27T19:55:06.134279Z,mapped
+2025,Nissan,Z,NISMO,41215,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
+2025,Nissan,Z,Performance,41115,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
+2025,Nissan,Z,Performance,41165,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
+2025,Nissan,Z,Sport,41015,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
+2025,Nissan,Z,Sport,41065,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Mitsubishi,Outlander,ES,OT45-A/E5A,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,Platinum Edition,OT45-Z/R52,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,SE,OT45-I/E5B,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
