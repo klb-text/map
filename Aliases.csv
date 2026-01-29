@@ -93,6 +93,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Toyota,Tacoma,SR5,7540,,,user,2026-01-29T04:41:48.252618Z,mapped
 2025,Toyota,Tacoma Hybrid,TRD Sport Hybrid,7530,,,user,2026-01-29T04:40:31.764629Z,mapped
 2025,Toyota,Tundra,SR5,8261,,,user,2026-01-29T04:56:41.353714Z,mapped
+2025,Volvo,EX90,Plus,EX90TP7AWD,,,user,2026-01-29T05:28:36.793244Z,mapped
 2025,jeep,wagoneer s,,,,,user,2026-01-28T17:45:22.154762Z,no_data
 2026,Acura,Integra,,DE4H2TJW,,,user,2026-01-29T00:28:44.711239Z,mapped
 2026,Acura,MDX,,YE1H3TJNW,,,user,2026-01-29T00:29:16.730251Z,mapped
