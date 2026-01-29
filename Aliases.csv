@@ -1022,6 +1022,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD,2026 ford mustang mach e select rwd,user,2026-01-29T19:40:26.259006Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Standard Battery,2026 ford mustang mach e select rwd standard battery,user,2026-01-29T16:48:47.539802Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Std Bat,2026 ford mustang mach e select rwd std bat,user,2026-01-29T16:53:49.450969Z,mapped
+2026,Ford,Ranger,LARIAT,R4J/500A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,LARIAT,R4K/500A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,Raptor,R4L/800A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,XL,R4B/100A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,XL,R4P/100A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,XLT,R4G/300A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
+2026,Ford,Ranger,XLT,R4H/300A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
 2026,Subaru,Forester,,TFB/01,2026 Forester Base,2026 forester base,user,2026-01-29T15:34:04.137978Z,mapped
 2026,Subaru,Forester,Limited,TFJ/41,2026 Forester Limited,2026 forester limited,user,2026-01-29T18:53:22.957921Z,mapped
 2026,Subaru,Forester,Premium,TFD/11,2026 Forester Premium,2026 forester premium,user,2026-01-29T18:52:10.481369Z,mapped
