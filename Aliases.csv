@@ -823,6 +823,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Wrangler,Sport,JLJL74/23B,2025 WRANGLER 4-DOOR SPORT,2025 wrangler 4 door sport,user,2026-01-28T15:40:22.219255Z,mapped
 2025,Jeep,Wrangler,Willys,JLJL74/23B,2025 WRANGLER 4-DOOR WILLYS,2025 wrangler 4 door willys,user,2026-01-28T16:45:46.894016Z,mapped
 2025,Subaru,WRX,Premium,SUC/11,2025 WRX Premium,2025 wrx premium,user,2026-01-29T15:40:27.154462Z,mapped
+2024,Genesis,GV70,3.5T Sport,U0462A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
+2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
+2026,Genesis,GV70,3.5T Sport Advanced,U0472A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
+2026,Genesis,GV70,3.5T Sport Prestige,U0482A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
 2026,Mercedes-Benz,AMG GLC 63 Coupe,,,2026 AMG GLC 63 Coupe,2026 amg glc 63 coupe,user,2026-01-29T12:27:36.620443Z,no_data
 2026,Mercedes-Benz,AMG GLC 63 S E,,,2026 AMG GLC 63 S E,2026 amg glc 63 s e,user,2026-01-29T12:27:07.228568Z,no_data
 2026,Nissan,Armada,NISMO,29016,2026 Armada,2026 armada,user,2026-01-29T15:22:23.907165Z,mapped
