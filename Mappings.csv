@@ -817,6 +817,10 @@ year,make,model,trim,model_code,source
 2026,Mazda,CX-30,2.5 S Preferred,C30 PF XA,user
 2026,Mazda,CX-30,2.5 S Select Sport,C30 SES XA,user
 2026,Mazda,CX-70,3.3 Turbo Preferred,C70 PF XA,user
+2026,Mazda,CX-70,3.3 Turbo Premium,C70 PR XA,user
+2026,Mazda,CX-70,3.3 Turbo Premium Plus,C70 PP XA,user
+2026,Mazda,CX-70,3.3 Turbo S Premium,C70 SPR XA,user
+2026,Mazda,CX-70,3.3 Turbo S Premium Plus,C70 SPP XA,user
 2026,Mazda,CX-70 PHEV,SC,C7P SC XA,user
 2026,Mazda,CX-90,Preferred,C90 PF XA,user
 2026,Mazda,CX-90,Select,C90 SE XA,user
