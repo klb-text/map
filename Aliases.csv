@@ -4,6 +4,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,BMW,760,760i xDrive,257I,,,user,2026-01-29T00:17:17.951602Z,mapped
 2025,Honda,Accord,LX,CY1F2SEW,,,user,2026-01-29T00:37:32.103833Z,mapped
 2025,Honda,Accord Hybrid,Sport,CY2F5SJW,,,user,2026-01-29T00:37:13.809769Z,mapped
+2025,Honda,CR-V FCEV,,ZC8H5SGNW,,,user,2026-01-29T00:43:20.367288Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,,,user,2026-01-29T00:39:47.287572Z,mapped
 2025,Honda,Pilot,EX-L,YG2H4SENW,,,user,2026-01-29T00:40:05.639757Z,mapped
 2025,Jeep,Wagoneer L,,,,,user,2026-01-28T17:31:50.918954Z,no_data
