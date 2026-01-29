@@ -1,4 +1,5 @@
 year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
+2025,BMW,760,760i xDrive,257I,,,user,2026-01-29T00:17:17.951602Z,mapped
 2025,Jeep,Wagoneer L,,,,,user,2026-01-28T17:31:50.918954Z,no_data
 2025,MAZDA,Electrified Gv70,,,,,user,2026-01-27T15:19:02.365605Z,no_data
 2025,Mercedes-Benz,E-Class,E 350,E350W,,,user,2026-01-28T23:39:36.511433Z,mapped
