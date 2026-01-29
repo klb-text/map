@@ -632,6 +632,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,SEL Premium,J1432F65/01,2025 PALISADE SEL PREMIUM FWD,2025 palisade sel premium fwd,user,2026-01-27T19:11:11.495151Z,mapped
 2025,Hyundai,Palisade,XRT,J1482A65/01,2025 PALISADE XRT AWD,2025 palisade xrt awd,user,2026-01-27T19:10:56.383231Z,mapped
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
+2025,Nissan,Pathfinder,Platinum,25715,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,Platinum,25815,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,Rock Creek,25415,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,S,25015,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,S,25115,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,SL,25515,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,SL,25615,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,SV,25215,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
+2025,Nissan,Pathfinder,SV,25315,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Honda,Pilot,Black Edition,YG1H9SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
