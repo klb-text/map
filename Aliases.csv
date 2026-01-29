@@ -577,6 +577,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,GV80,,V0422A45/01,2025 GV80 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2025 gv80 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:14:45.021810Z,mapped
 2025,Genesis,GV80,Standard,V0402A45/01,2025 GV80 2.5T STANDARD AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2025 gv80 2.5t standard awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:14:35.189536Z,mapped
 2025,Genesis,GV80 Coupe,3.5T,V04C2A65/01,2025 GV80 COUPE 3.5T COUPE AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 gv80 coupe 3.5t coupe awd 3.5l v6 automatic transmission,user,2026-01-29T20:14:58.346871Z,mapped
+2025,Genesis,GV80 Coupe,3.5T e-SC,V04F2A65/01,2025 GV80 COUPE 3.5T COUPE E-SC AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 gv80 coupe 3.5t coupe e sc awd 3.5l v6 automatic transmission,user,2026-01-29T20:15:09.303539Z,mapped
 2025,Dodge,Hornet,GT,GGEH49/23N,2025 HORNET GT AWD,2025 hornet gt awd,user,2026-01-27T18:18:00.389393Z,mapped
 2025,Dodge,Hornet,GT Plus,GGEH49/23N,2025 HORNET GT PLUS AWD,2025 hornet gt plus awd,user,2026-01-27T18:18:26.523336Z,mapped
 2025,Dodge,Hornet,R/T,GG7P49/28E,2025 HORNET R/T EAWD,2025 hornet r t eawd,user,2026-01-27T18:19:27.747707Z,mapped
