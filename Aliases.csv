@@ -1,4 +1,5 @@
 year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
+,Genesis,Electrified Gv70,,,,,user,2026-01-29T22:11:05.539983Z,no_data
 2025,Acura,ADX,,SA1H3SJNW,,,user,2026-01-29T00:28:26.401076Z,mapped
 2025,Acura,TLX,w/Technology Package,UB5F4SGNW,,,user,2026-01-29T00:28:08.074871Z,mapped
 2025,BMW,760,760i xDrive,257I,,,user,2026-01-29T00:17:17.951602Z,mapped
@@ -435,12 +436,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,ES 350,ES 350,9000,2025 ES 350,2025 es 350,user,2026-01-27T21:03:48.780851Z,mapped
 2025,Kia,EV6,GT,N5472,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,GT-Line,N4362,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
-2025,Kia,EV6,GT-Line,N5462,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Light,N2342,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Light Long Range,N4342,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
-2025,Kia,EV6,Light Long Range,N5442,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Wind,N4352,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
-2025,Kia,EV6,Wind,N5452,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 EV6,2025 ev6,user,2026-01-29T22:10:35.012967Z,mapped
 2025,Kia,EV6,GT,N5472,2025 EV6 6,2025 ev6 6,user,2026-01-29T22:02:04.750967Z,mapped
 2025,Kia,EV6,Light Long Range,N5442,2025 EV6 Light Long Range AWD,2025 ev6 light long range awd,user,2026-01-27T19:54:57.314500Z,mapped
