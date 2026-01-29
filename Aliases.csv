@@ -441,6 +441,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Kia,EV6,Light Long Range,N5442,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Wind,N4352,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Wind,N5452,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
+2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 EV6,2025 ev6,user,2026-01-29T22:10:35.012967Z,mapped
 2025,Kia,EV6,GT,N5472,2025 EV6 6,2025 ev6 6,user,2026-01-29T22:02:04.750967Z,mapped
 2025,Kia,EV6,Light Long Range,N5442,2025 EV6 Light Long Range AWD,2025 ev6 light long range awd,user,2026-01-27T19:54:57.314500Z,mapped
 2025,Kia,EV6,Light Long Range,N4342,2025 EV6 Light Long Range RWD,2025 ev6 light long range rwd,user,2026-01-27T19:54:46.512680Z,mapped
