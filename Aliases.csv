@@ -11,6 +11,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,ES 300h,ES 300h,9040,,,user,2026-01-29T00:55:56.708803Z,mapped
 2025,Lexus,ES 350,ES 350,9000,,,user,2026-01-29T00:55:40.606118Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT,9510,,,user,2026-01-29T00:55:08.363324Z,mapped
+2025,Lexus,UX 300h,UX 300h,9721,,,user,2026-01-29T00:58:58.607125Z,mapped
 2025,MAZDA,Electrified Gv70,,,,,user,2026-01-27T15:19:02.365605Z,no_data
 2025,Mercedes-Benz,E-Class,E 350,E350W,,,user,2026-01-28T23:39:36.511433Z,mapped
 2025,Mercedes-Benz,E-Class,E 350,E350W4,,,user,2026-01-28T23:39:57.127073Z,mapped
