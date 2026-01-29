@@ -641,6 +641,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Z,Performance,41115,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Nissan,Z,Sport,41015,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Subaru,Outback,,SDB/01,2025 Outback Base,2025 outback base,user,2026-01-29T15:46:37.765886Z,mapped
+2025,Subaru,Outback,Limited,SDF/34,2025 Outback Limited,2025 outback limited,user,2026-01-29T15:47:56.284314Z,mapped
 2025,Subaru,Outback,Onyx Edition,SDE/21,2025 Outback Onyx Edition,2025 outback onyx edition,user,2026-01-29T15:47:32.118339Z,mapped
 2025,Subaru,Outback,Premium,SDD/11,2025 Outback Premium,2025 outback premium,user,2026-01-29T15:32:35.013339Z,mapped
 2025,Mitsubishi,Outlander,ES,OT45-A/E5A,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
