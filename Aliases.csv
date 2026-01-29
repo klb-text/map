@@ -902,6 +902,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Cadillac,VISTIQ,Sport,6MC56/1SF,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ AWD Luxury,2026 cadillac vistiq awd luxury,user,2026-01-26T16:45:26.157028Z,mapped
 2026,Toyota,Camry,Nightshade,2551/BK,2026 Camry Nightshade,2026 camry nightshade,user,2026-01-29T12:41:33.693960Z,mapped
+2026,Kia,Carnival MPV,,,2026 Carnival MPV LX FWD,2026 carnival mpv lx fwd,user,2026-01-29T22:00:06.312560Z,no_data
 2026,Porsche,Cayenne,,9YAAI1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Porsche,Cayenne,GTS,9YABS1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Porsche,Cayenne,S,9YABJ1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
