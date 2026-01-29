@@ -997,6 +997,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
 2026,Toyota,Tundra i-FORCE MAX,,,2026 Tundra Limited i-FORCE MAX,2026 tundra limited i force max,user,2026-01-29T12:28:21.978044Z,no_data
+2026,Toyota,Tundra,SR5,8361/OF,2026 Tundra SR5,2026 tundra sr5,user,2026-01-29T12:38:46.229014Z,mapped
 2026,Lexus,TX,,,2026 TX 350,2026 tx 350,user,2026-01-28T18:00:27.113291Z,no_data
 2026,Lexus,TXh,,,2026 TX 500h F SPORT PERFORMANCE PREMIUM AWD,2026 tx 500h f sport performance premium awd,user,2026-01-28T18:00:39.887270Z,no_data
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Plus,2026 v60 b5 awd cross country plus,user,2026-01-27T15:12:37.837191Z,no_data
