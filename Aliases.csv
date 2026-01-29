@@ -821,7 +821,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Kia,Sorento,X-Line SX Prestige,76492,2025 Sorento,2025 sorento,user,2026-01-29T22:02:53.261076Z,mapped
 2025,Kia,Sorento,X-Pro SX Prestige,764A2,2025 Sorento,2025 sorento,user,2026-01-29T22:02:53.261076Z,mapped
 2025,Kia,Sorento Hybrid,EX,U4242,2025 Sorento Hybrid,2025 sorento hybrid,user,2026-01-29T22:04:08.268684Z,mapped
-2025,Kia,Sorento Hybrid,EX,U4442,2025 Sorento Hybrid,2025 sorento hybrid,user,2026-01-29T22:04:08.268684Z,mapped
 2025,Kia,Sorento Hybrid,SX Prestige,U4462,2025 Sorento Hybrid,2025 sorento hybrid,user,2026-01-29T22:04:08.268684Z,mapped
 2025,Kia,Sorento Hybrid,EX,U4442,2025 Sorento Hybrid EX AWD,2025 sorento hybrid ex awd,user,2026-01-29T21:58:19.169256Z,mapped
 2025,Kia,Sorento Hybrid,EX,U4242,2025 Sorento Hybrid EX FWD,2025 sorento hybrid ex fwd,user,2026-01-29T21:58:00.876575Z,mapped
@@ -1189,6 +1188,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
 2026,Kia,K4,,,2026 K4 EX FWD,2026 k4 ex fwd,user,2026-01-29T21:57:19.601644Z,no_data
 2026,Kia,K4,,,2026 K4 K4,2026 k4 k4,user,2026-01-29T22:03:39.139846Z,no_data
+2026,Kia,K4,,,2026 K4 K4 Hatchback EX,2026 k4 k4 hatchback ex,user,2026-01-29T22:05:30.395990Z,no_data
 2026,Kia,K4,,,2026 K4 LXS FWD,2026 k4 lxs fwd,user,2026-01-29T21:57:13.783300Z,no_data
 2026,Kia,K5,LXS,L4232,2026 K5 LXS FWD,2026 k5 lxs fwd,user,2026-01-29T22:00:19.928237Z,mapped
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
@@ -1404,11 +1404,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Kia,Seltos,EX,K2242,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
-2026,Kia,Seltos,EX,K2442,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
 2026,Kia,Seltos,LX,K2222,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
-2026,Kia,Seltos,LX,K2422,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
 2026,Kia,Seltos,S,K2232,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
-2026,Kia,Seltos,S,K2432,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
 2026,Kia,Seltos,SX,K4482,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
 2026,Kia,Seltos,LX,K2422,2026 Seltos LX AWD,2026 seltos lx awd,user,2026-01-29T21:59:39.648381Z,mapped
 2026,Kia,Seltos,LX,K2222,2026 Seltos LX FWD,2026 seltos lx fwd,user,2026-01-29T21:59:30.675625Z,mapped
@@ -1436,7 +1433,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Sorento,X-Line SX Prestige,76492,2026 Sorento,2026 sorento,user,2026-01-29T22:03:10.245696Z,mapped
 2026,Kia,Sorento,X-Pro SX Prestige,764A2,2026 Sorento,2026 sorento,user,2026-01-29T22:03:10.245696Z,mapped
 2026,Kia,Sorento Hybrid,EX,U4242,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
-2026,Kia,Sorento Hybrid,EX,U4442,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
 2026,Kia,Sorento Hybrid,X-Line SX Prestige,U4462,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
 2026,Kia,Sorento Hybrid,EX,U4442,2026 Sorento Hybrid EX AWD,2026 sorento hybrid ex awd,user,2026-01-29T21:58:43.688783Z,mapped
 2026,Kia,Sorento Hybrid,EX,U4242,2026 Sorento Hybrid EX FWD,2026 sorento hybrid ex fwd,user,2026-01-29T21:58:33.656001Z,mapped
@@ -1447,12 +1443,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Sorento,S,73432,2026 Sorento S AWD,2026 sorento s awd,user,2026-01-27T19:56:44.050129Z,mapped
 2026,Kia,Sorento,S,73232,2026 Sorento S FWD,2026 sorento s fwd,user,2026-01-27T19:56:33.179164Z,mapped
 2026,Kia,Sportage,EX,42242,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
-2026,Kia,Sportage,EX,42442,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage,LX,42222,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
-2026,Kia,Sportage,LX,42422,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage,SX,42262,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage,SX-Prestige,42282,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
-2026,Kia,Sportage,SX-Prestige,42482,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage,X-Line,42452,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage,X-Pro Prestige,42492,2026 Sportage,2026 sportage,user,2026-01-29T22:05:08.898626Z,mapped
 2026,Kia,Sportage Hybrid,LX,S4222,2026 Sportage Hybrid LX FWD,2026 sportage hybrid lx fwd,user,2026-01-29T22:00:43.014449Z,mapped
