@@ -134,6 +134,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,TX 500h,TX 500h F SPORT Performance Premium,9360,,,user,2026-01-29T00:56:31.204098Z,mapped
 2026,Lexus,TX 550h+,TX 550h+ Luxury,9365,,,user,2026-01-29T03:52:54.839094Z,mapped
 2026,Mercedes-Benz,AMG C 43,AMG C 43,C43W4,,,user,2026-01-29T03:58:28.083346Z,mapped
+2026,Mercedes-Benz,AMG C 63,AMG C 63 S E Performance,C63W4SE,,,user,2026-01-29T03:58:46.439031Z,mapped
 2026,Mercedes-Benz,AMG CLA 35,AMG CLA 35,CLA35C4,,,user,2026-01-29T03:56:03.541533Z,mapped
 2026,Mercedes-Benz,AMG CLA 45,AMG CLA 45,CLA45C4S,,,user,2026-01-29T03:56:19.601081Z,mapped
 2026,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-28T23:39:16.017075Z,mapped
