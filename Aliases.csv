@@ -475,6 +475,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,F-150 Lightning,Platinum,W7L/710A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
 2025,Ford,F-150 Lightning,Pro,W1B/110A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
 2025,Ford,F-150 Lightning,XLT,W3L/311A,2025 Ford F-150 Lightning,2025 ford f 150 lightning,user,2026-01-27T19:53:54.605127Z,mapped
+2025,Ford,F-150,XLT,X3K/300A,2025 Ford F-150 XLT 2.7L,2025 ford f 150 xlt 2.7l,user,2026-01-29T16:42:00.161773Z,mapped
 2025,Ford,Maverick,LARIAT,W8S/501A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,Lobo High,W8P/702A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
 2025,Ford,Maverick,Lobo Standard,W8T/402A,2025 Ford Maverick,2025 ford maverick,user,2026-01-27T19:52:38.980236Z,mapped
