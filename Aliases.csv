@@ -940,6 +940,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Elantra,SEL Sport Premium,494K2F4S/01,2026 ELANTRA SEL SPORT PREMIUM,2026 elantra sel sport premium,user,2026-01-27T19:04:06.088100Z,mapped
 2026,Genesis,Electrified GV70,Standard,U04F2AEZ/01,2026 Electrified GV70,2026 electrified gv70,user,2026-01-29T20:20:52.975206Z,mapped
 2026,Genesis,Electrified GV70,Advanced,U04H2AEZ/01,2026 Electrified GV70 ADVANCED,2026 electrified gv70 advanced,user,2026-01-29T20:21:03.602469Z,mapped
+2026,Genesis,Electrified GV70,Prestige,U04J2AEZ/01,2026 Electrified GV70 PRESTIGE,2026 electrified gv70 prestige,user,2026-01-29T20:21:13.744698Z,mapped
 2026,Volvo,EX30,Cross Country Ultra,EX30TCCUAWD,2026 EX30 AWD Cross Country Ultra,2026 ex30 awd cross country ultra,user,2026-01-27T15:11:13.762186Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape,2026 ford escape,user,2026-01-29T14:54:26.198782Z,mapped
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD,2026 ford escape active awd,user,2026-01-27T19:47:15.544606Z,mapped
