@@ -1419,6 +1419,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Kia,Sorento,X-Line SX,76482,2026 Sorento,2026 sorento,user,2026-01-29T22:03:10.245696Z,mapped
 2026,Kia,Sorento,X-Line SX Prestige,76492,2026 Sorento,2026 sorento,user,2026-01-29T22:03:10.245696Z,mapped
 2026,Kia,Sorento,X-Pro SX Prestige,764A2,2026 Sorento,2026 sorento,user,2026-01-29T22:03:10.245696Z,mapped
+2026,Kia,Sorento Hybrid,EX,U4242,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
+2026,Kia,Sorento Hybrid,EX,U4442,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
+2026,Kia,Sorento Hybrid,X-Line SX Prestige,U4462,2026 Sorento Hybrid,2026 sorento hybrid,user,2026-01-29T22:04:15.920895Z,mapped
 2026,Kia,Sorento Hybrid,EX,U4442,2026 Sorento Hybrid EX AWD,2026 sorento hybrid ex awd,user,2026-01-29T21:58:43.688783Z,mapped
 2026,Kia,Sorento Hybrid,EX,U4242,2026 Sorento Hybrid EX FWD,2026 sorento hybrid ex fwd,user,2026-01-29T21:58:33.656001Z,mapped
 2026,Kia,Sorento,LX,73222,2026 Sorento LX FWD,2026 sorento lx fwd,user,2026-01-27T19:56:22.756232Z,mapped
