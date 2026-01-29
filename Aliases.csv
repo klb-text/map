@@ -275,9 +275,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Ford,Ranger,LARIAT,R4J/500A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
 2024,Ford,Ranger,Raptor,R4L/800A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
 2024,Ford,Ranger,XL,R4B/100A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
-2024,Ford,Ranger,XL,R4P/100A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
 2024,Ford,Ranger,XLT,R4G/300A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
-2024,Ford,Ranger,XLT,R4H/300A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
 2024,Acura,Integra,Type S,DE5G9REW,2024 INTEGRA Type S,2024 integra type s,user,2026-01-29T13:46:35.409044Z,mapped
 2024,Jaguar,F-TYPE,75,HL152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
@@ -464,9 +462,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Escape,ST-Line Select,U9N/400A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active AWD,2025 ford escape active awd,user,2026-01-27T19:50:17.590929Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active AWD 1.5L Gas,2025 ford escape active awd 1.5l gas,user,2026-01-27T19:20:41.355048Z,mapped
-2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active AWD 1.5L Gas,2025 ford escape active awd 1.5l gas,user,2026-01-29T20:54:23.019083Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active FWD,2025 ford escape active fwd,user,2026-01-29T14:58:37.911834Z,mapped
-2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active FWD,2025 ford escape active fwd,user,2026-01-29T21:16:12.716246Z,mapped
 2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active Gas,2025 ford escape active gas,user,2026-01-29T15:33:53.411538Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Gas,2025 ford escape gas,user,2026-01-29T14:57:17.145873Z,mapped
 2025,Ford,Escape,Active,U0G/200A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
@@ -511,19 +507,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E,2025 ford mustang mach e,user,2026-01-27T19:47:54.046680Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E Premium AWD,2025 ford mustang mach e premium awd,user,2026-01-29T16:14:08.332504Z,mapped
-2025,Ford,Mustang Mach-E,Premium,K3S/300A,2025 Ford Mustang Mach-E Premium AWD,2025 ford mustang mach e premium awd,user,2026-01-29T16:51:12.351609Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3R/300A,2025 Ford Mustang Mach-E Premium AWD Extended Battery,2025 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:10.969672Z,mapped
 2025,Ford,Mustang Mach-E,Premium,K3S/300A,2025 Ford Mustang Mach-E Premium Extended Range AWD,2025 ford mustang mach e premium extended range awd,user,2026-01-29T16:03:34.717630Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD,2025 ford mustang mach e select rwd,user,2026-01-29T15:35:18.519529Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD Standard Battery,2025 ford mustang mach e select rwd standard battery,user,2026-01-29T16:10:18.074442Z,mapped
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD Std Bat,2025 ford mustang mach e select rwd std bat,user,2026-01-29T16:16:27.165637Z,mapped
 2025,Ford,Ranger,LARIAT,R4J/500A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
-2025,Ford,Ranger,LARIAT,R4K/500A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Ford,Ranger,Raptor,R4L/800A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Ford,Ranger,XL,R4B/100A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
-2025,Ford,Ranger,XL,R4P/100A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Ford,Ranger,XLT,R4G/300A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
-2025,Ford,Ranger,XLT,R4H/300A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Subaru,Forester,,SFB/01,2025 Forester Base,2025 forester base,user,2026-01-29T15:33:07.591617Z,mapped
 2025,Subaru,Forester,Limited,SFJ/41,2025 Forester Limited,2025 forester limited,user,2026-01-29T18:49:47.177962Z,mapped
 2025,Subaru,Forester Hybrid,Limited Hybrid,SFK/46,2025 Forester Limited Hybrid,2025 forester limited hybrid,user,2026-01-29T18:50:09.495970Z,mapped
@@ -545,22 +537,16 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,G90,,T1422A65/01,2025 G90 3.5T AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 g90 3.5t awd 3.5l v6 automatic transmission,user,2026-01-29T20:13:06.156277Z,mapped
 2025,Genesis,G90,e-SC,T1462A65/01,2025 G90 3.5T E-SC MHEV AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 g90 3.5t e sc mhev awd 3.5l v6 automatic transmission,user,2026-01-29T20:13:22.490451Z,mapped
 2025,Genesis,G70,2.5T,R0422A45/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
-2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
-2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
 2025,Genesis,G90,,T1422A65/01,2025 Genesis G90,2025 genesis g90,user,2026-01-29T20:27:52.948457Z,mapped
 2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
-2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,GV70,2.5T,U0422A45/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
-2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Genesis,GV80,Advanced,V0432A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
-2025,Genesis,GV80,Advanced,V0482A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Genesis,GV80,Prestige,V0442A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
-2025,Genesis,GV80,Prestige,V0492A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Genesis,GV80,Select,V0412A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Genesis,GV80,Standard,V0402A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
@@ -606,7 +592,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Grand Cherokee,Summit Reserve,WLJT74/23S,2025 GRAND CHEROKEE SUMMIT 4X4,2025 grand cherokee summit 4x4,user,2026-01-28T16:42:41.403972Z,mapped
 2025,Jeep,Grand Cherokee,Summit Reserve,WLJT74/23S,2025 GRAND CHEROKEE SUMMIT RESERVE 4X4,2025 grand cherokee summit reserve 4x4,user,2026-01-28T17:17:55.031703Z,mapped
 2025,Genesis,GV60,Standard,W0402AEZ/01,2025 GV60 STANDARD AWD AUTOMATIC TRANSMISSION,2025 gv60 standard awd automatic transmission,user,2026-01-29T20:13:43.712546Z,mapped
-2025,Genesis,GV60,Standard,W0402REZ/01,2025 GV60 STANDARD AWD AUTOMATIC TRANSMISSION,2025 gv60 standard awd automatic transmission,user,2026-01-29T20:13:43.712546Z,mapped
 2025,Genesis,GV60,Standard,W0402REZ/01,2025 GV60 STANDARD RWD AUTOMATIC TRANSMISSION,2025 gv60 standard rwd automatic transmission,user,2026-01-29T20:13:34.089494Z,mapped
 2025,Genesis,GV70,2.5T,U0422A45/01,2025 GV70 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2025 gv70 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:13:56.704691Z,mapped
 2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025 GV70 3.5T AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 gv70 3.5t awd 3.5l v6 automatic transmission,user,2026-01-29T20:14:14.769615Z,mapped
@@ -988,11 +973,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Active AWD 1.5L Gas,2026 ford escape active awd 1.5l gas,user,2026-01-27T19:21:11.444920Z,mapped
 2026,Ford,Escape,Active,U0G/200A,2026 Ford Escape Active FWD,2026 ford escape active fwd,user,2026-01-29T14:52:32.133592Z,mapped
 2026,Ford,Escape,Active,U0G/200A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
-2026,Ford,Escape,Active,U9G/200A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,Platinum,U9J/600A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,ST-Line,U0M/300A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
-2026,Ford,Escape,ST-Line,U9M/300A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,ST-Line Elite,U9P/500A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,ST-Line Select,U9N/400A,2026 Ford Escape Gas,2026 ford escape gas,user,2026-01-29T21:12:20.200359Z,mapped
 2026,Ford,Escape,PHEV,U0E/700A,2026 Ford Escape PHEV,2026 ford escape phev,user,2026-01-27T19:21:46.748771Z,mapped
@@ -1002,7 +985,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Explorer,ST-Line,K7K/300A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Tremor,K8J/800A,2026 Ford Explorer,2026 ford explorer,user,2026-01-27T19:23:24.743800Z,mapped
 2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer Active 4WD,2026 ford explorer active 4wd,user,2026-01-29T19:22:11.866116Z,mapped
-2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD,2026 ford explorer active 4wd,user,2026-01-27T19:53:15.638065Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active 4WD with Comfort Package,2026 ford explorer active 4wd with comfort package,user,2026-01-27T19:48:36.466930Z,mapped
 2026,Ford,Explorer,Active,K8D/100A,2026 Ford Explorer Active AWD with Comfort Package,2026 ford explorer active awd with comfort package,user,2026-01-29T14:56:07.487204Z,mapped
 2026,Ford,Explorer,Active,K7D/100A,2026 Ford Explorer Active RWD,2026 ford explorer active rwd,user,2026-01-27T19:51:45.073331Z,mapped
@@ -1015,9 +997,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,F-150 Lightning,Pro,W1B/110A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
 2026,Ford,F-150 Lightning,STX,W3J/310A,2026 Ford F-150 Lightning,2026 ford f 150 lightning,user,2026-01-27T19:53:47.319559Z,mapped
 2026,Ford,F-150,XLT,W3K/300A,2026 Ford F-150 XLT 2.7L,2026 ford f 150 xlt 2.7l,user,2026-01-29T16:45:51.152754Z,mapped
-2026,Ford,F-150,XLT,W3L/300A,2026 Ford F-150 XLT 2.7L,2026 ford f 150 xlt 2.7l,user,2026-01-29T16:45:51.152754Z,mapped
-2026,Ford,F-150,XLT,X3K/300A,2026 Ford F-150 XLT 2.7L,2026 ford f 150 xlt 2.7l,user,2026-01-29T16:45:51.152754Z,mapped
-2026,Ford,F-150,XLT,X3L/300A,2026 Ford F-150 XLT 2.7L,2026 ford f 150 xlt 2.7l,user,2026-01-29T16:45:51.152754Z,mapped
 2026,Ford,Maverick,LARIAT,W8S/501A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,Lobo High,W8P/702A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,Lobo Standard,W8T/402A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
@@ -1035,12 +1014,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Standard Battery,2026 ford mustang mach e select rwd standard battery,user,2026-01-29T16:48:47.539802Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Std Bat,2026 ford mustang mach e select rwd std bat,user,2026-01-29T16:53:49.450969Z,mapped
 2026,Ford,Ranger,LARIAT,R4J/500A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
-2026,Ford,Ranger,LARIAT,R4K/500A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
 2026,Ford,Ranger,Raptor,R4L/800A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
 2026,Ford,Ranger,XL,R4B/100A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
-2026,Ford,Ranger,XL,R4P/100A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
 2026,Ford,Ranger,XLT,R4G/300A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
-2026,Ford,Ranger,XLT,R4H/300A,2026 Ford Ranger,2026 ford ranger,user,2026-01-29T21:06:34.889163Z,mapped
 2026,Subaru,Forester,,TFB/01,2026 Forester Base,2026 forester base,user,2026-01-29T15:34:04.137978Z,mapped
 2026,Subaru,Forester,Limited,TFJ/41,2026 Forester Limited,2026 forester limited,user,2026-01-29T18:53:22.957921Z,mapped
 2026,Subaru,Forester,Premium,TFD/11,2026 Forester Premium,2026 forester premium,user,2026-01-29T18:52:10.481369Z,mapped
@@ -1055,29 +1031,18 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Frontier,SV,33316,"2026 Frontier SV (CC) 4x2 with Splash Guards (4-piece set) and Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio","2026 frontier sv (cc) 4x2 with splash guards (4 piece set) and carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio",user,2026-01-29T15:17:08.848544Z,mapped
 2026,Nissan,Frontier,SV,32216,"2026 Frontier SV (CC) 4x4 with Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio and Splash Guards (4-piece set)","2026 frontier sv (cc) 4x4 with carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio and splash guards (4 piece set)",user,2026-01-29T15:16:07.811407Z,mapped
 2026,Genesis,G70,2.5T Prestige,R0442A45/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
-2026,Genesis,G70,2.5T Prestige,R0442R45/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
 2026,Genesis,G70,2.5T Standard,R0422A45/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
-2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
-2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,2026 G70 2.5T,2026 g70 2.5t,user,2026-01-29T20:16:32.698275Z,mapped
 2026,Genesis,G70,2.5T Standard,R0422A45/01,2026 G70 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2026 g70 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:15:36.749007Z,mapped
 2026,Genesis,G70,2.5T Prestige,R0442A45/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
-2026,Genesis,G70,2.5T Prestige,R0442R45/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
 2026,Genesis,G70,2.5T Standard,R0422A45/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
-2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
-2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,2026 G70 2.5T PRESTIGE,2026 g70 2.5t prestige,user,2026-01-29T20:16:50.832743Z,mapped
 2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 2.5T RWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2026 g70 2.5t rwd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:15:23.213731Z,mapped
 2026,Genesis,G70,2.5T Prestige,R0442A45/01,2026 G70 3.3T PRESTIGE GRAPHITE,2026 g70 3.3t prestige graphite,user,2026-01-29T20:17:13.739049Z,mapped
-2026,Genesis,G70,2.5T Prestige,R0442R45/01,2026 G70 3.3T PRESTIGE GRAPHITE,2026 g70 3.3t prestige graphite,user,2026-01-29T20:17:13.739049Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,2026 G70 3.3T PRESTIGE GRAPHITE,2026 g70 3.3t prestige graphite,user,2026-01-29T20:17:13.739049Z,mapped
-2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,2026 G70 3.3T PRESTIGE GRAPHITE,2026 g70 3.3t prestige graphite,user,2026-01-29T20:17:13.739049Z,mapped
 2026,Genesis,G70,2.5T Prestige,R0442A45/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
-2026,Genesis,G70,2.5T Prestige,R0442R45/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
 2026,Genesis,G70,2.5T Standard,R0422A45/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
-2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
-2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
 2026,Genesis,G80,2.5T,S1422A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
 2026,Genesis,G80,2.5T Advanced,S1432A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
 2026,Genesis,G80,2.5T Sport Prestige,S1442A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
@@ -1127,17 +1092,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Genesis,GV70,3.5T Sport Advanced,U0472A65/01,2026 GV70 3.5T SPORT,2026 gv70 3.5t sport,user,2026-01-29T20:20:25.954484Z,mapped
 2026,Genesis,GV70,3.5T Sport Prestige,U0482A65/01,2026 GV70 3.5T SPORT PRESTIGE,2026 gv70 3.5t sport prestige,user,2026-01-29T20:20:41.884804Z,mapped
 2026,Genesis,GV80,,V0402A45/01,2026 GV80 2.5T,2026 gv80 2.5t,user,2026-01-29T20:21:28.435979Z,mapped
-2026,Genesis,GV80,,V0402R45/01,2026 GV80 2.5T,2026 gv80 2.5t,user,2026-01-29T20:21:28.435979Z,mapped
 2026,Genesis,GV80,Advanced,V0432A45/01,2026 GV80 2.5T,2026 gv80 2.5t,user,2026-01-29T20:22:03.594326Z,mapped
-2026,Genesis,GV80,Advanced,V0482A65/01,2026 GV80 2.5T,2026 gv80 2.5t,user,2026-01-29T20:22:03.594326Z,mapped
 2026,Genesis,GV80,Select,V0412A45/01,2026 GV80 2.5T,2026 gv80 2.5t,user,2026-01-29T20:22:03.594326Z,mapped
 2026,Genesis,GV80,Prestige,V0442A45/01,2026 GV80 2.5T PRESTIGE,2026 gv80 2.5t prestige,user,2026-01-29T20:22:21.186766Z,mapped
 2026,Genesis,GV80,Select,V0412A45/01,2026 GV80 2.5T PRESTIGE,2026 gv80 2.5t prestige,user,2026-01-29T20:22:21.186766Z,mapped
 2026,Genesis,GV80,Select,V0412A45/01,2026 GV80 2.5T SELECT,2026 gv80 2.5t select,user,2026-01-29T20:21:41.753806Z,mapped
 2026,Genesis,GV80,Advanced,V0432A45/01,2026 GV80 3.5T,2026 gv80 3.5t,user,2026-01-29T20:22:39.671000Z,mapped
-2026,Genesis,GV80,Advanced,V0482A65/01,2026 GV80 3.5T,2026 gv80 3.5t,user,2026-01-29T20:22:39.671000Z,mapped
 2026,Genesis,GV80,Prestige,V0442A45/01,2026 GV80 3.5T PRESTIGE,2026 gv80 3.5t prestige,user,2026-01-29T20:22:57.711889Z,mapped
-2026,Genesis,GV80,Prestige,V0492A65/01,2026 GV80 3.5T PRESTIGE,2026 gv80 3.5t prestige,user,2026-01-29T20:22:57.711889Z,mapped
 2026,Genesis,GV80,Prestige Black,V04B2A65/01,2026 GV80 3.5T PRESTIGE BLACK,2026 gv80 3.5t prestige black,user,2026-01-29T20:23:11.577089Z,mapped
 2026,Genesis,GV80 Coupe,3.5T,V04C2A65/01,2026 GV80 Coupe 3.5T,2026 gv80 coupe 3.5t,user,2026-01-29T20:23:50.070109Z,mapped
 2026,Genesis,GV80 Coupe,3.5T e-SC,V04F2A65/01,2026 GV80 Coupe 3.5T E-SC MHEV,2026 gv80 coupe 3.5t e sc mhev,user,2026-01-29T20:24:01.118163Z,mapped
@@ -1166,6 +1127,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jaguar,F-PACE,SVR 575 Edition,HO761/352XK,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
 2026,Jaguar,F-PACE,R-Dynamic S,HB761/352KU,2026 Jaguar F-PACE P250 R-Dynamic S AWD,2026 jaguar f pace p250 r dynamic s awd,user,2026-01-28T15:25:51.645955Z,mapped
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
+2026,Kia,K4,,,2026 K4 LXS FWD,2026 k4 lxs fwd,user,2026-01-29T21:57:13.783300Z,no_data
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
@@ -1372,7 +1334,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
-2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Nissan,Sentra,,,2026 Sentra,2026 sentra,user,2026-01-29T15:25:55.035500Z,no_data
