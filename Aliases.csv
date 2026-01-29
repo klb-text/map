@@ -999,6 +999,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Maverick,Tremor,W8N/602A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,XL,W8A/100A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
 2026,Ford,Maverick,XLT,W8H/300A,2026 Ford Maverick,2026 ford maverick,user,2026-01-27T19:52:46.276683Z,mapped
+2026,Ford,Mustang,GT,P8C/300A,2026 Ford Mustang GT,2026 ford mustang gt,user,2026-01-29T20:57:46.599520Z,mapped
 2026,Ford,Mustang Mach-E,GT,K4S/400A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
