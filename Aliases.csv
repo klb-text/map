@@ -297,6 +297,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,bZ,XLE,2872,,,user,2026-01-29T04:59:40.467845Z,mapped
 2026,Toyota,bZ,XLE,2873,,,user,2026-01-29T05:02:12.600228Z,mapped
 2026,Toyota,bZ,XLE Plus,2870,,,user,2026-01-29T04:55:32.475378Z,mapped
+2026,Volvo,EX40,Plus,EX40SPRWD,,,user,2026-01-29T05:18:47.077700Z,mapped
 2026,Volvo,V60 Cross Country,Plus,V60CCB5PAWD,,,user,2026-01-29T05:16:24.698827Z,mapped
 2026,Volvo,V60 Cross Country,Ultra,V60CCB5UAWD,,,user,2026-01-29T05:16:43.045524Z,mapped
 2026,Volvo,V90 Cross Country,Ultra,V90CCB6UAWD,,,user,2026-01-29T05:17:01.478391Z,mapped
