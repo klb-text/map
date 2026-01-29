@@ -1183,6 +1183,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Sentra,,,2026 Sentra,2026 sentra,user,2026-01-29T15:25:55.035500Z,no_data
 2026,Nissan,Sentra,,,2026 Sentra SV with Floor Mat Package and Splash Guards (4-piece set),2026 sentra sv with floor mat package and splash guards (4 piece set),user,2026-01-29T15:12:52.937011Z,no_data
 2026,Toyota,Sequoia,SR5,7947/OF,2026 Sequoia SR5,2026 sequoia sr5,user,2026-01-29T12:43:11.094335Z,mapped
+2026,Subaru,Solterra,Limited,TEG/31,2026 Solterra Limited,2026 solterra limited,user,2026-01-29T15:43:53.833010Z,mapped
 2026,Subaru,Solterra,Premium,TED/11,2026 Solterra Premium,2026 solterra premium,user,2026-01-29T15:32:09.280088Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA LIMITED HYBRID,2026 sonata limited hybrid,user,2026-01-27T19:15:40.430391Z,mapped
