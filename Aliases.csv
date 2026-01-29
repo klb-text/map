@@ -156,6 +156,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,CLE 450,CLE 450,CLE450A4,,,user,2026-01-29T04:01:54.793863Z,mapped
 2026,Mercedes-Benz,CLE 450,CLE 450,CLE450C4,,,user,2026-01-29T04:00:09.126330Z,mapped
 2026,Mercedes-Benz,E-Class,E 350,E350W,,,user,2026-01-29T04:03:36.095484Z,mapped
+2026,Mercedes-Benz,E-Class,E 350,E350W4,,,user,2026-01-29T04:03:52.222772Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2024,Ford,F-150 Lightning,Flash,W3L/312A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
