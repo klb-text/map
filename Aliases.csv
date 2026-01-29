@@ -274,6 +274,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Highlander Hybrid,Hybrid Limited,6966,,,user,2026-01-29T04:54:23.606179Z,mapped
 2026,Toyota,Highlander Hybrid,Hybrid XLE,6965,,,user,2026-01-29T04:51:29.045691Z,mapped
 2026,Toyota,Prius,LE,1223,,,user,2026-01-29T05:00:28.611476Z,mapped
+2026,Toyota,Prius,LE,1263,,,user,2026-01-29T05:01:35.118645Z,mapped
 2026,Toyota,Prius Plug-In Hybrid,SE,1235,,,user,2026-01-29T04:59:56.553436Z,mapped
 2026,Toyota,Sienna,LE,5402,,,user,2026-01-29T04:59:19.751227Z,mapped
 2026,Toyota,Sienna,LE,5403,,,user,2026-01-29T05:00:12.584957Z,mapped
