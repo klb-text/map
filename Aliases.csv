@@ -1017,6 +1017,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Murano,SV,23016,2026 Murano,2026 murano,user,2026-01-29T15:21:24.171601Z,mapped
 2026,Kia,Niro,EX,G4242,2026 Niro EX FWD,2026 niro ex fwd,user,2026-01-27T19:55:36.222221Z,mapped
 2026,Kia,Niro,LX,G4222,2026 Niro LX FWD,2026 niro lx fwd,user,2026-01-27T19:55:25.786501Z,mapped
+2026,Nissan,Z,NISMO,41216,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
+2026,Nissan,Z,Performance,41116,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
+2026,Nissan,Z,Performance,41166,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
+2026,Nissan,Z,Sport,41016,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
+2026,Nissan,Z,Sport,41066,2026 Nissan Z,2026 nissan z,user,2026-01-29T15:27:24.264913Z,mapped
 2026,Lexus,NX,,,2026 NX 350 AWD,2026 nx 350 awd,user,2026-01-28T18:00:53.524981Z,no_data
 2026,Lexus,NXh,,,2026 NX 350h AWD,2026 nx 350h awd,user,2026-01-28T18:01:13.308999Z,no_data
 2026,Lexus,NXphev,,,2026 NX 450h+ PREMIUM AWD,2026 nx 450h+ premium awd,user,2026-01-28T18:01:23.491631Z,no_data
