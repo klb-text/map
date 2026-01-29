@@ -644,6 +644,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Subaru,Outback,Limited,SDF/34,2025 Outback Limited,2025 outback limited,user,2026-01-29T15:47:56.284314Z,mapped
 2025,Subaru,Outback,Onyx Edition,SDE/21,2025 Outback Onyx Edition,2025 outback onyx edition,user,2026-01-29T15:47:32.118339Z,mapped
 2025,Subaru,Outback,Premium,SDD/11,2025 Outback Premium,2025 outback premium,user,2026-01-29T15:32:35.013339Z,mapped
+2025,Subaru,Outback,Touring,SDG/41,2025 Outback Touring,2025 outback touring,user,2026-01-29T15:48:26.078608Z,mapped
 2025,Mitsubishi,Outlander,ES,OT45-A/E5A,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,Platinum Edition,OT45-Z/R52,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
 2025,Mitsubishi,Outlander,SE,OT45-I/E5B,2025 Outlander,2025 outlander,user,2026-01-28T13:55:08.967528Z,mapped
