@@ -468,7 +468,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang,GT,P8C/300A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,GT Premium,P8C/400A,2025 Ford Mustang,2025 ford mustang,user,2026-01-27T19:18:51.128944Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang Coupe EcoBoost Auto Transmission,2025 ford mustang coupe ecoboost auto transmission,user,2026-01-27T19:19:19.389526Z,mapped
-2025,Ford,Mustang,EcoBoost,P8U/101A,2025 Ford Mustang Coupe EcoBoost Auto Transmission,2025 ford mustang coupe ecoboost auto transmission,user,2026-01-29T14:03:01.405954Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost Premium,P8T/200A,2025 Ford Mustang EcoBoost,2025 ford mustang ecoboost,user,2026-01-27T19:22:39.751992Z,mapped
 2025,Ford,Mustang,EcoBoost,P8T/100A,2025 Ford Mustang EcoBoost Coupe,2025 ford mustang ecoboost coupe,user,2026-01-27T19:50:47.939326Z,mapped
@@ -559,6 +558,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-5,2.5 S Carbon Edition,CX5 CE XA,2025 MAZDA CX-5 2.5 S CARBON EDITION,2025 mazda cx 5 2.5 s carbon edition,user,2026-01-27T15:21:41.679682Z,mapped
 2025,Mazda,CX-5,2.5 S Preferred Package,CX5 PF XA,2025 MAZDA CX-5 2.5 S PREFERRED,2025 mazda cx 5 2.5 s preferred,user,2026-01-27T15:21:21.001066Z,mapped
 2025,Mazda,CX-5,2.5 S Select Package,CX5 SE XA,2025 MAZDA CX-5 2.5 S SELECT,2025 mazda cx 5 2.5 s select,user,2026-01-27T15:20:58.586853Z,mapped
+2025,MAZDA,MX-5 miata st,,,2025 MAZDA MX-5 Sport (RWD / Manual Transmission),2025 mazda mx 5 sport (rwd manual transmission),user,2026-01-29T14:06:05.881297Z,no_data
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
