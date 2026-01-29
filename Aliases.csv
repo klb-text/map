@@ -82,6 +82,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mercedes-Benz,S-Class,S 580,S580V4,,,user,2026-01-29T04:07:48.770891Z,mapped
 2025,Mercedes-Benz,S-Class,S 580e,S580eV4,,,user,2026-01-29T04:08:04.828515Z,mapped
 2025,Toyota,RAV4 Hybrid,Hybrid LE,4435,,,user,2026-01-29T04:40:15.241565Z,mapped
+2025,Toyota,RAV4 Hybrid,Hybrid XLE,4444,,,user,2026-01-29T04:43:40.906788Z,mapped
 2025,Toyota,Tacoma,SR5,7540,,,user,2026-01-29T04:41:48.252618Z,mapped
 2025,Toyota,Tacoma Hybrid,TRD Sport Hybrid,7530,,,user,2026-01-29T04:40:31.764629Z,mapped
 2025,jeep,wagoneer s,,,,,user,2026-01-28T17:45:22.154762Z,no_data
