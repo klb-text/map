@@ -274,6 +274,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Grand Highlander,XLE,6702,,,user,2026-01-29T04:45:44.694182Z,mapped
 2026,Toyota,Grand Highlander,XLE,6708,,,user,2026-01-29T04:47:55.531728Z,mapped
 2026,Toyota,Grand Highlander Hybrid,Hybrid LE,6720,,,user,2026-01-29T04:53:53.708918Z,mapped
+2026,Toyota,Grand Highlander Hybrid,Hybrid XLE,6716,,,user,2026-01-29T05:06:45.585726Z,mapped
 2026,Toyota,Grand Highlander Hybrid,Hybrid XLE,6722,,,user,2026-01-29T04:46:00.753270Z,mapped
 2026,Toyota,Highlander,XLE,6953,,,user,2026-01-29T04:45:28.624265Z,mapped
 2026,Toyota,Highlander Hybrid,Hybrid Limited,6966,,,user,2026-01-29T04:54:23.606179Z,mapped
