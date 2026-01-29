@@ -1017,6 +1017,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
 2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,2026 G70 3.3T SPORT PRESTIGE,2026 g70 3.3t sport prestige,user,2026-01-29T20:17:05.107745Z,mapped
+2026,Genesis,G80,2.5T,S1422A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
+2026,Genesis,G80,2.5T Advanced,S1432A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
+2026,Genesis,G80,2.5T Sport Prestige,S1442A45/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
+2026,Genesis,G80,3.5T Prestige Black,S14B2A65/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
+2026,Genesis,G80,3.5T Sport Prestige,S1492A65/01,2026 G80 2.5T,2026 g80 2.5t,user,2026-01-29T20:17:23.382971Z,mapped
 2026,Jeep,Gladiator,Mojave,JTJH98/24D,2026 GLADIATOR MOJAVE 4X4,2026 gladiator mojave 4x4,user,2026-01-28T17:24:40.781180Z,mapped
 2026,Jeep,Gladiator,Mojave X,JTJH98/24D,2026 GLADIATOR MOJAVE X 4X4,2026 gladiator mojave x 4x4,user,2026-01-28T17:25:02.504396Z,mapped
 2026,Jeep,Gladiator,Rubicon,JTJS98/24R,2026 GLADIATOR RUBICON 4X4,2026 gladiator rubicon 4x4,user,2026-01-28T17:24:21.796079Z,mapped
