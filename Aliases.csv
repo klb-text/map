@@ -574,11 +574,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,MX-5 Miata,35th Anniversary,MX5 SV 6P,2025 MAZDA MX-5 MIATA,2025 mazda mx 5 miata,user,2026-01-29T14:41:47.512532Z,mapped
 2025,Mazda,MX-5 Miata,Club,MX5 CL 6P,2025 MAZDA MX-5 MIATA,2025 mazda mx 5 miata,user,2026-01-29T14:41:47.512532Z,mapped
 2025,Mazda,MX-5 Miata,Grand Touring,MX5 GT 6P,2025 MAZDA MX-5 MIATA,2025 mazda mx 5 miata,user,2026-01-29T14:41:47.512532Z,mapped
-2025,Mazda,MX-5 Miata,Grand Touring,MX5 GT A,2025 MAZDA MX-5 MIATA,2025 mazda mx 5 miata,user,2026-01-29T14:41:47.512532Z,mapped
 2025,Mazda,MX-5 Miata,Sport,MX5 SP 6P,2025 MAZDA MX-5 MIATA,2025 mazda mx 5 miata,user,2026-01-29T14:41:47.512532Z,mapped
 2025,Mazda,MX-5 Miata RF,Club,MXR CL 6P,2025 MAZDA MX-5 MIATA RF,2025 mazda mx 5 miata rf,user,2026-01-29T14:41:03.339925Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MAZDA MX-5 MIATA RF,2025 mazda mx 5 miata rf,user,2026-01-29T14:41:03.339925Z,mapped
-2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT A,2025 MAZDA MX-5 MIATA RF,2025 mazda mx 5 miata rf,user,2026-01-29T14:41:03.339925Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT A,2025 MAZDA MX-5 Miata RF Grand Touring (RWD / Automatic Transmission),2025 mazda mx 5 miata rf grand touring (rwd automatic transmission),user,2026-01-29T14:11:43.627925Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MAZDA MX-5 RF Grand Touring (RWD / Manual Transmission),2025 mazda mx 5 rf grand touring (rwd manual transmission),user,2026-01-29T14:07:03.037253Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MAZDA MX-5 Sport (RWD / Manual Transmission),2025 mazda mx 5 sport (rwd manual transmission),user,2026-01-29T14:06:05.881297Z,no_data
@@ -901,6 +899,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mazda,CX-30,2.5 S,C30 25S XA,2026 MAZDA CX-30 2.5 S (FWD / Automatic Transmission),2026 mazda cx 30 2.5 s (fwd automatic transmission),user,2026-01-29T14:04:26.701301Z,mapped
 2026,Mazda,CX-30,2.5 S Preferred,C30 PF XA,2026 MAZDA CX-30 2.5 S PREFERRED (AWD / Automatic Transmission),2026 mazda cx 30 2.5 s preferred (awd automatic transmission),user,2026-01-29T14:16:46.679021Z,mapped
 2026,Mazda,CX-30,2.5 S Select Sport,C30 SES XA,2026 MAZDA CX-30 2.5 S SELECT SPORT (AWD / Automatic Transmission),2026 mazda cx 30 2.5 s select sport (awd automatic transmission),user,2026-01-29T14:24:25.967271Z,mapped
+2026,MAZDA,CX-50,,,2026 MAZDA CX-50,2026 mazda cx 50,user,2026-01-29T14:42:34.608267Z,no_data
 2026,MAZDA,CX-50,,,2026 MAZDA CX-50 2.5 S Select (AWD / Automatic Transmission),2026 mazda cx 50 2.5 s select (awd automatic transmission),user,2026-01-29T14:08:55.600533Z,no_data
 2026,MAZDA,CX-50 Hybrid,,,2026 MAZDA CX-50 Hybrid Preferred (AWD / Automatic Transmission),2026 mazda cx 50 hybrid preferred (awd automatic transmission),user,2026-01-29T14:07:35.870683Z,no_data
 2026,Mazda,CX-70,3.3 Turbo Preferred,C70 PF XA,2026 MAZDA CX-70,2026 mazda cx 70,user,2026-01-29T14:34:32.324082Z,mapped
