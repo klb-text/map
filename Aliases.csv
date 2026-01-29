@@ -1088,6 +1088,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Odyssey,Touring,RL6H8TKNW,2026 Odyssey,2026 odyssey,user,2026-01-28T14:57:58.688713Z,mapped
 2026,Honda,Odyssey,EX-L,RL6H6TJNW,2026 Odyssey EX-L,2026 odyssey ex l,user,2026-01-28T14:56:57.022317Z,mapped
 2026,Subaru,Outback,Limited,TDF/34,2026 Outback Limited,2026 outback limited,user,2026-01-29T18:43:33.366220Z,mapped
+2026,Subaru,Outback,Limited XT,TDJ/32,2026 Outback Limited XT,2026 outback limited xt,user,2026-01-29T18:44:55.423226Z,mapped
 2026,Subaru,Outback,Premium,TDD/11,2026 Outback Premium,2026 outback premium,user,2026-01-29T18:43:05.580685Z,mapped
 2026,Subaru,Outback,Touring,TDG/41,2026 Outback Touring,2026 outback touring,user,2026-01-29T18:44:00.272781Z,mapped
 2026,Subaru,Outback,Wilderness,TDI/21,2026 Outback Wilderness,2026 outback wilderness,user,2026-01-29T18:44:33.236812Z,mapped
