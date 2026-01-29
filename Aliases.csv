@@ -917,6 +917,18 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
+2026,Nissan,Frontier,PRO-4X,32416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,PRO-4X,33416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,PRO-4X w/R Package,32816,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,PRO-X,32516,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,S,31016,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,S,31116,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,S,32016,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,S,32116,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,SV,32216,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,SV,32316,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,SV,33216,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
+2026,Nissan,Frontier,SV,33316,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,SV,33316,"2026 Frontier SV (CC) 4x2 with Splash Guards (4-piece set) and Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio","2026 frontier sv (cc) 4x2 with splash guards (4 piece set) and carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio",user,2026-01-29T15:17:08.848544Z,mapped
 2026,Nissan,Frontier,SV,32216,"2026 Frontier SV (CC) 4x4 with Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio and Splash Guards (4-piece set)","2026 frontier sv (cc) 4x4 with carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio and splash guards (4 piece set)",user,2026-01-29T15:16:07.811407Z,mapped
 2026,Jeep,Gladiator,Mojave,JTJH98/24D,2026 GLADIATOR MOJAVE 4X4,2026 gladiator mojave 4x4,user,2026-01-28T17:24:40.781180Z,mapped
