@@ -174,6 +174,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,EQE 320+ Sedan,EQE 320+,EQE320V,,,user,2026-01-29T04:06:44.516478Z,mapped
 2026,Mercedes-Benz,S-Class,S 500,S500V4,,,user,2026-01-29T04:08:23.148452Z,mapped
 2026,Mercedes-Benz,S-Class,S 580,S580V4,,,user,2026-01-29T04:08:41.471631Z,mapped
+2026,Mercedes-Benz,S-Class,S 580e,S580eV4,,,user,2026-01-29T04:08:57.561176Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2024,Ford,F-150 Lightning,Flash,W3L/312A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
