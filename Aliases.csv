@@ -558,6 +558,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mazda,CX-5,2.5 S Carbon Edition,CX5 CE XA,2025 MAZDA CX-5 2.5 S CARBON EDITION,2025 mazda cx 5 2.5 s carbon edition,user,2026-01-27T15:21:41.679682Z,mapped
 2025,Mazda,CX-5,2.5 S Preferred Package,CX5 PF XA,2025 MAZDA CX-5 2.5 S PREFERRED,2025 mazda cx 5 2.5 s preferred,user,2026-01-27T15:21:21.001066Z,mapped
 2025,Mazda,CX-5,2.5 S Select Package,CX5 SE XA,2025 MAZDA CX-5 2.5 S SELECT,2025 mazda cx 5 2.5 s select,user,2026-01-27T15:20:58.586853Z,mapped
+2025,Mazda,CX-50,2.5 S Premium Package,C50 PR XA,2025 MAZDA CX-50 2.5 S Premium (AWD / Automatic Transmission),2025 mazda cx 50 2.5 s premium (awd automatic transmission),user,2026-01-29T14:13:35.419392Z,mapped
 2025,Mazda,CX-50,2.5 S Select Package,C50 SE XA,2025 MAZDA CX-50 2.5 S Select (AWD / Automatic Transmission),2025 mazda cx 50 2.5 s select (awd automatic transmission),user,2026-01-29T14:09:31.683842Z,mapped
 2025,Mazda,CX-50 Hybrid,Preferred Package,50H PF XA,2025 MAZDA CX-50 Hybrid Preferred (AWD / Automatic Transmission),2025 mazda cx 50 hybrid preferred (awd automatic transmission),user,2026-01-29T14:08:25.926393Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT A,2025 MAZDA MX-5 Miata RF Grand Touring (RWD / Automatic Transmission),2025 mazda mx 5 miata rf grand touring (rwd automatic transmission),user,2026-01-29T14:11:43.627925Z,mapped
