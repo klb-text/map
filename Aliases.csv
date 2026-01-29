@@ -396,6 +396,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,SEL Sport,494G2F4S/01,2025 ELANTRA SEL SPORT,2025 elantra sel sport,user,2026-01-27T19:04:55.442008Z,mapped
 2025,Mercedes-Benz,EQE 350 4MATIC SUV,,,2025 EQE 350 4MATIC SUV,2025 eqe 350 4matic suv,user,2026-01-29T12:25:53.317197Z,no_data
 2025,Mercedes-Benz,EQE 350+ SUV,EQE 350+,EQE350X/DY0,2025 EQE 350+ SUV,2025 eqe 350+ suv,user,2026-01-29T12:25:35.505822Z,mapped
+2025,Mercedes-Benz,EQE 500 4MATIC SUV,,,2025 EQE 500 4MATIC SUV,2025 eqe 500 4matic suv,user,2026-01-29T12:26:19.165783Z,no_data
 2025,Lexus,ESh,,,2025 ES 300h,2025 es 300h,user,2026-01-28T18:00:07.902854Z,no_data
 2025,Lexus,ES,,,2025 ES 350,2025 es 350,user,2026-01-28T18:03:55.996929Z,no_data
 2025,Lexus,ES 350,ES 350,9000,2025 ES 350,2025 es 350,user,2026-01-27T21:03:48.780851Z,mapped
