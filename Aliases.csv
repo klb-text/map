@@ -1420,6 +1420,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Land Rover,Range Rover Velar,Dynamic SE,HB560/352YP,2026 Rover Velar models,2026 rover velar models,user,2026-01-27T16:28:00.254099Z,mapped
 2026,Land Rover,Range Rover Velar,S,HB560/560CE,2026 Rover Velar models,2026 rover velar models,user,2026-01-27T16:28:00.254099Z,mapped
 2026,Lexus,RX,,,2026 RX 350,2026 rx 350,user,2026-01-28T18:01:41.107255Z,no_data
+2026,Lexus,RX 450h+,RX 450h+ Premium,9441,2026 RX 350h PREMIUM AWD,2026 rx 350h premium awd,user,2026-01-29T22:13:24.822093Z,mapped
 2026,Lexus,RXh,,,2026 RX 350h PREMIUM AWD,2026 rx 350h premium awd,user,2026-01-28T18:01:52.817723Z,no_data
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
