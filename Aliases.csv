@@ -709,6 +709,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Ridgeline,Sport+,YK3F2SEW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Honda,Ridgeline,TrailSport,YK3F6SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Honda,Ridgeline,TrailSport+,YK3F7SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
+2025,Nissan,Sentra,S,12015,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
+2025,Nissan,Sentra,SR,12215,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
+2025,Nissan,Sentra,SV,12115,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
 2025,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2025 SONATA LIMITED HYBRID,2025 sonata limited hybrid,user,2026-01-27T19:15:26.623404Z,mapped
 2025,Hyundai,Sonata,N Line,29472FT5/01,2025 SONATA N LINE,2025 sonata n line,user,2026-01-27T19:13:26.210138Z,mapped
 2025,Hyundai,Sonata,SE,29412F4S/01,2025 SONATA SE,2025 sonata se,user,2026-01-27T19:17:27.281116Z,mapped
