@@ -60,6 +60,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,X5,M60i,26SJ,,,user,2026-01-29T00:05:09.775342Z,mapped
 2026,BMW,X5,sDrive40i,26XO,,,user,2026-01-29T00:04:13.087845Z,mapped
 2026,BMW,X5,xDrive40i,26XG,,,user,2026-01-29T00:04:30.679643Z,mapped
+2026,BMW,X5 M,Competition,26XK,,,user,2026-01-29T00:26:38.810552Z,mapped
 2026,BMW,X5 PHEV,xDrive50e,26XT,,,user,2026-01-29T00:04:51.381042Z,mapped
 2026,BMW,X6,M60i,26XM,,,user,2026-01-29T00:23:10.496610Z,mapped
 2026,BMW,X6,xDrive40i,26XL,,,user,2026-01-29T00:05:25.765932Z,mapped
