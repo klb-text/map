@@ -308,6 +308,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volvo,XC60,Ultra Black Edition,XC60B5UBEAWD,,,user,2026-01-29T05:20:43.043091Z,mapped
 2026,Volvo,XC60 Plug-In Hybrid,Core,XC60T8CAWD,,,user,2026-01-29T05:20:59.087972Z,mapped
 2026,Volvo,XC60 Plug-In Hybrid,Plus,XC60T8PAWD,,,user,2026-01-29T05:21:15.202240Z,mapped
+2026,Volvo,XC60 Plug-In Hybrid,Ultra,XC60T8UAWD,,,user,2026-01-29T05:21:31.275395Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2024,Ford,F-150 Lightning,Flash,W3L/312A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
