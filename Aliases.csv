@@ -910,6 +910,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jaguar,F-PACE,SVR 575 Edition,HO761/352XK,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
 2026,Jaguar,F-PACE,R-Dynamic S,HB761/352KU,2026 Jaguar F-PACE P250 R-Dynamic S AWD,2026 jaguar f pace p250 r dynamic s awd,user,2026-01-28T15:25:51.645955Z,mapped
 2026,Volkswagen,Jetta GLI,Autobahn,BU59V2,2026 Jetta GLI,2026 jetta gli,user,2026-01-27T15:14:18.323473Z,mapped
+2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Nissan,Kicks,S,21116,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Nissan,Kicks,SR,21516,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Nissan,Kicks,SV,21316,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
 2026,Lexus,LS,,,2026 LS,2026 ls,user,2026-01-27T21:06:55.567000Z,no_data
