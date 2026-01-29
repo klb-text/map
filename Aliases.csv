@@ -503,6 +503,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Mustang Mach-E,Select,K1R/100A,2025 Ford Mustang Mach-E Select RWD Std Bat,2025 ford mustang mach e select rwd std bat,user,2026-01-29T16:16:27.165637Z,mapped
 2025,Subaru,Forester,,SFB/01,2025 Forester Base,2025 forester base,user,2026-01-29T15:33:07.591617Z,mapped
 2025,Subaru,Forester,Limited,SFJ/41,2025 Forester Limited,2025 forester limited,user,2026-01-29T18:49:47.177962Z,mapped
+2025,Subaru,Forester Hybrid,Limited Hybrid,SFK/46,2025 Forester Limited Hybrid,2025 forester limited hybrid,user,2026-01-29T18:50:09.495970Z,mapped
 2025,Subaru,Forester,Premium,SFD/11,2025 Forester Premium,2025 forester premium,user,2026-01-29T18:46:22.394176Z,mapped
 2025,Subaru,Forester,Premium,SFD/11,2025 Forester Premium Hybrid,2025 forester premium hybrid,user,2026-01-29T15:33:36.001826Z,mapped
 2025,Subaru,Forester,Sport,SFF/21,2025 Forester Sport,2025 forester sport,user,2026-01-29T18:48:05.208278Z,mapped
