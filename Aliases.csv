@@ -276,6 +276,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Tacoma,SR5,7540,,,user,2026-01-29T04:42:04.456920Z,mapped
 2026,Toyota,Tacoma Hybrid,TRD Sport Hybrid,7530,,,user,2026-01-29T04:41:04.177866Z,mapped
 2026,Toyota,Tundra,SR5,8261,,,user,2026-01-29T04:56:59.747037Z,mapped
+2026,Toyota,bZ,XLE,2872,,,user,2026-01-29T04:59:40.467845Z,mapped
 2026,Toyota,bZ,XLE Plus,2870,,,user,2026-01-29T04:55:32.475378Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
