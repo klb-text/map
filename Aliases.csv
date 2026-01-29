@@ -532,6 +532,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis G70,2025 genesis g70,user,2026-01-29T20:25:02.234629Z,mapped
+2025,Genesis,G90,,T1422A65/01,2025 Genesis G90,2025 genesis g90,user,2026-01-29T20:27:52.948457Z,mapped
 2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
