@@ -1343,6 +1343,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
+2026,Kia,Seltos,LX,K2422,2026 Seltos LX AWD,2026 seltos lx awd,user,2026-01-29T21:59:39.648381Z,mapped
 2026,Kia,Seltos,LX,K2222,2026 Seltos LX FWD,2026 seltos lx fwd,user,2026-01-29T21:59:30.675625Z,mapped
 2026,Nissan,Sentra,,,2026 Sentra,2026 sentra,user,2026-01-29T15:25:55.035500Z,no_data
 2026,Nissan,Sentra,,,2026 Sentra SV with Floor Mat Package and Splash Guards (4-piece set),2026 sentra sv with floor mat package and splash guards (4 piece set),user,2026-01-29T15:12:52.937011Z,no_data
