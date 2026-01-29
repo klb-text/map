@@ -48,6 +48,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,X1,xDrive28i,26XB,,,user,2026-01-29T00:02:59.461181Z,mapped
 2026,BMW,X2,M35i,26XZ,,,user,2026-01-29T00:21:25.194365Z,mapped
 2026,BMW,X2,xDrive28i,26XY,,,user,2026-01-29T00:03:33.883121Z,mapped
+2026,BMW,X3,30 xDrive,26XD,,,user,2026-01-29T00:21:43.488612Z,mapped
 2026,BMW,X3,M50 xDrive,26XE,,,user,2026-01-29T00:03:52.229877Z,mapped
 2026,BMW,X5,M60i,26SJ,,,user,2026-01-29T00:05:09.775342Z,mapped
 2026,BMW,X5,sDrive40i,26XO,,,user,2026-01-29T00:04:13.087845Z,mapped
