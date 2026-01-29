@@ -633,14 +633,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Palisade,XRT,J1482A65/01,2025 PALISADE XRT AWD,2025 palisade xrt awd,user,2026-01-27T19:10:56.383231Z,mapped
 2025,Hyundai,Palisade,XRT,J1482F65/01,2025 PALISADE XRT FWD,2025 palisade xrt fwd,user,2026-01-27T19:10:45.166662Z,mapped
 2025,Nissan,Pathfinder,Platinum,25715,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
-2025,Nissan,Pathfinder,Platinum,25815,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Nissan,Pathfinder,Rock Creek,25415,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Nissan,Pathfinder,S,25015,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
-2025,Nissan,Pathfinder,S,25115,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Nissan,Pathfinder,SL,25515,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
-2025,Nissan,Pathfinder,SL,25615,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Nissan,Pathfinder,SV,25215,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
-2025,Nissan,Pathfinder,SV,25315,2025 Pathfinder,2025 pathfinder,user,2026-01-29T15:19:57.944302Z,mapped
 2025,Honda,Pilot,Black Edition,YG1H9SKNW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L,YG1H4SENW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
 2025,Honda,Pilot,EX-L+,YG1H4SEXW,2025 Pilot,2025 pilot,user,2026-01-28T15:00:29.682852Z,mapped
@@ -1043,6 +1039,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,Passport,RTL,YF9H3TGXW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
 2026,Honda,Passport,RTL Blackout,YF9H3TGZW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
 2026,Honda,Passport,RTL Towing,YF9H3TGYW,2026 Passport AWD RTL,2026 passport awd rtl,user,2026-01-28T14:45:33.326053Z,mapped
+2026,Nissan,Pathfinder,,,2026 Pathfinder,2026 pathfinder,user,2026-01-29T15:20:46.342845Z,no_data
 2026,Nissan,Pathfinder,,,2026 Pathfinder with Carpeted Floor Mats with Bench Seating (4-piece set) and Carpeted Cargo Area Protector and Splash Guards (4-piece set),2026 pathfinder with carpeted floor mats with bench seating (4 piece set) and carpeted cargo area protector and splash guards (4 piece set),user,2026-01-29T15:05:37.509392Z,no_data
 2026,Honda,Pilot,,,2026 Pilot,2026 pilot,user,2026-01-28T15:09:41.143825Z,no_data
 2026,Honda,CR-V Hybrid,Sport,RS5H5TJXW,2026 Prelude Hybrid,2026 prelude hybrid,user,2026-01-28T15:06:43.201794Z,mapped
