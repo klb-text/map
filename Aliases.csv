@@ -436,6 +436,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Escape,ST-Line Select,U9N/400A,2025 Ford Escape,2025 ford escape,user,2026-01-27T19:23:43.568497Z,mapped
 2025,Ford,Escape,Active,U9G/200A,2025 Ford Escape Active AWD,2025 ford escape active awd,user,2026-01-27T19:50:17.590929Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active AWD 1.5L Gas,2025 ford escape active awd 1.5l gas,user,2026-01-27T19:20:41.355048Z,mapped
+2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Active FWD,2025 ford escape active fwd,user,2026-01-29T14:58:37.911834Z,mapped
 2025,Ford,Escape,Active,U0G/200A,2025 Ford Escape Gas,2025 ford escape gas,user,2026-01-29T14:57:17.145873Z,mapped
 2025,Ford,Escape,Active,U0G/200A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
 2025,Ford,Escape,PHEV,U0E/700A,"2025 Ford Escape Gas, Hybrid","2025 ford escape gas, hybrid",user,2026-01-27T19:21:24.935148Z,mapped
