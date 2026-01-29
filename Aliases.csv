@@ -572,6 +572,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,GV60,Standard,W0402REZ/01,2025 GV60 STANDARD AWD AUTOMATIC TRANSMISSION,2025 gv60 standard awd automatic transmission,user,2026-01-29T20:13:43.712546Z,mapped
 2025,Genesis,GV60,Standard,W0402REZ/01,2025 GV60 STANDARD RWD AUTOMATIC TRANSMISSION,2025 gv60 standard rwd automatic transmission,user,2026-01-29T20:13:34.089494Z,mapped
 2025,Genesis,GV70,2.5T,U0422A45/01,2025 GV70 2.5T AWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2025 gv70 2.5t awd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:13:56.704691Z,mapped
+2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025 GV70 3.5T AWD 3.5L V6 AUTOMATIC TRANSMISSION,2025 gv70 3.5t awd 3.5l v6 automatic transmission,user,2026-01-29T20:14:14.769615Z,mapped
 2025,Dodge,Hornet,GT,GGEH49/23N,2025 HORNET GT AWD,2025 hornet gt awd,user,2026-01-27T18:18:00.389393Z,mapped
 2025,Dodge,Hornet,GT Plus,GGEH49/23N,2025 HORNET GT PLUS AWD,2025 hornet gt plus awd,user,2026-01-27T18:18:26.523336Z,mapped
 2025,Dodge,Hornet,R/T,GG7P49/28E,2025 HORNET R/T EAWD,2025 hornet r t eawd,user,2026-01-27T18:19:27.747707Z,mapped
