@@ -421,6 +421,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SEL Convenience,494H2F4S/01,2025 ELANTRA SEL CONVENIENCE,2025 elantra sel convenience,user,2026-01-27T19:05:08.299743Z,mapped
 2025,Hyundai,Elantra,SEL Sport,494G2F4S/01,2025 ELANTRA SEL SPORT,2025 elantra sel sport,user,2026-01-27T19:04:55.442008Z,mapped
+2025,Genesis,Electrified GV70,Advanced,U04E2AEZ/01,2025 ELECTRIFIED GV70 AWD AUTOMATIC TRANSMISSION,2025 electrified gv70 awd automatic transmission,user,2026-01-29T20:14:23.436495Z,mapped
 2025,Mercedes-Benz,EQE 350 4MATIC SUV,,,2025 EQE 350 4MATIC SUV,2025 eqe 350 4matic suv,user,2026-01-29T12:25:53.317197Z,no_data
 2025,Mercedes-Benz,EQE 350+ SUV,EQE 350+,EQE350X/DY0,2025 EQE 350+ SUV,2025 eqe 350+ suv,user,2026-01-29T12:25:35.505822Z,mapped
 2025,Mercedes-Benz,EQE 500 4MATIC SUV,,,2025 EQE 500 4MATIC SUV,2025 eqe 500 4matic suv,user,2026-01-29T12:26:19.165783Z,no_data
