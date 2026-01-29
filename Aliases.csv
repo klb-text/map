@@ -600,6 +600,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mini,COUNTRYMAN SE ALL4,,,2025 MINI Countryman SE ALL4,2025 mini countryman se all4,user,2026-01-29T14:50:59.154925Z,no_data
 2025,Mini,JCW COUNTRYMAN ALL4,,,2025 MINI JCW Countryman ALL4,2025 mini jcw countryman all4,user,2026-01-29T14:53:55.635091Z,no_data
 2025,Mini,JCW HARDTOP 2 DOOR,,,2025 MINI JCW Hardtop 2 Door,2025 mini jcw hardtop 2 door,user,2026-01-29T14:53:32.066709Z,no_data
+2025,Nissan,Murano,Platinum,23415,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
+2025,Nissan,Murano,SL,23215,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
+2025,Nissan,Murano,SV,23015,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
+2025,Nissan,Murano,SV,23115,2025 Murano,2025 murano,user,2026-01-29T15:21:03.998386Z,mapped
 2025,Mazda,MX-5 Miata RF,Grand Touring,MXR GT 6P,2025 MX-5 Grand Touring (RWD / Manual Transmission),2025 mx 5 grand touring (rwd manual transmission),user,2026-01-29T14:22:14.563758Z,mapped
 2025,MAZDA,MX-5 miata st,,,2025 MX-5 Sport (RWD / Manual Transmission),2025 mx 5 sport (rwd manual transmission),user,2026-01-27T15:18:30.324345Z,no_data
 2025,Kia,Niro,EX,G4242,2025 Niro EX FWD,2025 niro ex fwd,user,2026-01-27T19:55:16.302400Z,mapped
