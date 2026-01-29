@@ -780,8 +780,12 @@ year,make,model,trim,model_code,source
 2026,Ford,Mustang Mach-E,Premium,K3S/300A,user
 2026,Ford,Mustang Mach-E,Select,K1R/100A,user
 2026,Ford,Mustang Mach-E,Select,K1S/100A,user
+2026,Genesis,G70,2.5T Prestige,R0442A45/01,user
+2026,Genesis,G70,2.5T Prestige,R0442R45/01,user
 2026,Genesis,G70,2.5T Standard,R0422A45/01,user
 2026,Genesis,G70,2.5T Standard,R0422R45/01,user
+2026,Genesis,G70,3.3T Sport Prestige,R0472A65/01,user
+2026,Genesis,G70,3.3T Sport Prestige,R0472R65/01,user
 2026,Genesis,GV70,2.5T,U0422A45/01,user
 2026,Genesis,GV70,2.5T Select,U0432A45/01,user
 2026,Honda,CR-V,EX,RS3H4TJW,user
