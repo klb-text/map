@@ -554,6 +554,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,IS,,,2025 IS 300 F SPORT DESIGN,2025 is 300 f sport design,user,2026-01-28T18:03:17.952291Z,no_data
 2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:02:52.423384Z,mapped
 2025,Lexus,IS 350,IS 350 F SPORT Design,9504/FM,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:03:02.841378Z,mapped
+2025,Nissan,Kicks,S,21015,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks,S,21115,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks,SR,21415,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks,SR,21515,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks,SV,21215,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
+2025,Nissan,Kicks,SV,21315,2025 Kicks,2025 kicks,user,2026-01-29T15:23:47.373968Z,mapped
 2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
