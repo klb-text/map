@@ -115,6 +115,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RX 450h+,RX 450h+ Premium,9441,,,user,2026-01-29T00:58:10.147391Z,mapped
 2026,Lexus,RZ 450e,RZ 450e Premium,9902,,,user,2026-01-29T00:58:42.285903Z,mapped
 2026,Lexus,TX 350,TX 350,9350,,,user,2026-01-29T00:56:12.800591Z,mapped
+2026,Lexus,TX 350,TX 350 Premium,9353,,,user,2026-01-29T01:01:13.849793Z,mapped
 2026,Lexus,TX 500h,TX 500h F SPORT Performance Premium,9360,,,user,2026-01-29T00:56:31.204098Z,mapped
 2026,Mercedes-Benz,AMG CLE 53,AMG CLE 53,CLE53A4,,,user,2026-01-28T23:39:16.017075Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
