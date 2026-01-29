@@ -321,6 +321,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volvo,XC90,Ultra,XC90B5UAWD7,,,user,2026-01-29T05:22:56.254069Z,mapped
 2026,Volvo,XC90,Ultra,XC90B6UAWD6,,,user,2026-01-29T05:25:16.287031Z,mapped
 2026,Volvo,XC90,Ultra,XC90B6UAWD7,,,user,2026-01-29T05:24:41.907530Z,mapped
+2026,Volvo,XC90,Ultra Dark Theme,XC90B6UDAWD6,,,user,2026-01-29T05:25:32.347407Z,mapped
 2026,Volvo,XC90,Ultra Dark Theme,XC90B6UDAWD7,,,user,2026-01-29T05:25:00.259495Z,mapped
 2026,audi,A8,55 TFSI quattro,,,,user,2026-01-27T17:07:40.223299Z,no_data
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
