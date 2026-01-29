@@ -704,6 +704,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Kia,Niro,LX,G4222,2025 Niro,2025 niro,user,2026-01-29T22:02:32.307690Z,mapped
 2025,Kia,Niro,SX,G4262,2025 Niro,2025 niro,user,2026-01-29T22:02:32.307690Z,mapped
 2025,Kia,Niro,SX Touring,G4272,2025 Niro,2025 niro,user,2026-01-29T22:02:32.307690Z,mapped
+2025,Kia,Niro EV,Wave,V1282,2025 Niro EV,2025 niro ev,user,2026-01-29T22:03:56.994019Z,mapped
+2025,Kia,Niro EV,Wind,V1242,2025 Niro EV,2025 niro ev,user,2026-01-29T22:03:56.994019Z,mapped
 2025,Kia,Niro EV,Wind,V1242,2025 Niro EV Wind FWD,2025 niro ev wind fwd,user,2026-01-29T21:57:46.266558Z,mapped
 2025,Kia,Niro,EX,G4242,2025 Niro EX FWD,2025 niro ex fwd,user,2026-01-27T19:55:16.302400Z,mapped
 2025,Kia,Niro,LX,G4222,2025 Niro LX FWD,2025 niro lx fwd,user,2026-01-27T19:55:06.134279Z,mapped
