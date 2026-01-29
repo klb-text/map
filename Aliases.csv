@@ -992,6 +992,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Frontier,SV,32216,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,SV,33316,"2026 Frontier SV (CC) 4x2 with Splash Guards (4-piece set) and Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio","2026 frontier sv (cc) 4x2 with splash guards (4 piece set) and carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio",user,2026-01-29T15:17:08.848544Z,mapped
 2026,Nissan,Frontier,SV,32216,"2026 Frontier SV (CC) 4x4 with Carpeted Floor Mats, Crew Cab (3-piece set) and Owner's Manual Portfolio and Splash Guards (4-piece set)","2026 frontier sv (cc) 4x4 with carpeted floor mats, crew cab (3 piece set) and owner's manual portfolio and splash guards (4 piece set)",user,2026-01-29T15:16:07.811407Z,mapped
+2026,Genesis,G70,2.5T Standard,R0422R45/01,2026 G70 2.5T RWD 2.5L 4-CYL AUTOMATIC TRANSMISSION,2026 g70 2.5t rwd 2.5l 4 cyl automatic transmission,user,2026-01-29T20:15:23.213731Z,mapped
 2026,Jeep,Gladiator,Mojave,JTJH98/24D,2026 GLADIATOR MOJAVE 4X4,2026 gladiator mojave 4x4,user,2026-01-28T17:24:40.781180Z,mapped
 2026,Jeep,Gladiator,Mojave X,JTJH98/24D,2026 GLADIATOR MOJAVE X 4X4,2026 gladiator mojave x 4x4,user,2026-01-28T17:25:02.504396Z,mapped
 2026,Jeep,Gladiator,Rubicon,JTJS98/24R,2026 GLADIATOR RUBICON 4X4,2026 gladiator rubicon 4x4,user,2026-01-28T17:24:21.796079Z,mapped
