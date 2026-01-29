@@ -272,6 +272,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Ford,Maverick,XLT,W8H/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT Advanced,W8C/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
+2024,Acura,Integra,Type S,DE5G9REW,2024 INTEGRA Type S,2024 integra type s,user,2026-01-29T13:46:35.409044Z,mapped
 2024,Jaguar,F-TYPE,75,HL152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Jaguar,F-TYPE,R-Dynamic,HN152/351RH,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Jaguar,F-TYPE,R75,HL152/351RJ,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
