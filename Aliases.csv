@@ -298,6 +298,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,bZ,XLE,2873,,,user,2026-01-29T05:02:12.600228Z,mapped
 2026,Toyota,bZ,XLE Plus,2870,,,user,2026-01-29T04:55:32.475378Z,mapped
 2026,Volvo,EX30,Plus,EX30SPRWD,,,user,2026-01-29T05:27:43.558298Z,mapped
+2026,Volvo,EX30,Plus,EX30TPAWD,,,user,2026-01-29T05:28:01.924602Z,mapped
 2026,Volvo,EX40,Plus,EX40SPRWD,,,user,2026-01-29T05:18:47.077700Z,mapped
 2026,Volvo,EX40,Plus,EX40TPAWD,,,user,2026-01-29T05:19:03.166062Z,mapped
 2026,Volvo,EX40,Ultra Black Edition,EX40TBAWD,,,user,2026-01-29T05:19:19.338559Z,mapped
