@@ -537,6 +537,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,GV70,2.5T,U0422A45/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
 2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025 Genesis GV70,2025 genesis gv70,user,2026-01-29T20:26:09.464479Z,mapped
+2025,Genesis,G70,2.5T,R0422R45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,G70,3.3T Sport Advanced,R0462A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,G70,3.3T Sport Advanced,R0462R65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Advanced,V0432A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Advanced,V0482A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Prestige,V0442A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Prestige,V0492A65/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Select,V0412A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
+2025,Genesis,GV80,Standard,V0402A45/01,2025 Genesis GV80,2025 genesis gv80,user,2026-01-29T20:26:32.021383Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA,2025 giulia,user,2026-01-27T16:39:48.591273Z,mapped
 2025,Alfa Romeo,Giulia,,GAFL41/22L,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
 2025,Alfa Romeo,Giulia,Special Edition,GAFT41/22Y,2025 GIULIA AWD,2025 giulia awd,user,2026-01-27T16:33:22.095003Z,mapped
