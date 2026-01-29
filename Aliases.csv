@@ -943,6 +943,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E Premium Extended Range AWD,2026 ford mustang mach e premium extended range awd,user,2026-01-29T16:36:43.844520Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Standard Battery,2026 ford mustang mach e select rwd standard battery,user,2026-01-29T16:48:47.539802Z,mapped
+2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD Std Bat,2026 ford mustang mach e select rwd std bat,user,2026-01-29T16:53:49.450969Z,mapped
 2026,Subaru,Forester,,TFB/01,2026 Forester Base,2026 forester base,user,2026-01-29T15:34:04.137978Z,mapped
 2026,Nissan,Frontier,PRO-4X,32416,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
 2026,Nissan,Frontier,PRO-4X w/R Package,32816,2026 Frontier,2026 frontier,user,2026-01-29T15:28:34.165683Z,mapped
