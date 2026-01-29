@@ -8,6 +8,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,BMW,228 Gran Coupe,228 xDrive,262T,,,user,2026-01-28T23:30:02.683015Z,mapped
 2026,BMW,230,230i,262B,,,user,2026-01-28T23:54:48.384875Z,mapped
 2026,BMW,230,230i xDrive,262J,,,user,2026-01-29T00:08:19.921768Z,mapped
+2026,BMW,330,330i NA,263Y,,,user,2026-01-29T00:09:14.922618Z,mapped
 2026,BMW,330,330i NA xDrive,263X,,,user,2026-01-28T23:55:04.472351Z,mapped
 2026,BMW,430,430i xDrive,264D,,,user,2026-01-28T23:56:52.103318Z,mapped
 2026,BMW,430 Gran Coupe,430i,264R,,,user,2026-01-28T23:56:33.799981Z,mapped
