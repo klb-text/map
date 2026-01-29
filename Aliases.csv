@@ -1090,6 +1090,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Subaru,Outback,Limited,TDF/34,2026 Outback Limited,2026 outback limited,user,2026-01-29T18:43:33.366220Z,mapped
 2026,Subaru,Outback,Premium,TDD/11,2026 Outback Premium,2026 outback premium,user,2026-01-29T18:43:05.580685Z,mapped
 2026,Subaru,Outback,Touring,TDG/41,2026 Outback Touring,2026 outback touring,user,2026-01-29T18:44:00.272781Z,mapped
+2026,Subaru,Outback,Wilderness,TDI/21,2026 Outback Wilderness,2026 outback wilderness,user,2026-01-29T18:44:33.236812Z,mapped
 2026,Mitsubishi,Outlander,Black Edition,OT45-Q/E6G,2026 Outlander,2026 outlander,user,2026-01-28T13:55:21.246184Z,mapped
 2026,Mitsubishi,Outlander,ES,OT45-A/E6A,2026 Outlander,2026 outlander,user,2026-01-28T13:55:21.246184Z,mapped
 2026,Mitsubishi,Outlander,LE,OT45-E/E6B,2026 Outlander,2026 outlander,user,2026-01-28T13:55:21.246184Z,mapped
