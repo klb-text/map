@@ -272,6 +272,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Ford,Maverick,XL,W8A/100A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT,W8H/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
 2024,Ford,Maverick,XLT Advanced,W8C/300A,2024 Ford Maverick,2024 ford maverick,user,2026-01-27T19:52:31.741574Z,mapped
+2024,Ford,Ranger,LARIAT,R4J/500A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
+2024,Ford,Ranger,Raptor,R4L/800A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
+2024,Ford,Ranger,XL,R4B/100A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
+2024,Ford,Ranger,XL,R4P/100A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
+2024,Ford,Ranger,XLT,R4G/300A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
+2024,Ford,Ranger,XLT,R4H/300A,2024 Ford Ranger,2024 ford ranger,user,2026-01-29T21:02:23.271923Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
 2024,Acura,Integra,Type S,DE5G9REW,2024 INTEGRA Type S,2024 integra type s,user,2026-01-29T13:46:35.409044Z,mapped
 2024,Jaguar,F-TYPE,75,HL152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
