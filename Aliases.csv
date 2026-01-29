@@ -210,6 +210,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mercedes-Benz,E-Class,E 450,E450S4,,,user,2026-01-29T04:05:01.141994Z,mapped
 2026,Mercedes-Benz,E-Class,E 450,E450W4,,,user,2026-01-29T04:04:08.334248Z,mapped
 2026,Mercedes-Benz,EQE 320 Sedan,EQE 320,EQE320V4,,,user,2026-01-29T04:07:00.570717Z,mapped
+2026,Mercedes-Benz,EQE 320+ SUV,EQE 320+,EQE320X,,,user,2026-01-29T04:27:05.163469Z,mapped
 2026,Mercedes-Benz,EQE 320+ Sedan,EQE 320+,EQE320V,,,user,2026-01-29T04:06:44.516478Z,mapped
 2026,Mercedes-Benz,EQS 450 Sedan,EQS 450,EQS450V4,,,user,2026-01-29T04:10:40.856889Z,mapped
 2026,Mercedes-Benz,EQS 450+ Sedan,EQS 450+,EQS450V,,,user,2026-01-29T04:10:24.772742Z,mapped
