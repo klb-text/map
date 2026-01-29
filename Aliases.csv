@@ -277,6 +277,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Jaguar,F-TYPE,R75,HL152/351RJ,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Jaguar,XF,R-Dynamic SE,HC260/260KV,2024 Jaguar XF,2024 jaguar xf,user,2026-01-28T15:28:32.984909Z,mapped
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
+2025,Toyota,4Runner i-FORCE MAX,,,2025 4Runner TRD Off-Road i-FORCE MAX,2025 4runner trd off road i force max,user,2026-01-29T12:39:43.065512Z,no_data
 2025,FIAT,500e,INSPI(RED),FGEP24/21A,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T14:27:37.631549Z,mapped
 2025,Fiat,FIAT 500e,,,2025 500e INSPI(RED),2025 500e inspi(red),user,2026-01-27T18:20:20.998215Z,no_data
 2025,Honda,Accord Sedan,,,2025 Accord 1.5T LX,2025 accord 1.5t lx,user,2026-01-28T14:31:43.457179Z,no_data
