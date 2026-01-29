@@ -1369,6 +1369,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RXphev,,,2026 RX 450h+ PREMIUM AWD,2026 rx 450h+ premium awd,user,2026-01-28T18:02:04.455889Z,no_data
 2026,Lexus,RZ,,,2026 RZ 350e,2026 rz 350e,user,2026-01-29T13:18:27.049368Z,no_data
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
+2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
+2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
 2026,Nissan,Sentra,,,2026 Sentra,2026 sentra,user,2026-01-29T15:25:55.035500Z,no_data
 2026,Nissan,Sentra,,,2026 Sentra SV with Floor Mat Package and Splash Guards (4-piece set),2026 sentra sv with floor mat package and splash guards (4 piece set),user,2026-01-29T15:12:52.937011Z,no_data
 2026,Toyota,Sequoia,SR5,7947/OF,2026 Sequoia SR5,2026 sequoia sr5,user,2026-01-29T12:43:11.094335Z,mapped
