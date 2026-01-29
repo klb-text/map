@@ -1001,6 +1001,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Ford,Mustang Mach-E,GT,K4S/400A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E,2026 ford mustang mach e,user,2026-01-27T19:48:11.155051Z,mapped
+2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E Premium AWD,2026 ford mustang mach e premium awd,user,2026-01-29T20:50:54.311773Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3R/300A,2026 Ford Mustang Mach-E Premium AWD Extended Battery,2026 ford mustang mach e premium awd extended battery,user,2026-01-27T19:49:21.372645Z,mapped
 2026,Ford,Mustang Mach-E,Premium,K3S/300A,2026 Ford Mustang Mach-E Premium Extended Range AWD,2026 ford mustang mach e premium extended range awd,user,2026-01-29T16:36:43.844520Z,mapped
 2026,Ford,Mustang Mach-E,Select,K1R/100A,2026 Ford Mustang Mach-E Select RWD,2026 ford mustang mach e select rwd,user,2026-01-29T19:40:26.259006Z,mapped
