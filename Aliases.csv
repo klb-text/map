@@ -937,6 +937,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volkswagen,Atlas,2.0T SE w/Technology,CA37PZ,2026 Atlas,2026 atlas,user,2026-01-29T22:23:21.294806Z,mapped
 2026,Volkswagen,Atlas,2.0T SEL,CA34PR,2026 Atlas,2026 atlas,user,2026-01-29T22:23:21.294806Z,mapped
 2026,Volkswagen,Atlas,2.0T SEL Premium R-Line,CA35PR,2026 Atlas,2026 atlas,user,2026-01-29T22:23:21.294806Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SE,CMD3PR,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SE,CMD3PZ,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SE w/Technology,CMD7PR,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SE w/Technology,CMD7PZ,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SEL,CMD4PR,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SEL Premium R-Line,CMD5PR,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
+2026,Volkswagen,Atlas Cross Sport,2.0T SEL R-Line Black,CMD8PR,2026 Atlas Cross Sport,2026 atlas cross sport,user,2026-01-29T22:23:30.972257Z,mapped
 2026,AUDI,A3,,,2026 Audi A3 Sedan 40 TFSI quattro,2026 audi a3 sedan 40 tfsi quattro,user,2026-01-27T17:40:28.519111Z,no_data
 2026,Audi,A6,Premium,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
 2026,Audi,A6,Premium Plus,FN2A5Y,2026 Audi A6 Sedan quattro,2026 audi a6 sedan quattro,user,2026-01-27T17:27:33.535220Z,mapped
