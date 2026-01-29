@@ -293,6 +293,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Tesla,Model X,,MODELXB,2024 Model X Dual Motor All-Wheel Drive All-Wheel Drive,2024 model x dual motor all wheel drive all wheel drive,user,2026-01-29T22:21:43.706917Z,mapped
 2024,Tesla,Model X,Plaid,MODELXPL,2024 Model X Tri Motor All-Wheel Drive Plaid,2024 model x tri motor all wheel drive plaid,user,2026-01-29T22:21:52.364828Z,mapped
 2024,Tesla,Model Y,Long Range,MODELYLR2,2024 Model Y Dual Motor All-Wheel Drive Long Range All-Wheel Drive,2024 model y dual motor all wheel drive long range all wheel drive,user,2026-01-29T22:22:10.688061Z,mapped
+2024,Tesla,Model Y,Performance,MODELYP,2024 Model Y Dual Motor All-Wheel Drive Performance All-Wheel Drive,2024 model y dual motor all wheel drive performance all wheel drive,user,2026-01-29T22:22:19.595971Z,mapped
 2024,Tesla,Model Y,Long Range,MODELYLR,2024 Model Y Rear-Wheel Drive Long Range Rear-Wheel Drive,2024 model y rear wheel drive long range rear wheel drive,user,2026-01-29T22:22:01.919795Z,mapped
 2024,Acura,RDX,,TC2H3RJNW,2024 RDX,2024 rdx,user,2026-01-29T13:50:49.156263Z,mapped
 2024,Acura,TLX,Type S,UB7F0RGW,2024 TLX Type S,2024 tlx type s,user,2026-01-29T13:52:51.286646Z,mapped
