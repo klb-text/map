@@ -433,6 +433,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,ESh,,,2025 ES 300h,2025 es 300h,user,2026-01-28T18:00:07.902854Z,no_data
 2025,Lexus,ES,,,2025 ES 350,2025 es 350,user,2026-01-28T18:03:55.996929Z,no_data
 2025,Lexus,ES 350,ES 350,9000,2025 ES 350,2025 es 350,user,2026-01-27T21:03:48.780851Z,mapped
+2025,Kia,EV6,GT,N5472,2025 EV6 6,2025 ev6 6,user,2026-01-29T22:02:04.750967Z,mapped
 2025,Kia,EV6,Light Long Range,N5442,2025 EV6 Light Long Range AWD,2025 ev6 light long range awd,user,2026-01-27T19:54:57.314500Z,mapped
 2025,Kia,EV6,Light Long Range,N4342,2025 EV6 Light Long Range RWD,2025 ev6 light long range rwd,user,2026-01-27T19:54:46.512680Z,mapped
 2025,Ford,Bronco,Badlands,E9A/331A,2025 Ford Bronco,2025 ford bronco,user,2026-01-27T19:22:16.543371Z,mapped
