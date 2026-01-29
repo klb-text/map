@@ -95,6 +95,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Toyota,Tundra,SR5,8261,,,user,2026-01-29T04:56:41.353714Z,mapped
 2025,Volvo,EX90,Plus,EX90TP6AWD,,,user,2026-01-29T05:28:52.899105Z,mapped
 2025,Volvo,EX90,Plus,EX90TP7AWD,,,user,2026-01-29T05:28:36.793244Z,mapped
+2025,Volvo,EX90,Plus,EX90TPP6AWD,,,user,2026-01-29T05:30:01.812830Z,mapped
 2025,Volvo,EX90,Plus,EX90TPP7AWD,,,user,2026-01-29T05:29:43.435504Z,mapped
 2025,Volvo,EX90,Ultra,EX90TU6AWD,,,user,2026-01-29T05:29:25.040852Z,mapped
 2025,Volvo,EX90,Ultra,EX90TU7AWD,,,user,2026-01-29T05:29:08.962047Z,mapped
