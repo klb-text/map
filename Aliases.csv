@@ -1025,6 +1025,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,CR-V Hybrid,TrailSport,RS6H6TJZW,2026 CR-V Hybrid,2026 cr v hybrid,user,2026-01-28T15:01:38.375088Z,mapped
 2026,Subaru,Crosstrek,,TRA/03,2026 Crosstrek Base,2026 crosstrek base,user,2026-01-29T15:34:50.911523Z,mapped
 2026,Subaru,Crosstrek,Limited,TRF/31,2026 Crosstrek Limited,2026 crosstrek limited,user,2026-01-30T15:52:06.656874Z,mapped
+2026,Subaru,Crosstrek,Limited Hybrid,TRH/36,2026 Crosstrek Limited Hybrid,2026 crosstrek limited hybrid,user,2026-01-30T15:52:29.103599Z,mapped
 2026,Subaru,Crosstrek,Premium,TRB/13,2026 Crosstrek Premium,2026 crosstrek premium,user,2026-01-29T18:56:50.525747Z,mapped
 2026,Subaru,Crosstrek,Sport,TRD/21,2026 Crosstrek Sport,2026 crosstrek sport,user,2026-01-30T15:51:20.089171Z,mapped
 2026,Subaru,Crosstrek,Sport Hybrid,TRE/26,2026 Crosstrek Sport Hybrid,2026 crosstrek sport hybrid,user,2026-01-29T15:35:17.599482Z,mapped
