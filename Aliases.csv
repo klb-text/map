@@ -1696,6 +1696,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Tucson,SE,85402A4S/01,2026 TUCSON SE AWD,2026 tucson se awd,user,2026-01-30T21:19:56.633961Z,mapped
 2026,Hyundai,Tucson,SE,85402F4S/01,2026 TUCSON SE FWD,2026 tucson se fwd,user,2026-01-30T21:18:53.049043Z,mapped
 2026,Hyundai,Tucson,SEL,85432F4S/01,2026 TUCSON SEL FWD,2026 tucson sel fwd,user,2026-01-30T21:24:59.242833Z,mapped
+2026,Hyundai,Tucson,SEL Premium,85462A4S/01,2026 TUCSON SEL PREMIUM AWD,2026 tucson sel premium awd,user,2026-01-30T21:58:32.864823Z,mapped
 2026,Hyundai,Tucson,SEL Premium,85462F4S/01,2026 TUCSON SEL PREMIUM FWD,2026 tucson sel premium fwd,user,2026-01-30T21:56:09.313522Z,mapped
 2026,Hyundai,Tucson,XRT,85442A4S/01,2026 TUCSON XRT AWD,2026 tucson xrt awd,user,2026-01-30T21:54:36.025236Z,mapped
 2026,Hyundai,Tucson,XRT,85442F4S/01,2026 TUCSON XRT FWD,2026 tucson xrt fwd,user,2026-01-30T21:51:13.380674Z,mapped
