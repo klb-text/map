@@ -929,6 +929,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Ridgeline,Sport+,YK3F2SEW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Honda,Ridgeline,TrailSport,YK3F6SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Honda,Ridgeline,TrailSport+,YK3F7SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
+2025,Hyundai,Santa Fe,Limited,65492AT5/01,2025 Santa Fe Limited AWD,2025 santa fe limited awd,user,2026-01-30T19:13:29.173863Z,mapped
 2025,Hyundai,Santa Fe,Limited,65492FT5/01,2025 Santa Fe Limited FWD,2025 santa fe limited fwd,user,2026-01-30T19:12:15.379002Z,mapped
 2025,Hyundai,Santa Fe,SE,65402AT5/01,2025 Santa Fe SE AWD,2025 santa fe se awd,user,2026-01-30T18:58:14.005781Z,mapped
 2025,Hyundai,Santa Fe,SE,65402FT5/01,2025 Santa Fe SE FWD,2025 santa fe se fwd,user,2026-01-30T18:56:04.993424Z,mapped
