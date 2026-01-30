@@ -931,6 +931,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Ridgeline,TrailSport+,YK3F7SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Hyundai,Santa Fe,SE,65402AT5/01,2025 Santa Fe SE AWD,2025 santa fe se awd,user,2026-01-30T18:58:14.005781Z,mapped
 2025,Hyundai,Santa Fe,SE,65402FT5/01,2025 Santa Fe SE FWD,2025 santa fe se fwd,user,2026-01-30T18:56:04.993424Z,mapped
+2025,Hyundai,Santa Fe,SEL,65432FT5/01,2025 Santa Fe SEL FWD,2025 santa fe sel fwd,user,2026-01-30T19:00:03.826716Z,mapped
 2025,Nissan,Sentra,S,12015,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
 2025,Nissan,Sentra,SR,12215,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
 2025,Nissan,Sentra,SV,12115,2025 Sentra,2025 sentra,user,2026-01-29T15:25:12.390856Z,mapped
