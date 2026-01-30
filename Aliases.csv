@@ -783,6 +783,15 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Z,NISMO,41215,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Nissan,Z,Performance,41115,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
 2025,Nissan,Z,Sport,41015,2025 Nissan Z,2025 nissan z,user,2026-01-29T15:26:54.144603Z,mapped
+2025,Subaru,Outback,,SDB/01,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Limited,SDF/34,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Limited XT,SDJ/32,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Onyx Edition,SDE/21,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Onyx Edition XT,SDH/21,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Premium,SDD/11,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Touring,SDG/41,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Touring XT,SDL/41,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
+2025,Subaru,Outback,Wilderness,SDI/21,2025 Outback (all models),2025 outback (all models),user,2026-01-30T16:30:02.934647Z,mapped
 2025,Subaru,Outback,,SDB/01,2025 Outback Base,2025 outback base,user,2026-01-29T15:46:37.765886Z,mapped
 2025,Subaru,Outback,Limited,SDF/34,2025 Outback Limited,2025 outback limited,user,2026-01-29T15:47:56.284314Z,mapped
 2025,Subaru,Outback,Limited XT,SDJ/32,2025 Outback Limited XT,2025 outback limited xt,user,2026-01-29T18:42:05.469734Z,mapped
