@@ -930,6 +930,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Wrangler,Sahara,JLJP74/22G,2025 WRANGLER 4-DOOR SAHARA,2025 wrangler 4 door sahara,user,2026-01-28T15:43:55.859844Z,mapped
 2025,Jeep,Wrangler,Sport,JLJL74/23B,2025 WRANGLER 4-DOOR SPORT,2025 wrangler 4 door sport,user,2026-01-28T15:40:22.219255Z,mapped
 2025,Jeep,Wrangler,Willys,JLJL74/23B,2025 WRANGLER 4-DOOR WILLYS,2025 wrangler 4 door willys,user,2026-01-28T16:45:46.894016Z,mapped
+2025,Subaru,WRX,Limited,SUE/21,2025 WRX Limited,2025 wrx limited,user,2026-01-30T16:13:09.605878Z,mapped
+2025,Subaru,WRX,Limited,SUF/23,2025 WRX Limited,2025 wrx limited,user,2026-01-30T16:13:09.605878Z,mapped
 2025,Subaru,WRX,Premium,SUC/11,2025 WRX Premium,2025 wrx premium,user,2026-01-29T15:40:27.154462Z,mapped
 2025,Subaru,WRX,Premium,SUD/13,2025 WRX Premium,2025 wrx premium,user,2026-01-30T16:12:25.336721Z,mapped
 2024,Genesis,GV70,3.5T Sport,U0462A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
