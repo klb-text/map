@@ -669,6 +669,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Volkswagen,ID.4,Pro S,E814MN,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Volkswagen,ID.4,Pro S Plus,E815SN,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Volkswagen,ID.4,S Limited,E813LJ,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
+2025,Subaru,Impreza,,SLA/01,2025 Impreza (all models),2025 impreza (all models),user,2026-01-30T16:28:09.571490Z,mapped
+2025,Subaru,Impreza,RS,SLG/31,2025 Impreza (all models),2025 impreza (all models),user,2026-01-30T16:28:09.571490Z,mapped
+2025,Subaru,Impreza,Sport,SLD/21,2025 Impreza (all models),2025 impreza (all models),user,2026-01-30T16:28:09.571490Z,mapped
 2025,Subaru,Impreza,,SLA/01,2025 Impreza Base,2025 impreza base,user,2026-01-29T15:38:13.878518Z,mapped
 2025,Subaru,Impreza,RS,SLG/31,2025 Impreza RS,2025 impreza rs,user,2026-01-30T16:08:19.667696Z,mapped
 2025,Subaru,Impreza,Sport,SLD/21,2025 Impreza Sport,2025 impreza sport,user,2026-01-30T16:07:54.586349Z,mapped
