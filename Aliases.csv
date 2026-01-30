@@ -935,6 +935,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Subaru,WRX,Limited,SUF/23,2025 WRX Limited,2025 wrx limited,user,2026-01-30T16:13:09.605878Z,mapped
 2025,Subaru,WRX,Premium,SUC/11,2025 WRX Premium,2025 wrx premium,user,2026-01-29T15:40:27.154462Z,mapped
 2025,Subaru,WRX,Premium,SUD/13,2025 WRX Premium,2025 wrx premium,user,2026-01-30T16:12:25.336721Z,mapped
+2025,Subaru,WRX,tS,SUH/41,2025 WRX tS,2025 wrx ts,user,2026-01-30T16:14:01.134185Z,mapped
 2024,Genesis,GV70,3.5T Sport,U0462A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
 2025,Genesis,GV70,3.5T Sport,U0462A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
 2026,Genesis,GV70,3.5T Sport Advanced,U0472A65/01,2025MY GV70 3,2025my gv70 3,user,2026-01-29T20:24:41.098399Z,mapped
