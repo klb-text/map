@@ -1599,6 +1599,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RZ 450e,RZ 450e Premium,9902,2026 RZ 350e,2026 rz 350e,user,2026-01-29T22:13:47.954552Z,mapped
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
+2026,Hyundai,Santa Fe,SEL,65432AT5/01,2026 SANTA FE SEL 2.5T AWD,2026 santa fe sel 2.5t awd,user,2026-01-30T18:41:43.153106Z,mapped
+2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T AWD,2026 santa fe sel 2.5t awd,user,2026-01-30T18:41:43.153106Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Kia,Seltos,EX,K2242,2026 Seltos,2026 seltos,user,2026-01-29T22:05:00.400773Z,mapped
