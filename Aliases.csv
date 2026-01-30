@@ -645,6 +645,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Volkswagen,ID.4,Pro S Plus,E815SN,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Volkswagen,ID.4,S Limited,E813LJ,2025 ID.Buzz,2025 id.buzz,user,2026-01-27T15:13:40.761134Z,mapped
 2025,Subaru,Impreza,,SLA/01,2025 Impreza Base,2025 impreza base,user,2026-01-29T15:38:13.878518Z,mapped
+2025,Subaru,Impreza,Sport,SLD/21,2025 Impreza Sport,2025 impreza sport,user,2026-01-30T16:07:54.586349Z,mapped
 2025,Acura,Integra,,DE4H2SJW,2025 Integra,2025 integra,user,2026-01-29T13:53:52.693959Z,mapped
 2025,Acura,Integra,,DE4H2SJW,2025 INTEGRA Exclude Type S,2025 integra exclude type s,user,2026-01-27T16:07:16.286941Z,mapped
 2025,Acura,Integra,Type S,DE5G9SEW,2025 INTEGRA Type S,2025 integra type s,user,2026-01-27T16:08:51.626754Z,mapped
