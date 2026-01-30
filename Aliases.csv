@@ -328,6 +328,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Armada,Platinum Reserve,26715,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,SL,26215,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,SV,26015,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
+2025,Subaru,Ascent,Onyx Edition,SCH/22,2025 Ascent Onyx Edition 7‑Passenger,2025 ascent onyx edition 7‑passenger,user,2026-01-30T15:56:53.324876Z,mapped
 2025,Subaru,Ascent,Premium,SCB/12,2025 Ascent Premium 7‑Passenger,2025 ascent premium 7‑passenger,user,2026-01-29T15:36:59.452133Z,mapped
 2025,Subaru,Ascent,Premium,SCC/12,2025 Ascent Premium 7‑Passenger,2025 ascent premium 7‑passenger,user,2026-01-30T15:56:02.703057Z,mapped
 2025,Subaru,Ascent,Premium,SCB/12,2025 Ascent Premium 8‑Passenger,2025 ascent premium 8‑passenger,user,2026-01-30T15:55:30.956786Z,mapped
