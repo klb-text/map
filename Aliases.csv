@@ -1237,6 +1237,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Honda,HR-V,LX,RZ1H3TEW,2026 HR-V 2WD LX Continuously Variable Transmission,2026 hr v 2wd lx continuously variable transmission,user,2026-01-28T14:56:02.219253Z,mapped
 2026,Honda,HR-V,LX,RZ2H3TEW,2026 HR-V AWD LX Continuously Variable Transmission,2026 hr v awd lx continuously variable transmission,user,2026-01-28T14:55:29.919349Z,mapped
 2026,Volkswagen,ID.4,,,2026 ID.4,2026 id.4,user,2026-01-27T15:13:52.146070Z,no_data
+2026,Subaru,Impreza,RS,TLG/31,2026 Impreza RS,2026 impreza rs,user,2026-01-30T16:09:15.160191Z,mapped
 2026,Subaru,Impreza,Sport,TLD/21,2026 Impreza Sport,2026 impreza sport,user,2026-01-29T15:38:41.227267Z,mapped
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-24T18:49:23.098375Z,
 2026,Acura,Integra,,DE4H2TJW,2026 Integra,2026 integra,user,2026-01-27T14:29:12.315155Z,mapped
