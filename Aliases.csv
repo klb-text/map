@@ -675,6 +675,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Subaru,Legacy,,SAB/02,2025 Legacy Base,2025 legacy base,user,2026-01-30T16:09:54.817775Z,mapped
 2025,Subaru,Legacy,Limited,SAF/34,2025 Legacy Limited,2025 legacy limited,user,2026-01-30T16:10:47.296962Z,mapped
 2025,Subaru,Legacy,Premium,SAD/11,2025 Legacy Premium,2025 legacy premium,user,2026-01-29T15:39:07.360742Z,mapped
+2025,Subaru,Legacy,Sport,SAG/21,2025 Legacy Sport,2025 legacy sport,user,2026-01-30T16:11:13.549067Z,mapped
 2025,Mazda,CX-30,2.5 Carbon Turbo,C30 CE TXA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
 2025,Mazda,CX-30,2.5 S,C30 25S XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
 2025,Mazda,CX-30,2.5 S Carbon Edition,C30 CE XA,2025 MAZDA CX-30,2025 mazda cx 30,user,2026-01-27T15:19:38.317231Z,mapped
