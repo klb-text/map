@@ -1693,6 +1693,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Toyota,Toyota Crown,,,2026 Toyota Crown Signia,2026 toyota crown signia,user,2026-01-29T22:23:12.856352Z,no_data
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
+2026,Hyundai,Tucson,SE,85402A4S/01,2026 TUCSON SE AWD,2026 tucson se awd,user,2026-01-30T21:19:56.633961Z,mapped
 2026,Hyundai,Tucson,SE,85402F4S/01,2026 TUCSON SE FWD,2026 tucson se fwd,user,2026-01-30T21:18:53.049043Z,mapped
 2026,Toyota,Tundra i-FORCE MAX,,,2026 Tundra Limited i-FORCE MAX,2026 tundra limited i force max,user,2026-01-29T12:28:21.978044Z,no_data
 2026,Toyota,Tundra,SR5,8241,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
