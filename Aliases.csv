@@ -273,6 +273,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Subaru,BRZ,Limited,RZE/11,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
 2024,Subaru,BRZ,Limited,RZF/13,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
 2024,Subaru,BRZ,tS,RZR/21,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
+2024,Subaru,Crosstrek,,RRA/03,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
+2024,Subaru,Crosstrek,Limited,RRF/31,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
+2024,Subaru,Crosstrek,Premium,RRB/13,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
+2024,Subaru,Crosstrek,Sport,RRD/21,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
+2024,Subaru,Crosstrek,Wilderness,RRI/21,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
 2024,Tesla,Cybertruck,,CYBERB,2024 Cybertruck All-Wheel Drive,2024 cybertruck all wheel drive,user,2026-01-29T22:22:27.571222Z,mapped
 2024,Tesla,Cybertruck,Cyberbeast,CYBERBST,2024 Cybertruck Cyberbeast,2024 cybertruck cyberbeast,user,2026-01-29T22:22:38.817514Z,mapped
 2024,Genesis,Electrified G80,Advanced,S14E2AEZ/01,2024 ELECTRIFIED G80 AWD AUTOMATIC TRANSMISSION,2024 electrified g80 awd automatic transmission,user,2026-01-29T20:12:56.046196Z,mapped
