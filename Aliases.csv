@@ -563,6 +563,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Ford,Ranger,Raptor,R4L/800A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Ford,Ranger,XL,R4B/100A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
 2025,Ford,Ranger,XLT,R4G/300A,2025 Ford Ranger,2025 ford ranger,user,2026-01-29T21:05:09.914643Z,mapped
+2025,Subaru,Forester,,SFB/01,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
+2025,Subaru,Forester,Limited,SFJ/41,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
+2025,Subaru,Forester,Premium,SFD/11,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
+2025,Subaru,Forester,Sport,SFF/21,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
+2025,Subaru,Forester,Touring,SFL/51,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
+2025,Subaru,Forester,Wilderness,SFH/31,2025 Forester (all models),2025 forester (all models),user,2026-01-30T16:24:51.208595Z,mapped
 2025,Subaru,Forester,,SFB/01,2025 Forester Base,2025 forester base,user,2026-01-29T15:33:07.591617Z,mapped
 2025,Subaru,Forester,Limited,SFJ/41,2025 Forester Limited,2025 forester limited,user,2026-01-29T18:49:47.177962Z,mapped
 2025,Subaru,Forester Hybrid,Limited Hybrid,SFK/46,2025 Forester Limited Hybrid,2025 forester limited hybrid,user,2026-01-29T18:50:09.495970Z,mapped
