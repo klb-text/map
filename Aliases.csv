@@ -1691,6 +1691,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volkswagen,Taos,SEL,CL24SR,2026 Taos,2026 taos,user,2026-01-29T22:23:03.584867Z,mapped
 2026,Volkswagen,Tiguan,,,2026 Tiguan,2026 tiguan,user,2026-01-29T22:22:55.584423Z,no_data
 2026,Toyota,Toyota Crown,,,2026 Toyota Crown Signia,2026 toyota crown signia,user,2026-01-29T22:23:12.856352Z,no_data
+2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED AWD,2026 tucson limited awd,user,2026-01-30T22:04:13.070075Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED FWD,2026 tucson limited fwd,user,2026-01-30T22:00:28.765517Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
