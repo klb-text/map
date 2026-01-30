@@ -301,6 +301,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Subaru,Forester,Sport,RFG/21,2024 Forester (all models),2024 forester (all models),user,2026-01-30T17:06:40.796624Z,mapped
 2024,Subaru,Forester,Touring,RFJ/41,2024 Forester (all models),2024 forester (all models),user,2026-01-30T17:06:40.796624Z,mapped
 2024,Subaru,Forester,Wilderness,RFH/21,2024 Forester (all models),2024 forester (all models),user,2026-01-30T17:06:40.796624Z,mapped
+2024,Subaru,Impreza,,RLA/01,2024 Impreza (all models),2024 impreza (all models),user,2026-01-30T17:09:57.045847Z,mapped
+2024,Subaru,Impreza,RS,RLG/31,2024 Impreza (all models),2024 impreza (all models),user,2026-01-30T17:09:57.045847Z,mapped
+2024,Subaru,Impreza,Sport,RLD/21,2024 Impreza (all models),2024 impreza (all models),user,2026-01-30T17:09:57.045847Z,mapped
 2024,Acura,Integra,,DE4H2RJW,2024 INTEGRA Exclude Type S,2024 integra exclude type s,user,2026-01-27T16:33:09.861663Z,mapped
 2024,Acura,Integra,Type S,DE5G9REW,2024 INTEGRA Type S,2024 integra type s,user,2026-01-29T13:46:35.409044Z,mapped
 2024,Jaguar,F-TYPE,75,HL152/351RM,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
