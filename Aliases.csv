@@ -310,6 +310,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Jaguar,F-TYPE,R-Dynamic,HN152/351RH,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Jaguar,F-TYPE,R75,HL152/351RJ,2024 Jaguar F-TYPE,2024 jaguar f type,user,2026-01-28T15:27:56.686729Z,mapped
 2024,Jaguar,XF,R-Dynamic SE,HC260/260KV,2024 Jaguar XF,2024 jaguar xf,user,2026-01-28T15:28:32.984909Z,mapped
+2024,Subaru,Legacy,,RAB/02,2024 Legacy (all models),2024 legacy (all models),user,2026-01-30T17:10:29.018409Z,mapped
+2024,Subaru,Legacy,Limited,RAF/31,2024 Legacy (all models),2024 legacy (all models),user,2026-01-30T17:10:29.018409Z,mapped
+2024,Subaru,Legacy,Premium,RAD/11,2024 Legacy (all models),2024 legacy (all models),user,2026-01-30T17:10:29.018409Z,mapped
+2024,Subaru,Legacy,Sport,RAG/21,2024 Legacy (all models),2024 legacy (all models),user,2026-01-30T17:10:29.018409Z,mapped
+2024,Subaru,Legacy,Touring XT,RAL/41,2024 Legacy (all models),2024 legacy (all models),user,2026-01-30T17:10:29.018409Z,mapped
 2024,Acura,MDX,,YD9H3RJNW,2024 MDX Exclude Type S,2024 mdx exclude type s,user,2026-01-29T13:48:06.328166Z,mapped
 2024,Acura,MDX,Type S,YD8H9RKNW,2024 MDX Type S Only,2024 mdx type s only,user,2026-01-29T13:49:49.147470Z,mapped
 2024,Tesla,Model 3,Long Range,MODEL3LR,2024 Model 3 Dual Motor All-Wheel Drive Long Range All-Wheel Drive,2024 model 3 dual motor all wheel drive long range all wheel drive,user,2026-01-29T22:21:21.736096Z,mapped
