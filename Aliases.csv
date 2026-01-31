@@ -1137,6 +1137,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Cadillac,CT4,Luxury,6DB69/1SB,2026 CADILLAC CT4 excluding V RWD Luxury,2026 cadillac ct4 excluding v rwd luxury,user,2026-01-31T16:21:22.744588Z,mapped
 2026,Cadillac,CT5,Sport,6DD79/1SE,2026 CADILLAC CT5 excluding V RWD Premium Luxury,2026 cadillac ct5 excluding v rwd premium luxury,user,2026-01-31T16:21:03.367042Z,mapped
 2026,Cadillac,LYRIQ,Luxury,6MB26/1SC,2026 CADILLAC LYRIQ AWD Luxury w/AWD,2026 cadillac lyriq awd luxury w awd,user,2026-01-26T16:46:38.184243Z,mapped
+2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ excludes V-Series,2026 cadillac optiq excludes v series,user,2026-01-31T16:25:19.017919Z,mapped
+2026,Cadillac,OPTIQ,Premium Luxury,6MP26/1SE,2026 CADILLAC OPTIQ excludes V-Series,2026 cadillac optiq excludes v series,user,2026-01-31T16:25:19.017919Z,mapped
+2026,Cadillac,OPTIQ,Premium Sport,6MR26/1SH,2026 CADILLAC OPTIQ excludes V-Series,2026 cadillac optiq excludes v series,user,2026-01-31T16:25:19.017919Z,mapped
+2026,Cadillac,OPTIQ,Sport,6MR26/1SF,2026 CADILLAC OPTIQ excludes V-Series,2026 cadillac optiq excludes v series,user,2026-01-31T16:25:19.017919Z,mapped
 2026,Cadillac,OPTIQ,Luxury,6MP26/1SC,2026 CADILLAC OPTIQ RWD Luxury,2026 cadillac optiq rwd luxury,user,2026-01-26T17:17:37.405810Z,mapped
 2026,Cadillac,VISTIQ,Luxury,6MB56/1SC,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
 2026,Cadillac,VISTIQ,Premium Luxury,6MB56/1SE,2026 CADILLAC VISTIQ,2026 cadillac vistiq,user,2026-01-26T16:41:50.123912Z,mapped
