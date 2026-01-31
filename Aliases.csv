@@ -466,6 +466,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Cadillac,CT4,Luxury,6DB69/1SB,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,CT4,Premium Luxury,6DC69/1SD,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,CT4,Sport,6DD69/1SE,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
+2025,Cadillac,OPTIQ,Luxury,6MP26/1SC,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
+2025,Cadillac,OPTIQ,Luxury,6MP26/1SE,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
+2025,Cadillac,OPTIQ,Sport,6MR26/1SF,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
+2025,Cadillac,OPTIQ,Sport,6MR26/1SH,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
 2025,Cadillac,XT6,FWD Luxury,6NV26/1SA,2025 CADILLAC XT6 FWD Luxury,2025 cadillac xt6 fwd luxury,user,2026-01-31T16:21:53.106254Z,mapped
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,2025 CHARGER 2-DOOR DAYTONA R/T AWD,2025 charger 2 door daytona r t awd,user,2026-01-27T18:07:03.659705Z,mapped
 2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,2025 CHARGER 2-DOOR DAYTONA SCAT PACK AWD,2025 charger 2 door daytona scat pack awd,user,2026-01-27T18:07:27.300364Z,mapped
