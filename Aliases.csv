@@ -466,6 +466,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Cadillac,CT4,Luxury,6DB69/1SB,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,CT4,Premium Luxury,6DC69/1SD,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,CT4,Sport,6DD69/1SE,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
+2025,Cadillac,LYRIQ,Luxury,6MB26/1SC,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
+2025,Cadillac,LYRIQ,Luxury,6MB26/1SD,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
+2025,Cadillac,LYRIQ,Luxury,6MB26/1SE,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
+2025,Cadillac,LYRIQ,Sport,6MC26/1SF,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
+2025,Cadillac,LYRIQ,Sport,6MC26/1SJ,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
+2025,Cadillac,LYRIQ,Sport,6MC26/1SK,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
 2025,Cadillac,OPTIQ,Luxury,6MP26/1SC,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
 2025,Cadillac,OPTIQ,Luxury,6MP26/1SE,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
 2025,Cadillac,OPTIQ,Sport,6MR26/1SF,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
