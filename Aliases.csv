@@ -1740,6 +1740,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volkswagen,Tiguan,,,2026 Tiguan,2026 tiguan,user,2026-01-29T22:22:55.584423Z,no_data
 2026,Toyota,Toyota Crown,,,2026 Toyota Crown Signia,2026 toyota crown signia,user,2026-01-29T22:23:12.856352Z,no_data
 2026,Hyundai,Tucson Hybrid,Blue SE,854G2ABS/01,2026 TUCSON BLUE HYBRID SE AWD,2026 tucson blue hybrid se awd,user,2026-02-05T17:52:05.896772Z,mapped
+2026,Hyundai,Tucson Hybrid,Limited,854E2ABS/01,2026 TUCSON HYBRID LIMITED AWD,2026 tucson hybrid limited awd,user,2026-02-05T17:55:09.951689Z,mapped
 2026,Hyundai,Tucson Hybrid,SEL,854H2ABS/01,2026 TUCSON HYBRID SEL AWD,2026 tucson hybrid sel awd,user,2026-02-05T17:53:10.478474Z,mapped
 2026,Hyundai,Tucson Hybrid,SEL Convenience,854D2ABS/01,2026 TUCSON HYBRID SEL CONVENIENCE AWD,2026 tucson hybrid sel convenience awd,user,2026-02-05T17:54:16.752444Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED AWD,2026 tucson limited awd,user,2026-01-30T22:04:13.070075Z,mapped
