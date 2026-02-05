@@ -1027,6 +1027,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Tucson,SE,85402A4S/01,2025 Tucson SE AWD,2025 tucson se awd,user,2026-02-02T14:46:19.441490Z,mapped
 2025,Hyundai,Tucson,SE,85402F4S/01,2025 Tucson SE FWD,2025 tucson se fwd,user,2026-02-02T14:44:37.549789Z,mapped
 2025,Hyundai,Tucson,SEL,85432A4S/01,2025 Tucson SEL AWD,2025 tucson sel awd,user,2026-02-02T14:48:22.778206Z,mapped
+2025,Hyundai,Tucson,SEL Convenience,85462F4S/01,2025 Tucson SEL Convenience FWD,2025 tucson sel convenience fwd,user,2026-02-05T17:43:17.018056Z,mapped
 2025,Hyundai,Tucson,SEL,85432F4S/01,2025 Tucson SEL FWD,2025 tucson sel fwd,user,2026-02-02T14:47:31.030010Z,mapped
 2025,Hyundai,Tucson,XRT,85442A4S/01,2025 Tucson XRT AWD,2025 tucson xrt awd,user,2026-02-05T17:41:35.150873Z,mapped
 2025,Hyundai,Tucson,XRT,85442F4S/01,2025 Tucson XRT FWD,2025 tucson xrt fwd,user,2026-02-05T17:40:23.323455Z,mapped
