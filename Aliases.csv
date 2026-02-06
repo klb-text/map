@@ -743,6 +743,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,Integra,,DE4H2SJW,2025 INTEGRA Exclude Type S,2025 integra exclude type s,user,2026-01-27T16:07:16.286941Z,mapped
 2025,Acura,Integra,Type S,DE5G9SEW,2025 INTEGRA Type S,2025 integra type s,user,2026-01-27T16:08:51.626754Z,mapped
 2025,Hyundai,IONIQ 5 N,,5N4A2AEZ/01,2025 IONIQ 5 N N,2025 ioniq 5 n n,user,2026-01-27T19:03:26.759279Z,mapped
+2025,Hyundai,IONIQ 5,SE,50412AEZ/01,2025 Ioniq 5 SE AWD,2025 ioniq 5 se awd,user,2026-02-06T20:31:12.358676Z,mapped
+2025,Hyundai,IONIQ 5,SE,51412AEZ/01,2025 Ioniq 5 SE AWD,2025 ioniq 5 se awd,user,2026-02-06T20:31:12.358676Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-01-27T15:25:39.100368Z,mapped
 2025,Hyundai,IONIQ 5,SE Standard Range,50402REZ/01,2025 Ioniq 5 SE Standard Range RWD,2025 ioniq 5 se standard range rwd,user,2026-02-06T20:28:32.089694Z,mapped
 2025,Lexus,IS,,,2025 IS 300 F SPORT,2025 is 300 f sport,user,2026-01-28T18:03:28.725777Z,no_data
