@@ -1421,6 +1421,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Acura,Integra,,DE4H2TJW,2026 Integra FWD Continuously Variable Transmission,2026 integra fwd continuously variable transmission,user,2026-01-24T18:40:49.132210Z,
 2026,Acura,Integra,,DE4H2TJW,2026 Integra FWD Continuously Variable Transmission,2026 integra fwd continuously variable transmission,user,2026-01-27T15:37:23.653761Z,mapped
 2026,Hyundai,IONIQ 5,SE,51412REZ/01,2026 IONIQ 5 SE RWD,2026 ioniq 5 se rwd,user,2026-01-27T15:26:06.098511Z,mapped
+2026,Hyundai,IONIQ 5,SE Standard Range,51402REZ/01,2026 IONIQ 5 SE STANDARD RANGE,2026 ioniq 5 se standard range,user,2026-02-06T19:53:33.837690Z,mapped
 2026,Hyundai,IONIQ 5,SEL,51442REZ/01,2026 IONIQ 5 SEL RWD,2026 ioniq 5 sel rwd,user,2026-01-27T15:27:03.301600Z,mapped
 2026,Jaguar,F-PACE,R-Dynamic S,HD761/352MC,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
 2026,Jaguar,F-PACE,SVR 575 Edition,HO761/352XK,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
