@@ -764,6 +764,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,IONIQ 6,SE,A0412AEZ/01,2025 Ioniq 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-06T21:08:45.371944Z,mapped
 2025,Hyundai,IONIQ 6,SE,A0412REZ/01,2025 Ioniq 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-06T21:08:45.371944Z,mapped
 2025,Hyundai,IONIQ 6,SE Standard Range,A0492REZ/01,2025 Ioniq 6 SE Standard Range RWD,2025 ioniq 6 se standard range rwd,user,2026-02-06T21:07:05.774068Z,mapped
+2025,Hyundai,IONIQ 6,SEL,A0442REZ/01,2025 Ioniq 6 SEL RWD,2025 ioniq 6 sel rwd,user,2026-02-06T21:14:40.969220Z,mapped
 2025,Lexus,IS,,,2025 IS 300 F SPORT,2025 is 300 f sport,user,2026-01-28T18:03:28.725777Z,no_data
 2025,Lexus,IS,,,2025 IS 300 F SPORT DESIGN,2025 is 300 f sport design,user,2026-01-28T18:03:17.952291Z,no_data
 2025,Lexus,IS 350,IS 350 F SPORT,9510,2025 IS 350 F SPORT,2025 is 350 f sport,user,2026-01-27T21:02:52.423384Z,mapped
