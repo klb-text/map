@@ -489,6 +489,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Chevrolet,Equinox EV,LT1 w/PCY,1MB48/2LT,2025 CHEVROLET Equinox EV excludes Black Cloth seat trim,2025 chevrolet equinox ev excludes black cloth seat trim,user,2026-02-07T22:36:37.230315Z,mapped
 2025,Chevrolet,Equinox EV,LT2 w/PDE,1MB48/2LT,2025 CHEVROLET Equinox EV excludes Black Cloth seat trim,2025 chevrolet equinox ev excludes black cloth seat trim,user,2026-02-07T22:36:37.230315Z,mapped
 2025,Chevrolet,Equinox EV,RS,1MM48/2RS,2025 CHEVROLET Equinox EV excludes Black Cloth seat trim,2025 chevrolet equinox ev excludes black cloth seat trim,user,2026-02-07T22:36:37.230315Z,mapped
+2025,Chevrolet,Silverado EV,Extended Range LT,CT35843/3LT,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
+2025,Chevrolet,Silverado EV,Extended Range RST,CT35843/2SP,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
+2025,Chevrolet,Silverado EV,Extended Range Work Truck,CT35843/5WT,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
+2025,Chevrolet,Silverado EV,Max Range RST,CT35843/3SP,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
+2025,Chevrolet,Silverado EV,Max Range Work Truck,CT35843/8WT,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
+2025,Chevrolet,Silverado EV,Standard Range Work Truck,CT35843/2WT,2025 CHEVROLET Silverado EV,2025 chevrolet silverado ev,user,2026-02-07T22:36:46.094779Z,mapped
 2025,Honda,Civic Type R,,FL5G4SGW,2025 Civic Type R,2025 civic type r,user,2026-01-28T15:07:37.130973Z,mapped
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,2025 CLA 250,2025 cla 250,user,2026-01-27T21:07:35.848539Z,mapped
 2025,Jeep,Compass,Latitude,MPJM74/29J,2025 COMPASS LATITUDE 4X4,2025 compass latitude 4x4,user,2026-01-28T15:30:11.480201Z,mapped
