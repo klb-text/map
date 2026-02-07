@@ -1253,6 +1253,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Silverado 1500,Custom,CC10753/1CX,2026 CHEVROLET Silverado 1500 Crew Cab 4WD Custom w/Engine TurboMax,2026 chevrolet silverado 1500 crew cab 4wd custom w engine turbomax,user,2026-02-07T22:43:06.578235Z,mapped
 2026,CHEVROLET,Silverado 2500 HD,,,2026 CHEVROLET Silverado 2500HD excludes High Country,2026 chevrolet silverado 2500hd excludes high country,user,2026-02-07T22:37:02.094050Z,no_data
 2026,CHEVROLET,Silverado 3500 HD,,,2026 CHEVROLET Silverado 3500HD excludes High Country,2026 chevrolet silverado 3500hd excludes high country,user,2026-02-07T22:39:40.994970Z,no_data
+2026,Chevrolet,Trailblazer,LT,1TU56/1LT,2026 CHEVROLET Trailblazer AWD LT,2026 chevrolet trailblazer awd lt,user,2026-02-07T22:43:18.925035Z,mapped
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback FWD Sport Continuously Variable Transmission,2026 civic hatchback fwd sport continuously variable transmission,user,2026-01-28T14:34:45.256230Z,no_data
 2026,Honda,Civic Hatchback Hybrid,,,2026 Civic Hatchback FWD Touring Hybrid Continuously Variable Transmission,2026 civic hatchback fwd touring hybrid continuously variable transmission,user,2026-01-28T14:35:06.216426Z,no_data
