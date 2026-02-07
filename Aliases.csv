@@ -1263,6 +1263,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Silverado EV,Max Range LT,CT35843/4LT,2026 CHEVROLET Silverado EV 4WD LT,2026 chevrolet silverado ev 4wd lt,user,2026-02-07T22:43:48.931255Z,mapped
 2026,Chevrolet,Silverado EV,Standard Range LT,CT35843/2LT,2026 CHEVROLET Silverado EV 4WD LT,2026 chevrolet silverado ev 4wd lt,user,2026-02-07T22:43:48.931255Z,mapped
 2026,Chevrolet,Trailblazer,LT,1TU56/1LT,2026 CHEVROLET Trailblazer AWD LT,2026 chevrolet trailblazer awd lt,user,2026-02-07T22:43:18.925035Z,mapped
+2026,Chevrolet,Trailblazer,LT,1TU56/1LT,2026 CHEVROLET Trailblazer FWD LT,2026 chevrolet trailblazer fwd lt,user,2026-02-07T22:45:34.890327Z,mapped
 2026,Chevrolet,Traverse,FWD LT,1LB56/1LT,2026 CHEVROLET Traverse FWD LT,2026 chevrolet traverse fwd lt,user,2026-02-07T22:44:32.646256Z,mapped
 2026,Chevrolet,Trax,LT,1TU58/1LT,2026 CHEVROLET Trax FWD LT,2026 chevrolet trax fwd lt,user,2026-02-07T22:44:02.052071Z,mapped
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
