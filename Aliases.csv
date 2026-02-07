@@ -479,6 +479,12 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Cadillac,XT6,FWD Luxury,6NV26/1SA,2025 CADILLAC XT6 FWD Luxury,2025 cadillac xt6 fwd luxury,user,2026-01-31T16:21:53.106254Z,mapped
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,2025 CHARGER 2-DOOR DAYTONA R/T AWD,2025 charger 2 door daytona r t awd,user,2026-01-27T18:07:03.659705Z,mapped
 2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,2025 CHARGER 2-DOOR DAYTONA SCAT PACK AWD,2025 charger 2 door daytona scat pack awd,user,2026-01-27T18:07:27.300364Z,mapped
+2025,Chevrolet,Blazer EV,AWD LT,1MC26/4LT,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer EV,AWD RS,1MD26/3RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer EV,AWD SS,1MG26/2SS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer EV,FWD LT,1MC26/2LT,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer EV,FWD RS,1MD26/1RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer EV,RWD RS,1MD26/2RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Honda,Civic Type R,,FL5G4SGW,2025 Civic Type R,2025 civic type r,user,2026-01-28T15:07:37.130973Z,mapped
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,2025 CLA 250,2025 cla 250,user,2026-01-27T21:07:35.848539Z,mapped
 2025,Jeep,Compass,Latitude,MPJM74/29J,2025 COMPASS LATITUDE 4X4,2025 compass latitude 4x4,user,2026-01-28T15:30:11.480201Z,mapped
