@@ -1219,6 +1219,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Porsche,Cayenne,,9YAAI1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Porsche,Cayenne,GTS,9YABS1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Porsche,Cayenne,S,9YABJ1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
+2026,Chevrolet,Blazer EV,AWD LT,1MC26/4LT,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
+2026,Chevrolet,Blazer EV,AWD RS,1MD26/3RS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
+2026,Chevrolet,Blazer EV,AWD SS,1MG26/2SS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
+2026,Chevrolet,Blazer EV,FWD LT,1MC26/2LT,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
+2026,Chevrolet,Blazer EV,FWD RS,1MD26/1RS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback FWD Sport Continuously Variable Transmission,2026 civic hatchback fwd sport continuously variable transmission,user,2026-01-28T14:34:45.256230Z,no_data
 2026,Honda,Civic Hatchback Hybrid,,,2026 Civic Hatchback FWD Touring Hybrid Continuously Variable Transmission,2026 civic hatchback fwd touring hybrid continuously variable transmission,user,2026-01-28T14:35:06.216426Z,no_data
