@@ -1250,6 +1250,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Colorado,4WD ZR2,14H43/4ZR,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
 2026,Chevrolet,Equinox,AWD LT,1PT26/2LT,2026 CHEVROLET Equinox AWD LT,2026 chevrolet equinox awd lt,user,2026-02-07T22:42:50.889961Z,mapped
 2026,Chevrolet,Equinox EV,RS,1MM48/2RS,2026 CHEVROLET Equinox EV RS,2026 chevrolet equinox ev rs,user,2026-02-07T22:39:25.205606Z,mapped
+2026,Chevrolet,Silverado 1500,Custom,CC10753/1CX,2026 CHEVROLET Silverado 1500 Crew Cab 4WD Custom w/Engine TurboMax,2026 chevrolet silverado 1500 crew cab 4wd custom w engine turbomax,user,2026-02-07T22:43:06.578235Z,mapped
 2026,CHEVROLET,Silverado 2500 HD,,,2026 CHEVROLET Silverado 2500HD excludes High Country,2026 chevrolet silverado 2500hd excludes high country,user,2026-02-07T22:37:02.094050Z,no_data
 2026,CHEVROLET,Silverado 3500 HD,,,2026 CHEVROLET Silverado 3500HD excludes High Country,2026 chevrolet silverado 3500hd excludes high country,user,2026-02-07T22:39:40.994970Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
