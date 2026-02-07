@@ -1240,6 +1240,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Colorado,4WD Work Truck,14C43/4WT,2026 CHEVROLET Colorado,2026 chevrolet colorado,user,2026-02-07T22:39:53.299809Z,mapped
 2026,Chevrolet,Colorado,4WD Z71,14G43/4Z7,2026 CHEVROLET Colorado,2026 chevrolet colorado,user,2026-02-07T22:39:53.299809Z,mapped
 2026,Chevrolet,Colorado,4WD ZR2,14H43/4ZR,2026 CHEVROLET Colorado,2026 chevrolet colorado,user,2026-02-07T22:39:53.299809Z,mapped
+2026,Chevrolet,Colorado,4WD LT,14C43/4LT,2026 CHEVROLET Colorado Crew Cab 4WD LT,2026 chevrolet colorado crew cab 4wd lt,user,2026-02-07T22:42:26.423340Z,mapped
 2026,Chevrolet,Colorado,2WD LT,14C43/2LT,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
 2026,Chevrolet,Colorado,2WD Work Truck,14C43/2WT,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
 2026,Chevrolet,Colorado,4WD LT,14C43/4LT,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
