@@ -204,6 +204,12 @@ year,make,model,trim,model_code,source
 2025,Chevrolet,Equinox EV,LT1 w/PCY,1MB48/2LT,user
 2025,Chevrolet,Equinox EV,LT2 w/PDE,1MB48/2LT,user
 2025,Chevrolet,Equinox EV,RS,1MM48/2RS,user
+2025,Chevrolet,Silverado EV,Extended Range LT,CT35843/3LT,user
+2025,Chevrolet,Silverado EV,Extended Range RST,CT35843/2SP,user
+2025,Chevrolet,Silverado EV,Extended Range Work Truck,CT35843/5WT,user
+2025,Chevrolet,Silverado EV,Max Range RST,CT35843/3SP,user
+2025,Chevrolet,Silverado EV,Max Range Work Truck,CT35843/8WT,user
+2025,Chevrolet,Silverado EV,Standard Range Work Truck,CT35843/2WT,user
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,user
 2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,user
 2025,Dodge,Durango,GT,WDDH75/2BD,user
