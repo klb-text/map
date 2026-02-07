@@ -1252,6 +1252,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Equinox,AWD LT,1PT26/2LT,2026 CHEVROLET Equinox AWD LT,2026 chevrolet equinox awd lt,user,2026-02-07T22:42:50.889961Z,mapped
 2026,Chevrolet,Equinox EV,RS,1MM48/2RS,2026 CHEVROLET Equinox EV RS,2026 chevrolet equinox ev rs,user,2026-02-07T22:39:25.205606Z,mapped
 2026,Chevrolet,Silverado 1500,Custom,CC10753/1CX,2026 CHEVROLET Silverado 1500 Crew Cab 4WD Custom w/Engine TurboMax,2026 chevrolet silverado 1500 crew cab 4wd custom w engine turbomax,user,2026-02-07T22:43:06.578235Z,mapped
+2026,Chevrolet,Silverado 1500,LT,CC10753/1LT,2026 CHEVROLET Silverado 1500 Crew Cab 4WD LT w/Engine TurboMax,2026 chevrolet silverado 1500 crew cab 4wd lt w engine turbomax,user,2026-02-07T22:44:22.349840Z,mapped
 2026,CHEVROLET,Silverado 2500 HD,,,2026 CHEVROLET Silverado 2500HD excludes High Country,2026 chevrolet silverado 2500hd excludes high country,user,2026-02-07T22:37:02.094050Z,no_data
 2026,CHEVROLET,Silverado 3500 HD,,,2026 CHEVROLET Silverado 3500HD excludes High Country,2026 chevrolet silverado 3500hd excludes high country,user,2026-02-07T22:39:40.994970Z,no_data
 2026,Chevrolet,Silverado EV,Extended Range LT,CT35843/3LT,2026 CHEVROLET Silverado EV 4WD LT,2026 chevrolet silverado ev 4wd lt,user,2026-02-07T22:43:48.931255Z,mapped
