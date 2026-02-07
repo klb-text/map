@@ -264,14 +264,11 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,FIAT,500e,INSPI(RED),FGEP24/21A,2024 500e INSPI(RED),2024 500e inspi(red),user,2026-01-27T14:27:56.859022Z,mapped
 2024,Subaru,Ascent,,RCA/01,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,Ascent,Limited,RCK/21,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
-2024,Subaru,Ascent,Limited,RCL/21,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,Ascent,Onyx Edition,RCH/22,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,Ascent,Onyx Edition Limited,RCM/31,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,Ascent,Premium,RCB/11,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
-2024,Subaru,Ascent,Premium,RCC/12,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,Ascent,Touring,RCN/41,2024 Ascent (all models),2024 ascent (all models),user,2026-01-30T16:35:30.286306Z,mapped
 2024,Subaru,BRZ,Limited,RZE/11,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
-2024,Subaru,BRZ,Limited,RZF/13,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
 2024,Subaru,BRZ,tS,RZR/21,2024 BRZ (all models),2024 brz (all models),user,2026-01-30T17:08:58.106085Z,mapped
 2024,Subaru,Crosstrek,,RRA/03,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
 2024,Subaru,Crosstrek,Limited,RRF/31,2024 Crosstrek (all models),2024 crosstrek (all models),user,2026-01-30T17:09:29.819185Z,mapped
@@ -344,7 +341,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Subaru,WRX,,RUA/01,2024 WRX (all models),2024 wrx (all models),user,2026-01-30T17:12:20.254634Z,mapped
 2024,Subaru,WRX,GT,RUG/33,2024 WRX (all models),2024 wrx (all models),user,2026-01-30T17:12:20.254634Z,mapped
 2024,Subaru,WRX,Limited,RUE/21,2024 WRX (all models),2024 wrx (all models),user,2026-01-30T17:12:20.254634Z,mapped
-2024,Subaru,WRX,Limited,RUF/23,2024 WRX (all models),2024 wrx (all models),user,2026-01-30T17:12:20.254634Z,mapped
 2024,Subaru,WRX,TR,RUH/41,2024 WRX (all models),2024 wrx (all models),user,2026-01-30T17:12:20.254634Z,mapped
 2024,Acura,ZDX,Type S,3B2H6REW,2024 ZDX,2024 zdx,user,2026-01-27T16:05:37.528010Z,mapped
 2025,Toyota,4Runner i-FORCE MAX,,,2025 4Runner TRD Off-Road i-FORCE MAX,2025 4runner trd off road i force max,user,2026-01-29T12:39:43.065512Z,no_data
@@ -376,12 +372,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Nissan,Armada,SL,26215,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Nissan,Armada,SV,26015,2025 Armada,2025 armada,user,2026-01-29T15:21:49.425903Z,mapped
 2025,Subaru,Ascent,Limited,SCK/32,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
-2025,Subaru,Ascent,Limited,SCL/32,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Limited Bronze Edition,SCM/41,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Onyx Edition,SCH/22,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Onyx Edition Touring,SCP/61,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Premium,SCB/12,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
-2025,Subaru,Ascent,Premium,SCC/12,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Touring,SCN/51,2025 Ascent (all models),2025 ascent (all models),user,2026-01-30T16:23:16.749978Z,mapped
 2025,Subaru,Ascent,Limited,SCL/32,2025 Ascent Limited 7‑Passenger,2025 ascent limited 7‑passenger,user,2026-01-30T15:58:13.228452Z,mapped
 2025,Subaru,Ascent,Limited,SCK/32,2025 Ascent Limited 8‑Passenger,2025 ascent limited 8‑passenger,user,2026-01-30T15:57:46.732957Z,mapped
@@ -452,7 +446,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Audi,SQ7,Premium Plus,4MQSW1,2025 Audi SQ7 quattro,2025 audi sq7 quattro,user,2026-01-27T17:38:50.853799Z,mapped
 2025,Audi,SQ7,Prestige,4MQSW1,2025 Audi SQ7 quattro,2025 audi sq7 quattro,user,2026-01-27T17:38:50.853799Z,mapped
 2025,Subaru,BRZ,Limited,SZE/11,2025 BRZ,2025 brz,user,2026-01-30T16:23:51.400661Z,mapped
-2025,Subaru,BRZ,Limited,SZF/13,2025 BRZ,2025 brz,user,2026-01-30T16:23:51.400661Z,mapped
 2025,Subaru,BRZ,Premium,SZA/01,2025 BRZ,2025 brz,user,2026-01-30T16:23:51.400661Z,mapped
 2025,Subaru,BRZ,Series.Purple,SZG/12,2025 BRZ,2025 brz,user,2026-01-30T16:23:51.400661Z,mapped
 2025,Subaru,BRZ,tS,SZR/21,2025 BRZ,2025 brz,user,2026-01-30T16:23:51.400661Z,mapped
@@ -467,15 +460,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Cadillac,CT4,Premium Luxury,6DC69/1SD,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,CT4,Sport,6DD69/1SE,2025 CADILLAC CT4 excluding V,2025 cadillac ct4 excluding v,user,2026-01-31T16:23:20.531931Z,mapped
 2025,Cadillac,LYRIQ,Luxury,6MB26/1SC,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
-2025,Cadillac,LYRIQ,Luxury,6MB26/1SD,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
-2025,Cadillac,LYRIQ,Luxury,6MB26/1SE,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
 2025,Cadillac,LYRIQ,Sport,6MC26/1SF,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
-2025,Cadillac,LYRIQ,Sport,6MC26/1SJ,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
-2025,Cadillac,LYRIQ,Sport,6MC26/1SK,2025 CADILLAC LYRIQ,2025 cadillac lyriq,user,2026-01-31T16:24:52.541277Z,mapped
 2025,Cadillac,OPTIQ,Luxury,6MP26/1SC,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
-2025,Cadillac,OPTIQ,Luxury,6MP26/1SE,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
 2025,Cadillac,OPTIQ,Sport,6MR26/1SF,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
-2025,Cadillac,OPTIQ,Sport,6MR26/1SH,2025 CADILLAC OPTIQ,2025 cadillac optiq,user,2026-01-31T16:24:34.598055Z,mapped
 2025,Cadillac,XT6,FWD Luxury,6NV26/1SA,2025 CADILLAC XT6 FWD Luxury,2025 cadillac xt6 fwd luxury,user,2026-01-31T16:21:53.106254Z,mapped
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,2025 CHARGER 2-DOOR DAYTONA R/T AWD,2025 charger 2 door daytona r t awd,user,2026-01-27T18:07:03.659705Z,mapped
 2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,2025 CHARGER 2-DOOR DAYTONA SCAT PACK AWD,2025 charger 2 door daytona scat pack awd,user,2026-01-27T18:07:27.300364Z,mapped
@@ -759,28 +746,19 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Acura,Integra,,DE4H2SJW,2025 INTEGRA Exclude Type S,2025 integra exclude type s,user,2026-01-27T16:07:16.286941Z,mapped
 2025,Acura,Integra,Type S,DE5G9SEW,2025 INTEGRA Type S,2025 integra type s,user,2026-01-27T16:08:51.626754Z,mapped
 2025,Hyundai,IONIQ 5,Limited,50462AEZ/01,2025 Ioniq 5 Limited AWD,2025 ioniq 5 limited awd,user,2026-02-06T20:52:54.230421Z,mapped
-2025,Hyundai,IONIQ 5,Limited,51462AEZ/01,2025 Ioniq 5 Limited AWD,2025 ioniq 5 limited awd,user,2026-02-06T20:52:54.230421Z,mapped
 2025,Hyundai,IONIQ 5,Limited,50462REZ/01,2025 Ioniq 5 Limited RWD,2025 ioniq 5 limited rwd,user,2026-02-06T20:51:44.249368Z,mapped
-2025,Hyundai,IONIQ 5,Limited,51462REZ/01,2025 Ioniq 5 Limited RWD,2025 ioniq 5 limited rwd,user,2026-02-06T20:51:44.249368Z,mapped
 2025,Hyundai,IONIQ 5,SEL,51442AEZ/01,2025 Ioniq 5 Limited RWD,2025 ioniq 5 limited rwd,user,2026-02-06T20:51:44.249368Z,mapped
 2025,Hyundai,IONIQ 5 N,,5N4A2AEZ/01,2025 IONIQ 5 N N,2025 ioniq 5 n n,user,2026-01-27T19:03:26.759279Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412AEZ/01,2025 Ioniq 5 SE AWD,2025 ioniq 5 se awd,user,2026-02-06T20:31:12.358676Z,mapped
-2025,Hyundai,IONIQ 5,SE,51412AEZ/01,2025 Ioniq 5 SE AWD,2025 ioniq 5 se awd,user,2026-02-06T20:31:12.358676Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-01-27T15:25:39.100368Z,mapped
 2025,Hyundai,IONIQ 5,SE Standard Range,50402REZ/01,2025 Ioniq 5 SE Standard Range RWD,2025 ioniq 5 se standard range rwd,user,2026-02-06T20:28:32.089694Z,mapped
 2025,Hyundai,IONIQ 5,SEL,50442AEZ/01,2025 Ioniq 5 SEL AWD,2025 ioniq 5 sel awd,user,2026-02-06T20:50:08.672455Z,mapped
-2025,Hyundai,IONIQ 5,SEL,51442AEZ/01,2025 Ioniq 5 SEL AWD,2025 ioniq 5 sel awd,user,2026-02-06T20:50:08.672455Z,mapped
 2025,Hyundai,IONIQ 5,SEL,50442REZ/01,2025 Ioniq 5 SEL RWD,2025 ioniq 5 sel rwd,user,2026-02-06T20:32:17.487562Z,mapped
-2025,Hyundai,IONIQ 5,SEL,51442REZ/01,2025 Ioniq 5 SEL RWD,2025 ioniq 5 sel rwd,user,2026-02-06T20:32:17.487562Z,mapped
 2025,Hyundai,IONIQ 5,XRT,50452AEZ/01,2025 Ioniq 5 XRT AWD,2025 ioniq 5 xrt awd,user,2026-02-06T20:54:25.298684Z,mapped
-2025,Hyundai,IONIQ 5,XRT,504C2AEZ/01,2025 Ioniq 5 XRT AWD,2025 ioniq 5 xrt awd,user,2026-02-06T20:54:25.298684Z,mapped
-2025,Hyundai,IONIQ 5,XRT,51452AEZ/01,2025 Ioniq 5 XRT AWD,2025 ioniq 5 xrt awd,user,2026-02-06T20:54:25.298684Z,mapped
-2025,Hyundai,IONIQ 5,XRT,514C2AEZ/01,2025 Ioniq 5 XRT AWD,2025 ioniq 5 xrt awd,user,2026-02-06T20:54:25.298684Z,mapped
 2025,Hyundai,IONIQ 6,Limited,A0462REZ/01,2025 Ioniq 6 Limited AWD,2025 ioniq 6 limited awd,user,2026-02-06T21:18:15.136056Z,mapped
 2025,Hyundai,IONIQ 6,Limited,A0462REZ/01,2025 Ioniq 6 Limited RWD,2025 ioniq 6 limited rwd,user,2026-02-06T21:17:21.089947Z,mapped
 2025,Hyundai,IONIQ 6,SE,A0412AEZ/01,2025 Ioniq 6 SE AWD,2025 ioniq 6 se awd,user,2026-02-06T21:13:33.781408Z,mapped
 2025,Hyundai,IONIQ 6,SE,A0412AEZ/01,2025 Ioniq 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-06T21:08:45.371944Z,mapped
-2025,Hyundai,IONIQ 6,SE,A0412REZ/01,2025 Ioniq 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-06T21:08:45.371944Z,mapped
 2025,Hyundai,IONIQ 6,SE Standard Range,A0492REZ/01,2025 Ioniq 6 SE Standard Range RWD,2025 ioniq 6 se standard range rwd,user,2026-02-06T21:07:05.774068Z,mapped
 2025,Hyundai,IONIQ 6,SEL,A0442AEZ/01,2025 Ioniq 6 SEL AWD,2025 ioniq 6 sel awd,user,2026-02-06T21:16:06.386958Z,mapped
 2025,Hyundai,IONIQ 6,SEL,A0442REZ/01,2025 Ioniq 6 SEL RWD,2025 ioniq 6 sel rwd,user,2026-02-06T21:14:40.969220Z,mapped
@@ -1080,12 +1058,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Tucson,XRT,85442F4S/01,2025 Tucson XRT FWD,2025 tucson xrt fwd,user,2026-02-05T17:40:23.323455Z,mapped
 2025,Toyota,Tundra i-FORCE MAX,,,2025 Tundra Limited i-FORCE MAX,2025 tundra limited i force max,user,2026-01-29T12:29:17.854039Z,no_data
 2025,Toyota,Tundra,SR5,8241,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:03.736329Z,mapped
-2025,Toyota,Tundra,SR5,8261,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
-2025,Toyota,Tundra,SR5,8281,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
-2025,Toyota,Tundra,SR5,8341,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
-2025,Toyota,Tundra,SR5,8346,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
-2025,Toyota,Tundra,SR5,8361/OF,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
-2025,Toyota,Tundra,SR5,8381/OF,2025 Tundra SR5,2025 tundra sr5,user,2026-01-30T17:14:24.860611Z,mapped
 2025,Lexus,UXh,,,2025 UX 300h,2025 ux 300h,user,2026-01-29T13:24:33.153588Z,no_data
 2025,Lexus,UXh,,,2025 UX 300h PREMIUM AWD,2025 ux 300h premium awd,user,2026-01-29T22:15:04.739659Z,no_data
 2025,Nissan,Versa Sedan,,,2025 Versa Sedan,2025 versa sedan,user,2026-01-29T15:29:29.559654Z,no_data
@@ -1112,7 +1084,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Jeep,Wrangler,Willys,JLJL74/23B,2025 WRANGLER 4-DOOR WILLYS,2025 wrangler 4 door willys,user,2026-01-28T16:45:46.894016Z,mapped
 2025,Subaru,WRX,GT,SUG/33,2025 WRX (all models),2025 wrx (all models),user,2026-01-30T16:32:49.967692Z,mapped
 2025,Subaru,WRX,Limited,SUE/21,2025 WRX (all models),2025 wrx (all models),user,2026-01-30T16:32:49.967692Z,mapped
-2025,Subaru,WRX,Limited,SUF/23,2025 WRX (all models),2025 wrx (all models),user,2026-01-30T16:32:49.967692Z,mapped
 2025,Subaru,WRX,tS,SUH/41,2025 WRX (all models),2025 wrx (all models),user,2026-01-30T16:32:49.967692Z,mapped
 2025,Subaru,WRX,GT,SUG/33,2025 WRX GT,2025 wrx gt,user,2026-01-30T16:13:39.880360Z,mapped
 2025,Subaru,WRX,Limited,SUE/21,2025 WRX Limited,2025 wrx limited,user,2026-01-30T16:13:09.605878Z,mapped
@@ -1224,6 +1195,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Blazer EV,AWD SS,1MG26/2SS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
 2026,Chevrolet,Blazer EV,FWD LT,1MC26/2LT,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
 2026,Chevrolet,Blazer EV,FWD RS,1MD26/1RS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
+2026,CHEVROLET,Silverado 2500 HD,,,2026 CHEVROLET Silverado 2500HD excludes High Country,2026 chevrolet silverado 2500hd excludes high country,user,2026-02-07T22:37:02.094050Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback FWD Sport Continuously Variable Transmission,2026 civic hatchback fwd sport continuously variable transmission,user,2026-01-28T14:34:45.256230Z,no_data
 2026,Honda,Civic Hatchback Hybrid,,,2026 Civic Hatchback FWD Touring Hybrid Continuously Variable Transmission,2026 civic hatchback fwd touring hybrid continuously variable transmission,user,2026-01-28T14:35:06.216426Z,no_data
@@ -1241,7 +1213,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Jeep,Compass,Limited Altitude,MPJP74/29G,2026 COMPASS LIMITED ALTITUDE 4X4,2026 compass limited altitude 4x4,user,2026-01-28T15:33:42.680569Z,mapped
 2026,Jeep,Compass,Trailhawk,MPJH74/29E,2026 COMPASS TRAILHAWK® 4X4,2026 compass trailhawk® 4x4,user,2026-01-28T15:33:15.600860Z,mapped
 2026,Toyota,Corolla Cross,LE,6303,2026 Corolla Cross LE,2026 corolla cross le,user,2026-01-30T17:16:42.347964Z,mapped
-2026,Toyota,Corolla Cross,LE,6304,2026 Corolla Cross LE,2026 corolla cross le,user,2026-01-30T17:16:42.347964Z,mapped
 2026,Toyota,Corolla Hatchback,,,2026 Corolla Hatchback SE,2026 corolla hatchback se,user,2026-01-29T12:36:46.783881Z,no_data
 2026,Honda,CR-V,EX,RS3H4TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
 2026,Honda,CR-V,EX-L,RS3H7TJW,2026 CR-V,2026 cr v,user,2026-01-28T15:04:30.779443Z,mapped
@@ -1473,7 +1444,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,IONIQ 5,SE,51412REZ/01,2026 IONIQ 5 RWD SE,2026 ioniq 5 rwd se,user,2026-02-06T19:54:26.793522Z,mapped
 2026,Hyundai,IONIQ 5,SEL,51442REZ/01,2026 IONIQ 5 RWD SEL,2026 ioniq 5 rwd sel,user,2026-02-06T19:56:28.929336Z,mapped
 2026,Hyundai,IONIQ 5,SE,51412AEZ/01,2026 IONIQ 5 SE RWD,2026 ioniq 5 se rwd,user,2026-02-06T20:55:04.789880Z,mapped
-2026,Hyundai,IONIQ 5,SE,51412REZ/01,2026 IONIQ 5 SE RWD,2026 ioniq 5 se rwd,user,2026-01-27T15:26:06.098511Z,mapped
 2026,Hyundai,IONIQ 5,SE Standard Range,51402REZ/01,2026 IONIQ 5 SE STANDARD RANGE,2026 ioniq 5 se standard range,user,2026-02-06T19:53:33.837690Z,mapped
 2026,Hyundai,IONIQ 5,SEL,51442REZ/01,2026 IONIQ 5 SEL RWD,2026 ioniq 5 sel rwd,user,2026-01-27T15:27:03.301600Z,mapped
 2026,Hyundai,IONIQ 9,S,74412REZ/01,2026 Ioniq 9 S RWD,2026 ioniq 9 s rwd,user,2026-02-06T20:56:19.987736Z,mapped
@@ -1725,9 +1695,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE 2.5T FWD,2026 santa fe se 2.5t fwd,user,2026-01-30T20:49:01.605526Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE AWD,2026 santa fe se awd,user,2026-01-30T20:49:58.351348Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
-2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-30T18:47:52.854565Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432AT5/01,2026 SANTA FE SEL 2.5T AWD,2026 santa fe sel 2.5t awd,user,2026-01-30T18:41:43.153106Z,mapped
-2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T AWD,2026 santa fe sel 2.5t awd,user,2026-01-30T18:41:43.153106Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432AT5/01,2026 SANTA FE SEL AWD,2026 santa fe sel awd,user,2026-01-30T20:57:46.365130Z,mapped
@@ -1807,7 +1775,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Tucson Hybrid,SEL Convenience,854D2ABS/01,2026 TUCSON HYBRID SEL CONVENIENCE AWD,2026 tucson hybrid sel convenience awd,user,2026-02-05T17:54:16.752444Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED AWD,2026 tucson limited awd,user,2026-01-30T22:04:13.070075Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED FWD,2026 tucson limited fwd,user,2026-01-30T22:00:28.765517Z,mapped
-2026,Hyundai,Tucson,Limited,85472F4S/01,2026 TUCSON LIMITED FWD,2026 tucson limited fwd,user,2026-02-05T17:50:53.154039Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
 2026,Hyundai,Tucson,SE,85402A4S/01,2026 TUCSON SE AWD,2026 tucson se awd,user,2026-01-30T21:19:56.633961Z,mapped
@@ -1819,12 +1786,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Tucson,XRT,85442F4S/01,2026 TUCSON XRT FWD,2026 tucson xrt fwd,user,2026-01-30T21:51:13.380674Z,mapped
 2026,Toyota,Tundra i-FORCE MAX,,,2026 Tundra Limited i-FORCE MAX,2026 tundra limited i force max,user,2026-01-29T12:28:21.978044Z,no_data
 2026,Toyota,Tundra,SR5,8241,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
-2026,Toyota,Tundra,SR5,8261,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
-2026,Toyota,Tundra,SR5,8281,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
-2026,Toyota,Tundra,SR5,8341,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
-2026,Toyota,Tundra,SR5,8346,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
-2026,Toyota,Tundra,SR5,8361/OF,2026 Tundra SR5,2026 tundra sr5,user,2026-01-29T12:38:46.229014Z,mapped
-2026,Toyota,Tundra,SR5,8381/OF,2026 Tundra SR5,2026 tundra sr5,user,2026-01-30T17:15:01.303350Z,mapped
 2026,Lexus,TX,,,2026 TX 350,2026 tx 350,user,2026-01-28T18:00:27.113291Z,no_data
 2026,Lexus,TXh,,,2026 TX 500h F SPORT PERFORMANCE PREMIUM AWD,2026 tx 500h f sport performance premium awd,user,2026-01-28T18:00:39.887270Z,no_data
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Plus,2026 v60 b5 awd cross country plus,user,2026-01-27T15:12:37.837191Z,no_data
