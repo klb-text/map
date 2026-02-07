@@ -1212,6 +1212,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Chevrolet,Colorado,4WD Work Truck,14C43/4WT,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
 2026,Chevrolet,Colorado,4WD Z71,14G43/4Z7,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
 2026,Chevrolet,Colorado,4WD ZR2,14H43/4ZR,2026 CHEVROLET Colorado excludes Trail Boss/ZR2,2026 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:39:13.494158Z,mapped
+2026,Chevrolet,Equinox EV,RS,1MM48/2RS,2026 CHEVROLET Equinox EV RS,2026 chevrolet equinox ev rs,user,2026-02-07T22:39:25.205606Z,mapped
 2026,CHEVROLET,Silverado 2500 HD,,,2026 CHEVROLET Silverado 2500HD excludes High Country,2026 chevrolet silverado 2500hd excludes high country,user,2026-02-07T22:37:02.094050Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback,2026 civic hatchback,user,2026-01-28T15:02:24.282244Z,no_data
 2026,Honda,Civic Hatchback,,,2026 Civic Hatchback FWD Sport Continuously Variable Transmission,2026 civic hatchback fwd sport continuously variable transmission,user,2026-01-28T14:34:45.256230Z,no_data
