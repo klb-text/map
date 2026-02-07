@@ -480,6 +480,13 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Chevrolet,Blazer EV,FWD LT,1MC26/2LT,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,FWD RS,1MD26/1RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,RWD RS,1MD26/2RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Colorado,2WD LT,14C43/2WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,2WD Work Truck,14C43/2WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,4WD LT,14C43/4WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,4WD Trail Boss,14E43/0TR,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,4WD Work Truck,14C43/4WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,4WD Z71,14G43/4Z7,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
+2025,Chevrolet,Colorado,4WD ZR2,14H43/4ZR,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
 2025,Chevrolet,Colorado,2WD LT,14C43/2WT,2025 CHEVROLET Colorado excludes Trail Boss/ZR2,2025 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:38:54.013933Z,mapped
 2025,Chevrolet,Colorado,2WD Work Truck,14C43/2WT,2025 CHEVROLET Colorado excludes Trail Boss/ZR2,2025 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:38:54.013933Z,mapped
 2025,Chevrolet,Colorado,4WD LT,14C43/4WT,2025 CHEVROLET Colorado excludes Trail Boss/ZR2,2025 chevrolet colorado excludes trail boss zr2,user,2026-02-07T22:38:54.013933Z,mapped
