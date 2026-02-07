@@ -516,6 +516,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Chevrolet,Silverado EV,Extended Range LT,CT35843/3LT,2025 CHEVROLET Silverado EV Crew Cab 4WD LT,2025 chevrolet silverado ev crew cab 4wd lt,user,2026-02-07T22:45:00.747010Z,mapped
 2025,Chevrolet,Tahoe,High Country,CC10706/3LZ,2025 CHEVROLET Tahoe 1LZ/3LZ excludes Sunroof power,2025 chevrolet tahoe 1lz 3lz excludes sunroof power,user,2026-02-07T22:38:32.827069Z,mapped
 2025,Chevrolet,Tahoe,Premier,CC10706/1LZ,2025 CHEVROLET Tahoe 1LZ/3LZ excludes Sunroof power,2025 chevrolet tahoe 1lz 3lz excludes sunroof power,user,2026-02-07T22:38:32.827069Z,mapped
+2025,Chevrolet,Tahoe,LT,CC10706/1LT,2025 CHEVROLET Tahoe 4WD LT,2025 chevrolet tahoe 4wd lt,user,2026-02-07T22:45:16.223805Z,mapped
 2025,Honda,Civic Type R,,FL5G4SGW,2025 Civic Type R,2025 civic type r,user,2026-01-28T15:07:37.130973Z,mapped
 2025,Mercedes-Benz,CLA 250,CLA 250,CLA250C4,2025 CLA 250,2025 cla 250,user,2026-01-27T21:07:35.848539Z,mapped
 2025,Jeep,Compass,Latitude,MPJM74/29J,2025 COMPASS LATITUDE 4X4,2025 compass latitude 4x4,user,2026-01-28T15:30:11.480201Z,mapped
