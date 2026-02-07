@@ -480,6 +480,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Chevrolet,Blazer EV,FWD LT,1MC26/2LT,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,FWD RS,1MD26/1RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,RWD RS,1MD26/2RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
+2025,Chevrolet,Blazer,LT,1NK26/2LT,2025 CHEVROLET Blazer FWD LT,2025 chevrolet blazer fwd lt,user,2026-02-07T22:44:12.830249Z,mapped
 2025,Chevrolet,Colorado,2WD LT,14C43/2WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
 2025,Chevrolet,Colorado,2WD Work Truck,14C43/2WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
 2025,Chevrolet,Colorado,4WD LT,14C43/4WT,2025 CHEVROLET Colorado,2025 chevrolet colorado,user,2026-02-07T22:41:40.709269Z,mapped
