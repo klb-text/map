@@ -1091,6 +1091,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Tucson,Limited,85472F4S/01,2025 Tucson Limited FWD,2025 tucson limited fwd,user,2026-02-05T17:45:26.142739Z,mapped
 2025,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2025 TUCSON Plug-in Hybrid LIMITED,2025 tucson plug in hybrid limited,user,2026-01-27T18:59:16.592000Z,mapped
 2025,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2025 TUCSON Plug-in Hybrid SEL,2025 tucson plug in hybrid sel,user,2026-01-27T18:58:59.464135Z,mapped
+2025,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2025 Tucson Plug-in Hybrid SEL AWD,2025 tucson plug in hybrid sel awd,user,2026-02-09T17:59:13.676228Z,mapped
 2025,Hyundai,Tucson,SE,85402A4S/01,2025 Tucson SE AWD,2025 tucson se awd,user,2026-02-02T14:46:19.441490Z,mapped
 2025,Hyundai,Tucson,SE,85402F4S/01,2025 Tucson SE FWD,2025 tucson se fwd,user,2026-02-02T14:44:37.549789Z,mapped
 2025,Hyundai,Tucson,SEL,85432A4S/01,2025 Tucson SEL AWD,2025 tucson sel awd,user,2026-02-02T14:48:22.778206Z,mapped
