@@ -818,6 +818,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Kona Electric,Limited,Q14G2FEZ/01,2025 KONA Electric LIMITED,2025 kona electric limited,user,2026-01-27T18:57:26.733442Z,mapped
 2025,Hyundai,Kona Electric,N Line,Q14F2FEZ/01,2025 KONA Electric N LINE,2025 kona electric n line,user,2026-01-27T18:57:10.412914Z,mapped
 2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 KONA Electric SE,2025 kona electric se,user,2026-01-27T18:56:22.934323Z,mapped
+2025,Hyundai,Kona Electric,SE,Q14A2FEZ/01,2025 Kona Electric SE FWD,2025 kona electric se fwd,user,2026-02-09T17:48:10.106090Z,mapped
 2025,Nissan,LEAF,S,17015,2025 LEAF,2025 leaf,user,2026-01-29T15:30:00.916444Z,mapped
 2025,Nissan,LEAF,SV PLUS,17115,2025 LEAF,2025 leaf,user,2026-01-29T15:30:00.916444Z,mapped
 2025,Subaru,Legacy,,SAB/02,2025 Legacy (all models),2025 legacy (all models),user,2026-01-30T16:28:39.585261Z,mapped
