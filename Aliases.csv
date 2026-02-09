@@ -1703,6 +1703,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-01-27T19:08:39.431294Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM FWD,2026 palisade sel premium fwd,user,2026-01-27T19:08:30.988058Z,mapped
 2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO,2026 palisade xrt pro,user,2026-01-27T19:09:16.185767Z,mapped
+2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO AWD,2026 palisade xrt pro awd,user,2026-02-09T20:34:59.364408Z,mapped
 2026,Porsche,Panamera,,YAAAA1,2026 Panamera,2026 panamera,user,2026-01-29T15:31:09.395734Z,mapped
 2026,Porsche,Panamera,4,YAABA1,2026 Panamera,2026 panamera,user,2026-01-29T15:31:09.395734Z,mapped
 2026,Porsche,Panamera,GTS,YAADG1,2026 Panamera,2026 panamera,user,2026-01-29T15:31:09.395734Z,mapped
