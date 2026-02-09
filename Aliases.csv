@@ -1519,6 +1519,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,IONIQ 5,SE Standard Range,51402REZ/01,2026 IONIQ 5 SE STANDARD RANGE,2026 ioniq 5 se standard range,user,2026-02-06T19:53:33.837690Z,mapped
 2026,Hyundai,IONIQ 5,SEL,51442REZ/01,2026 IONIQ 5 SEL RWD,2026 ioniq 5 sel rwd,user,2026-01-27T15:27:03.301600Z,mapped
 2026,Hyundai,IONIQ 9,Performance Calligraphy,74492AEZ/01,2026 Ioniq 9 Calligraphy AWD,2026 ioniq 9 calligraphy awd,user,2026-02-09T17:46:03.382917Z,mapped
+2026,Hyundai,IONIQ 9,Performance Calligraphy Design,744A2AEZ/01,2026 Ioniq 9 Calligraphy Design AWD,2026 ioniq 9 calligraphy design awd,user,2026-02-09T17:47:11.577600Z,mapped
 2026,Hyundai,IONIQ 9,Performance Limited,74472AEZ/01,2026 Ioniq 9 Limited AWD,2026 ioniq 9 limited awd,user,2026-02-09T17:44:50.009142Z,mapped
 2026,Hyundai,IONIQ 9,S,74412REZ/01,2026 Ioniq 9 S RWD,2026 ioniq 9 s rwd,user,2026-02-06T20:56:19.987736Z,mapped
 2026,Hyundai,IONIQ 9,SE,74432AEZ/01,2026 Ioniq 9 SE AWD,2026 ioniq 9 se awd,user,2026-02-06T20:57:13.305380Z,mapped
