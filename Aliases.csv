@@ -1563,6 +1563,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Hyundai,Kona,Limited,Q1492FT5/01,2026 KONA LIMITED FWD,2026 kona limited fwd,user,2026-02-09T21:37:03.970537Z,mapped
 2026,Hyundai,Kona,SE,Q1402A45/01,2026 KONA SE AWD,2026 kona se awd,user,2026-02-09T21:29:19.706025Z,mapped
 2026,Hyundai,Kona,SE,Q1402F45/01,2026 KONA SE FWD,2026 kona se fwd,user,2026-02-09T21:28:12.940823Z,mapped
 2026,Hyundai,Kona,SEL Premium,Q1422AT5/01,2026 KONA SEL PREMIUM AWD,2026 kona sel premium awd,user,2026-02-09T21:35:50.758619Z,mapped
