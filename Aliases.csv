@@ -564,6 +564,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Mitsubishi,Eclipse Cross,SE,EC45-J/E52,2025 Eclipse Cross (SE/SEL/Black Edition),2025 eclipse cross (se sel black edition),user,2026-01-28T13:56:45.523347Z,mapped
 2025,Mitsubishi,Eclipse Cross,SEL,EC45-N/E54,2025 Eclipse Cross (SE/SEL/Black Edition),2025 eclipse cross (se sel black edition),user,2026-01-28T13:56:45.523347Z,mapped
 2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 ELANTRA LIMITED,2025 elantra limited,user,2026-01-27T19:05:20.862277Z,mapped
+2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 Elantra Limited FWD,2025 elantra limited fwd,user,2026-02-09T18:33:33.340686Z,mapped
 2025,Hyundai,Elantra,N Line,49452FT5/01,2025 ELANTRA N LINE,2025 elantra n line,user,2026-01-27T19:05:34.365712Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
