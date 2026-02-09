@@ -1563,6 +1563,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Nissan,Kicks,S,21016,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SR,21416,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
 2026,Nissan,Kicks,SV,21216,2026 Kicks,2026 kicks,user,2026-01-29T15:07:53.343685Z,mapped
+2026,Hyundai,Kona,SE,Q1402A45/01,2026 KONA SE AWD,2026 kona se awd,user,2026-02-09T21:29:19.706025Z,mapped
 2026,Hyundai,Kona,SE,Q1402F45/01,2026 KONA SE FWD,2026 kona se fwd,user,2026-02-09T21:28:12.940823Z,mapped
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
