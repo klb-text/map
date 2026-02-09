@@ -566,6 +566,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 ELANTRA LIMITED,2025 elantra limited,user,2026-01-27T19:05:20.862277Z,mapped
 2025,Hyundai,Elantra,Limited,494J2F4S/01,2025 Elantra Limited FWD,2025 elantra limited fwd,user,2026-02-09T18:33:33.340686Z,mapped
 2025,Hyundai,Elantra,N Line,49452FT5/01,2025 ELANTRA N LINE,2025 elantra n line,user,2026-01-27T19:05:34.365712Z,mapped
+2025,Hyundai,Elantra,N Line,49452FT5/01,2025 Elantra N Line FWD,2025 elantra n line fwd,user,2026-02-09T18:39:54.615151Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 Elantra SE FWD,2025 elantra se fwd,user,2026-02-09T18:30:04.552247Z,mapped
