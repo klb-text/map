@@ -1545,6 +1545,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,IONIQ 9,Performance Limited,74472AEZ/01,2026 Ioniq 9 Limited AWD,2026 ioniq 9 limited awd,user,2026-02-09T17:44:50.009142Z,mapped
 2026,Hyundai,IONIQ 9,S,74412REZ/01,2026 Ioniq 9 S RWD,2026 ioniq 9 s rwd,user,2026-02-06T20:56:19.987736Z,mapped
 2026,Hyundai,IONIQ 9,SE,74432AEZ/01,2026 Ioniq 9 SE AWD,2026 ioniq 9 se awd,user,2026-02-06T20:57:13.305380Z,mapped
+2026,Hyundai,IONIQ 9,SEL,74452AEZ/01,2026 IONIQ 9 SEL,2026 ioniq 9 sel,user,2026-02-10T20:46:38.070758Z,mapped
 2026,Hyundai,IONIQ 9,SEL,74452AEZ/01,2026 Ioniq 9 SEL AWD,2026 ioniq 9 sel awd,user,2026-02-06T20:58:47.310268Z,mapped
 2026,Jaguar,F-PACE,R-Dynamic S,HD761/352MC,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
 2026,Jaguar,F-PACE,SVR 575 Edition,HO761/352XK,2026 Jaguar F-PACE,2026 jaguar f pace,user,2026-01-28T15:27:05.088721Z,mapped
