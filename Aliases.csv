@@ -1790,6 +1790,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Lexus,RZ,,,2026 RZ 450e PREMIUM AWD,2026 rz 450e premium awd,user,2026-01-29T13:24:16.301953Z,no_data
 2026,Hyundai,Santa Cruz,Limited,90472AT5/01,2026 SANTA CRUZ LIMITED,2026 santa cruz limited,user,2026-02-10T16:48:51.249369Z,mapped
 2026,Hyundai,Santa Cruz,SE,90402A45/01,2026 SANTA CRUZ SE AWD,2026 santa cruz se awd,user,2026-02-10T20:41:44.195254Z,mapped
+2026,Hyundai,Santa Cruz,SE,90402F45/01,2026 SANTA CRUZ SE FWD,2026 santa cruz se fwd,user,2026-02-10T20:41:53.562695Z,mapped
 2026,Hyundai,Santa Cruz,SEL Activity,90492A45/01,2026 SANTA CRUZ SEL ACTIVITY AWD,2026 santa cruz sel activity awd,user,2026-02-10T16:49:13.402954Z,mapped
 2026,Hyundai,Santa Cruz,SEL Activity,90492F45/01,2026 SANTA CRUZ SEL ACTIVITY FWD,2026 santa cruz sel activity fwd,user,2026-02-10T16:49:23.696198Z,mapped
 2026,Hyundai,Santa Cruz,SEL,90432F45/01,2026 SANTA CRUZ SEL FWD,2026 santa cruz sel fwd,user,2026-02-10T20:41:20.084473Z,mapped
