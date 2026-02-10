@@ -1887,6 +1887,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Plus,2026 v60 b5 awd cross country plus,user,2026-01-27T15:12:37.837191Z,no_data
 2026,Volvo,B5 Cross Country,,,2026 V60 B5 AWD Cross Country Ultra,2026 v60 b5 awd cross country ultra,user,2026-01-27T15:13:06.198234Z,no_data
 2026,Volvo,B6 Cross Country,,,2026 V90 B6 AWD Cross Country Ultra,2026 v90 b6 awd cross country ultra,user,2026-01-27T15:13:18.289446Z,no_data
+2026,Hyundai,Venue,SE,30402F45/01,2026 VENUE SE,2026 venue se,user,2026-02-10T16:46:39.437907Z,mapped
 2026,Hyundai,Venue,SEL,30422F45/01,2026 VENUE SEL,2026 venue sel,user,2026-02-10T16:46:05.749939Z,mapped
 2026,Hyundai,Venue,SEL,30452F45/01,2026 VENUE SEL W/ 2-TONE ROOF,2026 venue sel w 2 tone roof,user,2026-02-10T16:46:24.497699Z,mapped
 2026,Chrysler,Voyager,LX,RUCL53/27E,2026 VOYAGER LX,2026 voyager lx,user,2026-01-27T17:51:35.264338Z,mapped
