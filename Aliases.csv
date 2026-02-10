@@ -1826,6 +1826,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid CALLIGRAPHY FWD,2026 santa fe hybrid calligraphy fwd,user,2026-02-10T20:58:40.392946Z,no_data
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid LIMITED AWD,2026 santa fe hybrid limited awd,user,2026-02-10T20:58:46.819663Z,no_data
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid LIMITED FWD,2026 santa fe hybrid limited fwd,user,2026-02-10T20:58:52.546636Z,no_data
+2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid SEL AWD,2026 santa fe hybrid sel awd,user,2026-02-10T20:58:59.676210Z,no_data
 2026,Hyundai,Santa Fe,Limited,65492AT5/01,2026 SANTA FE LIMITED 2.5T AWD,2026 santa fe limited 2.5t awd,user,2026-01-30T18:45:24.880319Z,mapped
 2026,Hyundai,Santa Fe,Limited,65492FT5/01,2026 SANTA FE LIMITED 2.5T FWD,2026 santa fe limited 2.5t fwd,user,2026-01-30T18:44:19.166261Z,mapped
 2026,Hyundai,Santa Fe,Limited,65492FT5/01,2026 SANTA FE LIMITED FWD,2026 santa fe limited fwd,user,2026-01-30T18:54:28.608781Z,mapped
