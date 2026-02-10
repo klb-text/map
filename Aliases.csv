@@ -1841,6 +1841,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE 2.5T FWD,2026 santa fe se 2.5t fwd,user,2026-01-30T20:49:01.605526Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE AWD,2026 santa fe se awd,user,2026-01-30T20:49:58.351348Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-01-29T21:24:28.174600Z,mapped
+2026,Hyundai,Santa Fe,SE,65402FT5/01,2026 SANTA FE SE FWD,2026 santa fe se fwd,user,2026-02-10T21:03:26.658488Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432AT5/01,2026 SANTA FE SEL 2.5T AWD,2026 santa fe sel 2.5t awd,user,2026-01-30T18:41:43.153106Z,mapped
 2026,Hyundai,Santa Fe,SE,65402AT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
 2026,Hyundai,Santa Fe,SEL,65432FT5/01,2026 SANTA FE SEL 2.5T FWD,2026 santa fe sel 2.5t fwd,user,2026-01-29T21:32:44.950029Z,mapped
