@@ -1046,6 +1046,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Sonata,SE,29412F4S/01,2025 SONATA SE,2025 sonata se,user,2026-01-27T19:17:27.281116Z,mapped
 2025,Hyundai,Sonata,SEL,29442A4S/01,2025 SONATA SEL AWD,2025 sonata sel awd,user,2026-01-27T19:13:48.147229Z,mapped
 2025,Hyundai,Sonata,SEL Convenience,29452F4S/01,2025 SONATA SEL CONVENIENCE,2025 sonata sel convenience,user,2026-01-27T19:13:35.645832Z,mapped
+2025,Hyundai,Sonata,SEL Convenience,29452F4S/01,2025 Sonata SEL Convenience FWD,2025 sonata sel convenience fwd,user,2026-02-10T21:04:50.889132Z,mapped
 2025,Hyundai,Sonata,SEL,29442F4S/01,2025 SONATA SEL FWD,2025 sonata sel fwd,user,2026-01-27T19:14:01.742189Z,mapped
 2025,Kia,Sorento,EX,76252,2025 Sorento,2025 sorento,user,2026-01-29T22:02:53.261076Z,mapped
 2025,Kia,Sorento,LX,73222,2025 Sorento,2025 sorento,user,2026-01-29T22:02:53.261076Z,mapped
