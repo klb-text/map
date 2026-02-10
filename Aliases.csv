@@ -1040,6 +1040,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Subaru,Solterra,Premium,SED/11,2025 Solterra (all models),2025 solterra (all models),user,2026-01-30T16:31:32.017722Z,mapped
 2025,Subaru,Solterra,Touring,SEJ/41,2025 Solterra (all models),2025 solterra (all models),user,2026-01-30T16:31:32.017722Z,mapped
 2025,Subaru,Solterra,Touring Onyx Edition,SEK/51,2025 Solterra (all models),2025 solterra (all models),user,2026-01-30T16:31:32.017722Z,mapped
+2025,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2025 Sonata Hybrid Limited Hybrid FWD,2025 sonata hybrid limited hybrid fwd,user,2026-02-10T21:05:44.730975Z,mapped
 2025,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2025 SONATA LIMITED HYBRID,2025 sonata limited hybrid,user,2026-01-27T19:15:26.623404Z,mapped
 2025,Hyundai,Sonata,N Line,29472FT5/01,2025 SONATA N LINE,2025 sonata n line,user,2026-01-27T19:13:26.210138Z,mapped
 2025,Hyundai,Sonata,N Line,29472FT5/01,2025 Sonata N Line FWD,2025 sonata n line fwd,user,2026-02-10T21:04:39.645037Z,mapped
