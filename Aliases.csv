@@ -1132,6 +1132,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,UXh,,,2025 UX 300h,2025 ux 300h,user,2026-01-29T13:24:33.153588Z,no_data
 2025,Lexus,UXh,,,2025 UX 300h PREMIUM AWD,2025 ux 300h premium awd,user,2026-01-29T22:15:04.739659Z,no_data
 2025,Hyundai,Venue,Limited,30442F45/01,2025 VENUE LIMITED,2025 venue limited,user,2026-02-10T16:44:31.958182Z,mapped
+2025,Hyundai,Venue,Limited,30442F45/01,2025 Venue Limited FWD,2025 venue limited fwd,user,2026-02-10T21:07:36.768315Z,mapped
 2025,Hyundai,Venue,SE,30402F45/01,2025 VENUE SE,2025 venue se,user,2026-02-10T16:45:06.182051Z,mapped
 2025,Hyundai,Venue,SEL,30422F45/01,2025 VENUE SEL,2025 venue sel,user,2026-02-10T16:44:47.627730Z,mapped
 2025,Nissan,Versa Sedan,,,2025 Versa Sedan,2025 versa sedan,user,2026-01-29T15:29:29.559654Z,no_data
