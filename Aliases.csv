@@ -467,13 +467,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Dodge,Charger Daytona,R/T,LB7M29/25M,2025 CHARGER 2-DOOR DAYTONA R/T AWD,2025 charger 2 door daytona r t awd,user,2026-01-27T18:07:03.659705Z,mapped
 2025,Dodge,Charger Daytona,Scat Pack,LB7S29/25S,2025 CHARGER 2-DOOR DAYTONA SCAT PACK AWD,2025 charger 2 door daytona scat pack awd,user,2026-01-27T18:07:27.300364Z,mapped
 2025,Chevrolet,Blazer,LT,1NK26/2LT,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
-2025,Chevrolet,Blazer,LT,1NK26/3LT,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
-2025,Chevrolet,Blazer,LT,1NR26/2LT,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
-2025,Chevrolet,Blazer,LT,1NR26/3LT,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
 2025,Chevrolet,Blazer,Premier,1NM26/0HD,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
-2025,Chevrolet,Blazer,Premier,1NT26/0HD,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
 2025,Chevrolet,Blazer,RS,1NL26/1RS,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
-2025,Chevrolet,Blazer,RS,1NS26/1RS,2025 CHEVROLET Blazer,2025 chevrolet blazer,user,2026-02-07T22:41:04.426847Z,mapped
 2025,Chevrolet,Blazer EV,AWD LT,1MC26/4LT,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,AWD RS,1MD26/3RS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
 2025,Chevrolet,Blazer EV,AWD SS,1MG26/2SS,2025 CHEVROLET Blazer EV,2025 chevrolet blazer ev,user,2026-02-07T22:36:18.325974Z,mapped
@@ -569,7 +564,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,Elantra,N Line,49452FT5/01,2025 Elantra N Line FWD,2025 elantra n line fwd,user,2026-02-09T18:39:54.615151Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 ELANTRA N N,2025 elantra n n,user,2026-01-27T19:06:01.671086Z,mapped
 2025,Hyundai,Elantra N,,4N4A2FT5/01,2025 Elantra N N FWD,2025 elantra n n fwd,user,2026-02-09T18:44:26.893460Z,mapped
-2025,Hyundai,Elantra N,,4N4A3FT5/01,2025 Elantra N N FWD,2025 elantra n n fwd,user,2026-02-09T18:44:26.893460Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 ELANTRA SE,2025 elantra se,user,2026-01-27T19:04:42.786917Z,mapped
 2025,Hyundai,Elantra,SE,494E2F4S/01,2025 Elantra SE FWD,2025 elantra se fwd,user,2026-02-09T18:30:04.552247Z,mapped
 2025,Hyundai,Elantra,SEL Convenience,494H2F4S/01,2025 ELANTRA SEL CONVENIENCE,2025 elantra sel convenience,user,2026-01-27T19:05:08.299743Z,mapped
@@ -796,11 +790,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,IONIQ 5 N,,5N4A2AEZ/01,2025 Ioniq 5 N N AWD,2025 ioniq 5 n n awd,user,2026-02-09T18:02:22.818938Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412AEZ/01,2025 Ioniq 5 SE AWD,2025 ioniq 5 se awd,user,2026-02-06T20:31:12.358676Z,mapped
 2025,Hyundai,IONIQ 5,SE,50412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-01-27T15:25:39.100368Z,mapped
-2025,Hyundai,IONIQ 5,SE,51412REZ/01,2025 IONIQ 5 SE RWD,2025 ioniq 5 se rwd,user,2026-02-09T17:51:33.816543Z,mapped
 2025,Hyundai,IONIQ 5,SE Standard Range,50402REZ/01,2025 Ioniq 5 SE Standard Range RWD,2025 ioniq 5 se standard range rwd,user,2026-02-06T20:28:32.089694Z,mapped
 2025,Hyundai,IONIQ 5,SEL,50442AEZ/01,2025 Ioniq 5 SEL AWD,2025 ioniq 5 sel awd,user,2026-02-06T20:50:08.672455Z,mapped
 2025,Hyundai,IONIQ 5,SEL,50442REZ/01,2025 Ioniq 5 SEL RWD,2025 ioniq 5 sel rwd,user,2026-02-06T20:32:17.487562Z,mapped
-2025,Hyundai,IONIQ 5,SEL,51442REZ/01,2025 Ioniq 5 SEL RWD,2025 ioniq 5 sel rwd,user,2026-02-09T17:43:46.525481Z,mapped
 2025,Hyundai,IONIQ 5,XRT,50452AEZ/01,2025 Ioniq 5 XRT AWD,2025 ioniq 5 xrt awd,user,2026-02-06T20:54:25.298684Z,mapped
 2025,Hyundai,IONIQ 6,Limited,A0462REZ/01,2025 Ioniq 6 Limited AWD,2025 ioniq 6 limited awd,user,2026-02-06T21:18:15.136056Z,mapped
 2025,Hyundai,IONIQ 6,Limited,A0462REZ/01,2025 Ioniq 6 Limited RWD,2025 ioniq 6 limited rwd,user,2026-02-06T21:17:21.089947Z,mapped
@@ -1245,11 +1237,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Porsche,Cayenne,GTS,9YABS1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Porsche,Cayenne,S,9YABJ1,2026 Cayenne,2026 cayenne,user,2026-01-29T15:30:44.800452Z,mapped
 2026,Chevrolet,Blazer,LT,1NK26/2LT,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
-2026,Chevrolet,Blazer,LT,1NK26/3LT,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
-2026,Chevrolet,Blazer,LT,1NR26/2LT,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
-2026,Chevrolet,Blazer,LT,1NR26/3LT,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
 2026,Chevrolet,Blazer,RS,1NL26/1RS,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
-2026,Chevrolet,Blazer,RS,1NS26/1RS,2026 CHEVROLET Blazer,2026 chevrolet blazer,user,2026-02-07T22:41:32.903734Z,mapped
 2026,Chevrolet,Blazer EV,AWD LT,1MC26/4LT,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
 2026,Chevrolet,Blazer EV,AWD RS,1MD26/3RS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
 2026,Chevrolet,Blazer EV,AWD SS,1MG26/2SS,2026 CHEVROLET Blazer EV,2026 chevrolet blazer ev,user,2026-02-07T22:36:54.938335Z,mapped
@@ -1350,7 +1338,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Mitsubishi,Eclipse Cross,ES,EC45-B/A61,2026 Eclipse Cross ES 1.5T S-AWC,2026 eclipse cross es 1.5t s awc,user,2026-01-28T13:54:49.251567Z,mapped
 2026,Hyundai,Elantra,Limited,494M2F4S/01,2026 ELANTRA LIMITED,2026 elantra limited,user,2026-01-27T19:04:18.657583Z,mapped
 2026,Hyundai,Elantra N,,4N4A2FT5/01,2026 ELANTRA N,2026 elantra n,user,2026-02-09T18:43:16.156359Z,mapped
-2026,Hyundai,Elantra N,,4N4A3FT5/01,2026 ELANTRA N,2026 elantra n,user,2026-02-09T18:43:16.156359Z,mapped
 2026,Hyundai,Elantra,N Line,494L2FT5/01,2026 ELANTRA N LINE,2026 elantra n line,user,2026-01-27T19:04:31.480738Z,mapped
 2026,Hyundai,Elantra N,,4N4A2FT5/01,2026 ELANTRA N N,2026 elantra n n,user,2026-01-27T19:05:48.374638Z,mapped
 2026,Hyundai,Elantra,SE,494E2F4S/01,2026 ELANTRA SE,2026 elantra se,user,2026-01-27T19:03:37.744327Z,mapped
@@ -1568,13 +1555,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Kona,SE,Q1402A45/01,2026 KONA SE AWD,2026 kona se awd,user,2026-02-09T21:29:19.706025Z,mapped
 2026,Hyundai,Kona,SE,Q1402F45/01,2026 KONA SE FWD,2026 kona se fwd,user,2026-02-09T21:28:12.940823Z,mapped
 2026,Hyundai,Kona,SEL Premium,Q1422AT5/01,2026 KONA SEL PREMIUM AWD,2026 kona sel premium awd,user,2026-02-09T21:35:50.758619Z,mapped
-2026,Hyundai,Kona,SEL Premium,Q14L2AT5/01,2026 KONA SEL PREMIUM AWD,2026 kona sel premium awd,user,2026-02-09T21:35:50.758619Z,mapped
 2026,Hyundai,Kona,SEL Premium,Q1422FT5/01,2026 KONA SEL PREMIUM FWD,2026 kona sel premium fwd,user,2026-02-09T21:34:16.848256Z,mapped
-2026,Hyundai,Kona,SEL Premium,Q14L2FT5/01,2026 KONA SEL PREMIUM FWD,2026 kona sel premium fwd,user,2026-02-09T21:34:16.848256Z,mapped
 2026,Hyundai,Kona,SEL Sport,Q1412A45/01,2026 KONA SEL SPORT AWD,2026 kona sel sport awd,user,2026-02-09T21:32:44.499869Z,mapped
-2026,Hyundai,Kona,SEL Sport,Q14J2A45/01,2026 KONA SEL SPORT AWD,2026 kona sel sport awd,user,2026-02-09T21:32:44.499869Z,mapped
 2026,Hyundai,Kona,SEL Sport,Q1412F45/01,2026 KONA SEL SPORT FWD,2026 kona sel sport fwd,user,2026-02-09T21:30:58.229283Z,mapped
-2026,Hyundai,Kona,SEL Sport,Q14J2F45/01,2026 KONA SEL SPORT FWD,2026 kona sel sport fwd,user,2026-02-09T21:30:58.229283Z,mapped
 2026,Toyota,Land Cruiser,,,2026 Land Cruiser 1958,2026 land cruiser 1958,user,2026-01-29T12:40:18.442264Z,no_data
 2026,Lexus,LC 500,LC 500,9260,2026 LC,2026 lc,user,2026-01-27T21:05:05.117463Z,mapped
 2026,Nissan,LEAF,PLATINUM+,17316,2026 LEAF,2026 leaf,user,2026-01-29T15:26:20.897011Z,mapped
@@ -1702,7 +1685,6 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,Limited,J2472F65/01,2026 PALISADE LIMITED FWD,2026 palisade limited fwd,user,2026-01-27T19:08:54.116439Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE LIMITED FWD,2026 palisade limited fwd,user,2026-01-27T19:08:54.116439Z,mapped
 2026,Hyundai,Palisade,SE,J2412A65/01,2026 PALISADE SE AWD,2026 palisade se awd,user,2026-02-09T20:02:48.356386Z,mapped
-2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SE AWD,2026 palisade se awd,user,2026-01-27T19:06:33.235351Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SE FWD,2026 palisade se fwd,user,2026-01-27T19:06:22.821327Z,mapped
 2026,Hyundai,Palisade,SEL 7P,J2442A65/01,2026 PALISADE SEL 7P AWD,2026 palisade sel 7p awd,user,2026-02-09T21:18:00.235138Z,mapped
 2026,Hyundai,Palisade,SEL 7P,J2442F65/01,2026 PALISADE SEL 7P FWD,2026 palisade sel 7p fwd,user,2026-02-09T20:05:30.091498Z,mapped
@@ -1710,11 +1692,9 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL 7P,J2442A65/01,2026 PALISADE SEL AWD,2026 palisade sel awd,user,2026-01-27T19:07:34.396883Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE AWD,2026 palisade sel convenience awd,user,2026-01-27T19:08:16.383388Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-01-27T19:08:00.329542Z,mapped
-2026,Hyundai,Palisade,SEL Convenience,J2422F65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-02-09T20:08:34.195416Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL 7P,J2442F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432A65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-02-09T20:11:59.958871Z,mapped
-2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-01-27T19:08:39.431294Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432F65/01,2026 PALISADE SEL PREMIUM FWD,2026 palisade sel premium fwd,user,2026-01-27T19:08:30.988058Z,mapped
 2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO,2026 palisade xrt pro,user,2026-01-27T19:09:16.185767Z,mapped
 2026,Hyundai,Palisade,XRT Pro,J2452A65/01,2026 PALISADE XRT PRO AWD,2026 palisade xrt pro awd,user,2026-02-09T20:34:59.364408Z,mapped
