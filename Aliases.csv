@@ -799,6 +799,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,IONIQ 6,Limited,A0462REZ/01,2025 Ioniq 6 Limited RWD,2025 ioniq 6 limited rwd,user,2026-02-06T21:17:21.089947Z,mapped
 2025,Hyundai,IONIQ 6,SE,A0412AEZ/01,2025 Ioniq 6 SE AWD,2025 ioniq 6 se awd,user,2026-02-06T21:13:33.781408Z,mapped
 2025,Hyundai,IONIQ 6,SE,A0412AEZ/01,2025 Ioniq 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-06T21:08:45.371944Z,mapped
+2025,Hyundai,IONIQ 6,SE,A0412REZ/01,2025 IONIQ 6 SE RWD,2025 ioniq 6 se rwd,user,2026-02-10T20:45:14.701684Z,mapped
 2025,Hyundai,IONIQ 6,SE Standard Range,A0492REZ/01,2025 Ioniq 6 SE Standard Range RWD,2025 ioniq 6 se standard range rwd,user,2026-02-06T21:07:05.774068Z,mapped
 2025,Hyundai,IONIQ 6,SEL,A0442AEZ/01,2025 Ioniq 6 SEL AWD,2025 ioniq 6 sel awd,user,2026-02-06T21:16:06.386958Z,mapped
 2025,Hyundai,IONIQ 6,SEL,A0442REZ/01,2025 Ioniq 6 SEL RWD,2025 ioniq 6 sel rwd,user,2026-02-06T21:14:40.969220Z,mapped
