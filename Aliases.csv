@@ -1925,6 +1925,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Tucson Hybrid,SEL Convenience,854D2ABS/01,2026 TUCSON HYBRID SEL CONVENIENCE AWD,2026 tucson hybrid sel convenience awd,user,2026-02-05T17:54:16.752444Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED AWD,2026 tucson limited awd,user,2026-01-30T22:04:13.070075Z,mapped
 2026,Hyundai,Tucson,Limited,85472A4S/01,2026 TUCSON LIMITED FWD,2026 tucson limited fwd,user,2026-01-30T22:00:28.765517Z,mapped
+2026,Hyundai,Tucson,Limited,85472F4S/01,2026 TUCSON LIMITED FWD,2026 tucson limited fwd,user,2026-02-10T20:55:41.812633Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON PLIMITED AWD,2026 tucson plimited awd,user,2026-02-09T17:56:24.702901Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,Limited,854K2APT/01,2026 TUCSON Plug-in Hybrid LIMITED,2026 tucson plug in hybrid limited,user,2026-01-27T18:58:48.345912Z,mapped
 2026,Hyundai,Tucson Plug-In Hybrid,SEL,854J2APT/01,2026 TUCSON Plug-in Hybrid SEL,2026 tucson plug in hybrid sel,user,2026-01-27T18:58:34.927702Z,mapped
