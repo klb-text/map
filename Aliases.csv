@@ -1025,6 +1025,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Hyundai,SANTA FE Hybrid,,,2025 SANTA FE Hybrid CALLIGRAPHY FWD,2025 santa fe hybrid calligraphy fwd,user,2026-02-10T20:57:49.370705Z,no_data
 2025,Hyundai,SANTA FE Hybrid,,,2025 SANTA FE Hybrid LIMITED AWD,2025 santa fe hybrid limited awd,user,2026-02-10T20:57:54.856163Z,no_data
 2025,Hyundai,SANTA FE Hybrid,,,2025 SANTA FE Hybrid LIMITED FWD,2025 santa fe hybrid limited fwd,user,2026-02-10T20:58:00.540634Z,no_data
+2025,Hyundai,SANTA FE Hybrid,,,2025 SANTA FE Hybrid SEL FWD,2025 santa fe hybrid sel fwd,user,2026-02-10T20:58:25.398063Z,no_data
 2025,Hyundai,Santa Fe,Limited,65492AT5/01,2025 Santa Fe Limited AWD,2025 santa fe limited awd,user,2026-01-30T19:13:29.173863Z,mapped
 2025,Hyundai,Santa Fe,Limited,65492FT5/01,2025 Santa Fe Limited FWD,2025 santa fe limited fwd,user,2026-01-30T19:12:15.379002Z,mapped
 2025,Hyundai,Santa Fe,SE,65402AT5/01,2025 Santa Fe SE AWD,2025 santa fe se awd,user,2026-01-30T18:58:14.005781Z,mapped
