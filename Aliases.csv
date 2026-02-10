@@ -1870,6 +1870,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Subaru,Solterra,Touring XT,TEK/41,2026 Solterra Touring XT Leather,2026 solterra touring xt leather,user,2026-01-29T15:45:59.620986Z,mapped
 2026,Hyundai,Sonata Hybrid,Blue,294C2FBS/01,2026 SONATA BLUE HYBRID,2026 sonata blue hybrid,user,2026-01-27T19:15:53.050131Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA HYBRID LIMITED,2026 sonata hybrid limited,user,2026-02-10T21:06:05.777205Z,mapped
+2026,Hyundai,Sonata Hybrid,SEL,294D2FBS/01,2026 SONATA HYBRID SEL,2026 sonata hybrid sel,user,2026-02-10T21:06:18.230767Z,mapped
 2026,Hyundai,Sonata Hybrid,Limited,294G2FBS/01,2026 SONATA LIMITED HYBRID,2026 sonata limited hybrid,user,2026-01-27T19:15:40.430391Z,mapped
 2026,Hyundai,Sonata,N Line,29472FT5/01,2026 SONATA N LINE,2026 sonata n line,user,2026-01-27T19:17:38.640687Z,mapped
 2026,Hyundai,Sonata,SE,29412F4S/01,2026 SONATA SE,2026 sonata se,user,2026-01-27T19:18:04.857090Z,mapped
