@@ -1729,6 +1729,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Palisade,SEL 7P,J2442A65/01,2026 PALISADE SEL AWD,2026 palisade sel awd,user,2026-01-27T19:07:34.396883Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE AWD,2026 palisade sel convenience awd,user,2026-01-27T19:08:16.383388Z,mapped
 2026,Hyundai,Palisade,SEL Convenience,J2422A65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-01-27T19:08:00.329542Z,mapped
+2026,Hyundai,Palisade,SEL Convenience,J2422F65/01,2026 PALISADE SEL CONVENIENCE FWD,2026 palisade sel convenience fwd,user,2026-02-10T21:04:28.465003Z,mapped
 2026,Hyundai,Palisade,SE,J2412F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL 7P,J2442F65/01,2026 PALISADE SEL FWD,2026 palisade sel fwd,user,2026-01-27T19:07:19.468953Z,mapped
 2026,Hyundai,Palisade,SEL Premium 7P,J2432A65/01,2026 PALISADE SEL PREMIUM AWD,2026 palisade sel premium awd,user,2026-02-09T20:11:59.958871Z,mapped
