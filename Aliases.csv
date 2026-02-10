@@ -1009,6 +1009,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Honda,Ridgeline,TrailSport,YK3F6SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Honda,Ridgeline,TrailSport+,YK3F7SKNW,2025 Ridgeline,2025 ridgeline,user,2026-01-28T15:03:58.511704Z,mapped
 2025,Hyundai,Santa Cruz,Limited,90472AT5/01,2025 SANTA CRUZ LIMITED,2025 santa cruz limited,user,2026-02-10T16:46:54.047582Z,mapped
+2025,Hyundai,Santa Cruz,SE,90402A45/01,2025 SANTA CRUZ SE AWD,2025 santa cruz se awd,user,2026-02-10T16:48:35.083819Z,mapped
 2025,Hyundai,Santa Cruz,SEL Activity,90492A45/01,2025 SANTA CRUZ SEL ACTIVITY AWD,2025 santa cruz sel activity awd,user,2026-02-10T16:47:34.007033Z,mapped
 2025,Hyundai,Santa Cruz,SEL Activity,90492F45/01,2025 SANTA CRUZ SEL ACTIVITY FWD,2025 santa cruz sel activity fwd,user,2026-02-10T16:47:51.544041Z,mapped
 2025,Hyundai,Santa Cruz,SEL,90432A45/01,2025 SANTA CRUZ SEL AWD,2025 santa cruz sel awd,user,2026-02-10T16:48:09.467513Z,mapped
