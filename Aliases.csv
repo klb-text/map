@@ -1824,6 +1824,7 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2026,Hyundai,Santa Fe,Calligraphy,654C2AT5/01,2026 SANTA FE CALLIGRAPHY 2.5T AWD,2026 santa fe calligraphy 2.5t awd,user,2026-01-30T18:50:41.546487Z,mapped
 2026,Hyundai,Santa Fe,Calligraphy,654C2FT5/01,2026 SANTA FE CALLIGRAPHY 2.5T FWD,2026 santa fe calligraphy 2.5t fwd,user,2026-01-30T18:46:23.956712Z,mapped
 2026,Hyundai,Santa Fe,Calligraphy,654C2AT5/01,2026 SANTA FE CALLIGRAPHY AWD,2026 santa fe calligraphy awd,user,2026-02-10T21:01:32.464139Z,mapped
+2026,Hyundai,Santa Fe,Calligraphy,654C2FT5/01,2026 SANTA FE CALLIGRAPHY FWD,2026 santa fe calligraphy fwd,user,2026-02-10T21:01:45.523371Z,mapped
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid CALLIGRAPHY AWD,2026 santa fe hybrid calligraphy awd,user,2026-02-10T20:58:30.643499Z,no_data
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid CALLIGRAPHY FWD,2026 santa fe hybrid calligraphy fwd,user,2026-02-10T20:58:40.392946Z,no_data
 2026,Hyundai,SANTA FE Hybrid,,,2026 SANTA FE Hybrid LIMITED AWD,2026 santa fe hybrid limited awd,user,2026-02-10T20:58:46.819663Z,no_data
