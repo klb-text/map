@@ -887,6 +887,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,MAZDA,MX-5 miata st,,,2025 MAZDA MX-5 Sport (RWD / Manual Transmission),2025 mazda mx 5 sport (rwd manual transmission),user,2026-01-29T14:06:05.881297Z,no_data
 2025,Acura,MDX,,YD9H3SJNW,2025 MDX Exclude Type S,2025 mdx exclude type s,user,2026-01-27T16:22:38.949482Z,mapped
 2025,Acura,MDX,Type S w/Advance Package,YD8H8SKNW,2025 MDX Type S Only,2025 mdx type s only,user,2026-01-27T16:24:39.023827Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA4H,2025 Mercedes-Benz eSprinter Cargo Van,2025 mercedes benz esprinter cargo van,user,2026-03-10T14:27:35.281007Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA4S,2025 Mercedes-Benz eSprinter Cargo Van,2025 mercedes benz esprinter cargo van,user,2026-03-10T14:27:35.281007Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA7H,2025 Mercedes-Benz eSprinter Cargo Van,2025 mercedes benz esprinter cargo van,user,2026-03-10T14:27:35.281007Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA7S,2025 Mercedes-Benz eSprinter Cargo Van,2025 mercedes benz esprinter cargo van,user,2026-03-10T14:27:35.281007Z,mapped
 2025,Mercedes-Benz,Sprinter 4500 Chassis,,M4CC4H,2025 Mercedes-Benz Sprinter Cab Chassis Medium,2025 mercedes benz sprinter cab chassis medium,user,2026-03-04T19:01:31.191915Z,mapped
 2025,Mercedes-Benz,Sprinter 4500 Chassis,,M4CC7H,2025 Mercedes-Benz Sprinter Cab Chassis Medium,2025 mercedes benz sprinter cab chassis medium,user,2026-03-04T19:02:16.671014Z,mapped
 2025,Mercedes-Benz,Sprinter 2500,,M2CA4A,2025 Mercedes-Benz Sprinter Medium,2025 mercedes benz sprinter medium,user,2026-03-04T19:02:47.547014Z,mapped
