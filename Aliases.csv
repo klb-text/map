@@ -278,6 +278,8 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2024,Tesla,Cybertruck,,CYBERB,2024 Cybertruck All-Wheel Drive,2024 cybertruck all wheel drive,user,2026-01-29T22:22:27.571222Z,mapped
 2024,Tesla,Cybertruck,Cyberbeast,CYBERBST,2024 Cybertruck Cyberbeast,2024 cybertruck cyberbeast,user,2026-01-29T22:22:38.817514Z,mapped
 2024,Genesis,Electrified G80,Advanced,S14E2AEZ/01,2024 ELECTRIFIED G80 AWD AUTOMATIC TRANSMISSION,2024 electrified g80 awd automatic transmission,user,2026-01-29T20:12:56.046196Z,mapped
+2024,Mercedes-Benz,eSprinter 2500,,E2CA7H,2024 eSprinter Cargo Van,2024 esprinter cargo van,user,2026-03-10T14:12:33.976905Z,mapped
+2024,Mercedes-Benz,eSprinter 2500,,E2CA7S,2024 eSprinter Cargo Van,2024 esprinter cargo van,user,2026-03-10T14:12:33.976905Z,mapped
 2024,Ford,F-150 Lightning,Flash,W3L/312A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
 2024,Ford,F-150 Lightning,LARIAT,W5L/511A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
 2024,Ford,F-150 Lightning,Platinum,W7L/710A,2024 Ford F-150 Lightning,2024 ford f 150 lightning,user,2026-01-27T19:53:35.601155Z,mapped
