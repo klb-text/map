@@ -580,6 +580,10 @@ year,make,model,trim,model_code,alias,alias_norm,source,created_at,status
 2025,Lexus,ESh,,,2025 ES 300h,2025 es 300h,user,2026-01-28T18:00:07.902854Z,no_data
 2025,Lexus,ES,,,2025 ES 350,2025 es 350,user,2026-01-28T18:03:55.996929Z,no_data
 2025,Lexus,ES 350,ES 350,9000,2025 ES 350,2025 es 350,user,2026-01-27T21:03:48.780851Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA4H,2025 eSprinter Cargo Van,2025 esprinter cargo van,user,2026-03-10T14:18:56.708939Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA4S,2025 eSprinter Cargo Van,2025 esprinter cargo van,user,2026-03-10T14:18:56.708939Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA7H,2025 eSprinter Cargo Van,2025 esprinter cargo van,user,2026-03-10T14:18:56.708939Z,mapped
+2025,Mercedes-Benz,eSprinter 2500,,E2CA7S,2025 eSprinter Cargo Van,2025 esprinter cargo van,user,2026-03-10T14:18:56.708939Z,mapped
 2025,Kia,EV6,GT,N5472,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,GT-Line,N4362,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
 2025,Kia,EV6,Light,N2342,2025 EV6,2025 ev6,user,2026-01-29T22:06:30.742596Z,mapped
